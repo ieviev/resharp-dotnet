@@ -20,6 +20,10 @@ let re = Resharp.Regex(@"\w+", ResharpOptions(IgnoreCase = true))
 
 > **Thread safety:** A `Regex` instance is **not** thread-safe. The lazy DFA mutates internal state during matching. If you need to use the same pattern from multiple threads, create a separate `Regex` instance per thread — or fully compile the DFA to make it safe (see `IsFullDFA`).
 
+### Syntax and supported features
+
+Some features of the default .NET regex syntax are not supported. RE# is an automata engine and does not support many features of the .NET regex engine. Lookahead and lookbehind are supported but with some limitations (see [syntax reference](docs/syntax.md)).
+
 ### Methods
 
 #### `IsMatch(input) -> bool`

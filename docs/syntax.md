@@ -1,6 +1,6 @@
 # RE# Syntax Reference
 
-RE# supports standard .NET regex syntax with three extensions: **intersection**, **complement**, and a **universal wildcard**.
+RE# supports most standard .NET regex syntax with three extensions: **intersection**, **complement**, and a **universal wildcard**.
 
 ## Extensions
 
@@ -41,9 +41,29 @@ Matches everything the inner pattern does **not** match. Must be written with pa
 
 ```
 ~(_*\d\d_*)     does not contain two consecutive digits
-~(.*\n\n.*)     does not contain a double newline (single paragraph)
-~(.*and.*)      does not contain "and"
+~(_*\n\n_*)     does not contain a double newline (single paragraph)
+~(_*and_*)      does not contain "and"
 ```
+
+- with complement, prefer `_` over `.*` 
+- complement is the main reason why we added `_` because `~(.*xyz.*)` means intuitively `does not contain xyz on the same line`, so it will just match the full input string if it does not contain "xyz", 
+- `~(_*xyz_*)` means `does not contain xyz`, no ifs, ands, or buts
+
+### Unsupported features
+
+As a bit of trivia, the .NET regex is a **turing complete** language, through the use of back references and balancing groups. RE# is an automata engine has a much more limited feature set.
+
+RE# does not support any of the following constructs:
+- Group captures: `(...)` is non-capturing, and `(?:...)` is just an explicit non-capturing group. 
+  - you technically have one capturing group
+  - ex. `ab(cd)ef` is can be used as `(?<=ab)cd(?=ef)`
+  - also string replace supports `$0`, but not `$1`, `$2`, etc. since there are no capture groups
+  - for more groups the easiest thing to do is use another engine to extract them post-match
+- Lazy quantifiers: `*?`, `+?`, `??`, `{n,m}?`
+- Backreferences: `\1`, `\2`, etc.
+- Balancing groups: `(?<open>...)`, `(?<-open>...)`
+- Conditional patterns: `(?(condition)yes|no)`
+- Nested lookarounds: `(?=(?<=a)b)` or `(?<=(?=a)b)c`
 
 ### Combining operators
 
@@ -76,9 +96,9 @@ F.*&~(.*Finn)                starts with 'F' but does not end with "Finn"
 
 | Pattern   | Description              |
 |-----------|--------------------------|
-| `*`       | 0 or more (greedy)       |
-| `+`       | 1 or more (greedy)       |
-| `?`       | 0 or 1 (greedy)          |
+| `*`       | 0 or more      |
+| `+`       | 1 or more       |
+| `?`       | 0 or 1          |
 | `{n}`     | exactly n                |
 | `{n,}`    | n or more                |
 | `{n,m}`   | between n and m          |
@@ -114,7 +134,7 @@ Lookarounds combine with intersection and complement:
 
 ```
 (?<=author).*&.*and.*   after "author", containing "and"
-(?<=__).*&~(.*and.*)    after "__", not containing "and"
+(?<=ab).*&~(_*and_*)    after "ab", not containing "and"
 ```
 
 **Restriction: no nested lookarounds.** RE# normalizes all lookarounds into the form `(?<=R1)R2(?=R3)`, where R1, R2, and R3 are regular expressions that themselves **cannot contain lookarounds**. This means patterns like `(?<=(?=a)b)c` or `(?=a(?<=b))` are not supported.

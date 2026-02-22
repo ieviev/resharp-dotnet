@@ -81,8 +81,9 @@ And on some extensions we added ourselves:
 For critical paths, you can use `ValueMatches` for memory-pooled matching and `ResharpOptions.HighThroughputDefaults` for more aggressive optimization.
 
 ```fsharp
-let re = Resharp.Regex("pattern", ResharpOptions.HighThroughputDefaults) // not thread-safe, use one instance per thread
-use slices = re.ValueMatches(chars) // <- dispose this after
+let re = Resharp.Regex("pattern", ResharpOptions.HighThroughputDefaults) 
+// note: Regex instances are not thread-safe
+use slices = re.ValueMatches(chars) // <- also dispose this after
 for s in slices do
     printfn $"match at {s.Index}..{s.Index + s.Length}"
 ```
