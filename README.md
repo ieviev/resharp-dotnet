@@ -55,27 +55,28 @@ F.*&~(.*Finn)                starts with 'F', does not end with "Finn"
 
 ## Performance
 
-RE# uses several optimizations: start-set inference, literal prefix scanning, and optional full DFA precompilation. RE# shares many optimizations with .NET's (and `.NonBacktracking` even shares some RE# techniques and strengths) but RE# is designed from the ground up and returns a different kind of matches (leftmost-longest).
+RE# uses several optimizations: start-set inference, literal prefix scanning, and optional full DFA precompilation. RE# shares many optimizations with .NET's (and `RegexOptions.NonBacktracking` even shares some RE# techniques and strengths that many do not know of!) but RE# is designed from the ground up and returns a different kind of matches (leftmost-longest).
 
 RE# particularly excels with large patterns and will often outperform .NET's regex engine (and all others) for complex patterns, especially those with a large set of literals or complex intersection and complement operations
 
-Here is a little comparison of RE# with .NET's compiled regex engine on these patterns, you can also find wider comparisons [in the paper](https://dl.acm.org/doi/10.1145/3704837):
+To illustrate, here is a little comparison of RE# with .NET's most used compiled and source-generated regex engines on these patterns, you can also find wider comparisons [in the paper](https://dl.acm.org/doi/10.1145/3704837):
 
 On [curated benchmarks from rebar](https://github.com/BurntSushi/rebar) (AMD Ryzen 7 5800X, .NET 10.0):
 
-| Pattern | RE# | .NET Compiled | Speedup |
-|---------|----:|-----:|--------:|
-| date validation | 1,698 us | 261,957 us | 154x |
-| dictionary search | 412 us | 14,726 us | 36x |
+| Pattern | RE# | .NET Compiled | .NET SourceGenerated |
+|---------|----:|-----:|-----:|
+| date validation | 1,737 us | 273,822 us | 318,070 us |
+| dictionary search | 105 us | 45,832 us | 26,410 us |
 
+And on some extensions we added ourselves:
 
-| Pattern | RE# | .NET Compiled | Speedup |
-|---------|----:|-----:|--------:|
-| dictionary, case-insensitive unicode | 603 us | 29,551 us | 49x |
-| dictionary, case-insensitive | 631 us | 49,685 us | 79x |
-| unicode dictionary | 326 us | 61,853 us | 190x |
-| unicode dictionary, case-insensitive | 331 us | 483,251 us | 1,460x |
-| dictionary + context window | 680 us | 24,470,445 us | 35,963x |
+| Pattern | RE# | .NET Compiled | .NET SourceGenerated |
+|---------|----:|-----:|-----:|
+| dictionary, case-insensitive | 576 us | 29,368 us | 21,146 us |
+| unicode dictionary | 336 us | 62,053 us | 38,613 us |
+| unicode dictionary, case-insensitive | 321 us | 484,135 us | 537,814 us |
+| dictionary + context window | 621 us | 48,893 us | 55,383 us |
+| dictionary + context window, unicode | 692 us | 24,105,091 us | 34,706,982 us |
 
 For critical paths, you can use `ValueMatches` for memory-pooled matching and `ResharpOptions.HighThroughputDefaults` for more aggressive optimization.
 
