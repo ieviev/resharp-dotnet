@@ -1,0 +1,399 @@
+description = '''
+lookahead and lookbehind tests
+'''
+
+# --- positive lookahead ---
+
+[[test]]
+pattern = '(?=a)'
+input = 'a'
+matches = [[0, 0]]
+
+[[test]]
+pattern = 'a(?=a)'
+input = 'aa'
+matches = [[0, 1]]
+
+[[test]]
+pattern = 'a(?=b)'
+input = '_ab_ab_'
+matches = [[1, 2], [4, 5]]
+
+[[test]]
+pattern = 'bb(?=aa)'
+input = '__bbaa__'
+matches = [[2, 4]]
+
+[[test]]
+pattern = 'bb(?=a)'
+input = '__bbaaa__'
+matches = [[2, 4]]
+
+[[test]]
+pattern = 'bb(?=aaa)'
+input = '__bbaaa__'
+matches = [[2, 4]]
+
+[[test]]
+pattern = 'bb(?=aaaa)'
+input = '__bbaaaa__'
+matches = [[2, 4]]
+
+[[test]]
+pattern = 'bb(?=aaaaa)'
+input = '__bbaaaaa__'
+matches = [[2, 4]]
+
+[[test]]
+pattern = '\w+(?=.*Springer)'
+input = 'publisher={Springer}'
+matches = [[0, 9]]
+
+[[test]]
+pattern = '\w+(?=_*Springer)'
+input = 'publisher={Springer}'
+matches = [[0, 9]]
+
+[[test]]
+pattern = '.*(?=aaa)'
+input = 'baaa'
+matches = [[0, 1], [1, 1]]
+
+[[test]]
+pattern = '.(?=.*c)'
+input = 'bc'
+matches = [[0, 1]]
+
+[[test]]
+pattern = 'a(?=b_)'
+input = '_ab_ab_'
+matches = [[1, 2], [4, 5]]
+
+[[test]]
+pattern = '.*(?=b_)'
+input = '_ab_ab_'
+matches = [[0, 5], [5, 5]]
+
+[[test]]
+pattern = '(ab)+(?=_)'
+input = '_ab_ab_'
+matches = [[1, 3], [4, 6]]
+
+# multiple lookaheads
+
+[[test]]
+pattern = '.*(?=.*bbb)(?=.*ccc)'
+input = 'aaa bbb ccc'
+matches = [[0, 4], [4, 4]]
+
+[[test]]
+pattern = '1(?=.*3)(?=.*2)'
+input = ' 1 23'
+matches = [[1, 2]]
+
+[[test]]
+pattern = 'a+(?=\W)(?=.*___)'
+input = 'aaa ___'
+matches = [[0, 3]]
+
+[[test]]
+pattern = '.*(?=\W)(?=.*___)'
+input = 'aaa ___'
+matches = [[0, 3], [3, 3]]
+
+# lookahead with time patterns
+
+[[test]]
+pattern = '\d+(?=[aA]\.?[mM]\.?)'
+input = '10am'
+matches = [[0, 2]]
+
+[[test]]
+pattern = '\d+(?=[aApP]\.?[mM]\.?)'
+input = '10pm'
+matches = [[0, 2]]
+
+[[test]]
+pattern = '\d+(?=\s*[aApP]\.?[mM]\.?)'
+input = '10 pm'
+matches = [[0, 2]]
+
+[[test]]
+pattern = '\d+(?=\s*[aApP]\.?[mM]\.?)'
+input = '10         pm'
+matches = [[0, 2]]
+
+# lookahead with anchors
+
+[[test]]
+pattern = 'a_*(?=\z)'
+input = 'aaa'
+matches = [[0, 3]]
+
+[[test]]
+pattern = 'a_*(?=_*\z)'
+input = 'aaa'
+matches = [[0, 3]]
+
+# --- positive lookbehind ---
+
+[[test]]
+pattern = '(?<=b)'
+input = 'b'
+matches = [[1, 1]]
+
+[[test]]
+pattern = '(?<=bb)'
+input = 'bb'
+matches = [[2, 2]]
+
+[[test]]
+pattern = '(?<=bbb)'
+input = 'bbb'
+matches = [[3, 3]]
+
+[[test]]
+pattern = '(?<=bbbb)'
+input = 'bbbb'
+matches = [[4, 4]]
+
+[[test]]
+pattern = '(?<=b)b'
+input = 'bb'
+matches = [[1, 2]]
+
+[[test]]
+pattern = '(?<=bb)b'
+input = 'bbb'
+matches = [[2, 3]]
+
+[[test]]
+pattern = '(?<=b)a'
+input = 'ba'
+matches = [[1, 2]]
+
+[[test]]
+pattern = '(?<=b)a'
+input = 'bba'
+matches = [[2, 3]]
+
+[[test]]
+pattern = '(?<=b)a'
+input = 'bbbba'
+matches = [[4, 5]]
+
+[[test]]
+pattern = '(?<=bb)a'
+input = 'bbbba'
+matches = [[4, 5]]
+
+[[test]]
+pattern = '(?<=bbb)a'
+input = 'bbbba'
+matches = [[4, 5]]
+
+[[test]]
+pattern = '(?<=aaa).*'
+input = 'aaabbb'
+matches = [[3, 6]]
+
+[[test]]
+pattern = '(?<=author).*'
+input = 'author: abc and def'
+matches = [[6, 19]]
+
+[[test]]
+pattern = '(?<=aaa\{).*(?=\})'
+input = 'aaa{bbb {ccc}}'
+matches = [[4, 13]]
+
+[[test]]
+pattern = '(?<=\w)(?<=a)b'
+input = 'ab'
+matches = [[1, 2]]
+
+[[test]]
+pattern = '(?<=\w\w)(?<=aa)b'
+input = 'aab'
+matches = [[2, 3]]
+
+[[test]]
+pattern = '(?<=\w\w)(?<=aa)bb'
+input = 'aabb'
+matches = [[2, 4]]
+
+[[test]]
+pattern = '(?<=\w)(?<=aa)b'
+input = 'aab'
+matches = [[2, 3]]
+
+[[test]]
+pattern = '(?<=a.*)\bb'
+input = 'a  b'
+matches = [[3, 4]]
+
+# lookbehind + lookahead combined
+
+[[test]]
+pattern = '(?<=a.*).(?=.*c)'
+input = 'abc'
+matches = [[1, 2]]
+
+[[test]]
+pattern = '(?<=a.*).(?=.*c)'
+input = 'a__c'
+matches = [[1, 2], [2, 3]]
+
+[[test]]
+pattern = '(?<=a.*)(x)(?=.*c)'
+input = 'a x c'
+matches = [[2, 3]]
+
+[[test]]
+pattern = '(?<=a.*)(\bx)(?=.*c)'
+input = 'a x c'
+matches = [[2, 3]]
+
+[[test]]
+pattern = '(?<=a.*)(\bx\b)(?=.*c)'
+input = 'a x c'
+matches = [[2, 3]]
+
+[[test]]
+pattern = '(?<=a.*)(\bx\b)(?=.*c)'
+input = 'a xx c'
+matches = []
+
+[[test]]
+pattern = '(?<=\W)hello(?=\W)'
+input = ' hello '
+matches = [[1, 6]]
+
+[[test]]
+pattern = '(?<=\W)hello(?=\W)'
+input = ' helloworld '
+matches = []
+
+[[test]]
+pattern = '(?<=c.*)(ab){1,3}'
+input = 'c_ababab'
+matches = [[2, 8]]
+
+[[test]]
+pattern = '(ab){1,3}(?=.*c)'
+input = '__ababab_c'
+matches = [[2, 6], [6, 8]]
+
+# complex lookaround
+
+[[test]]
+pattern = 'a.+(?=.*f)(?=.*e)(?=c)'
+input = 'abcdef'
+matches = [[0, 2]]
+
+[[test]]
+pattern = '(?<=f)(?<=e.*)(?<=c.*).+'
+input = 'abcdefghij'
+matches = [[6, 10]]
+
+# --- negative lookahead ---
+
+[[test]]
+pattern = '(?!a)'
+input = 'b'
+matches = [[0, 0], [1, 1]]
+
+# --- negative lookbehind ---
+
+[[test]]
+pattern = '(?<!a)'
+input = 'b'
+matches = [[0, 0], [1, 1]]
+
+[[test]]
+pattern = '(?<!a)'
+input = 'a'
+matches = [[0, 0]]
+
+[[test]]
+pattern = '(?<!\d)a'
+input = ' a'
+matches = [[1, 2]]
+
+[[test]]
+pattern = '(?<!b)c'
+input = ' c'
+matches = [[1, 2]]
+
+[[test]]
+pattern = '(?<=\d)a'
+input = '1a__a__a'
+matches = [[1, 2]]
+
+[[test]]
+pattern = '(?<!\d)a'
+input = '1a__a__a'
+matches = [[4, 5], [7, 8]]
+
+[[test]]
+pattern = '(?<!\d)a'
+input = ' a'
+matches = [[1, 2]]
+
+# lookbehind conditional matching
+
+[[test]]
+pattern = '1(?=[012])\d'
+input = '11'
+matches = [[0, 2]]
+
+[[test]]
+pattern = '.(?<=a)'
+input = 'aaa'
+matches = [[0, 1], [1, 2], [2, 3]]
+
+# lookahead with word boundary
+
+[[test]]
+pattern = 'a+\b(?=.*---)'
+input = 'aaa ---'
+matches = [[0, 3]]
+
+[[test]]
+pattern = '1\b(?=.*2)'
+input = ' 1 2'
+matches = [[1, 2]]
+
+[[test]]
+pattern = 'x\b(?=.*c)'
+input = 'a x c'
+matches = [[2, 3]]
+
+# phone number with lookaround context
+
+[[test]]
+pattern = '(\s*\(?0\d{4}\)?\s*\d{6}\s*)|(\s*\(?0\d{3}\)?\s*\d{3}\s*\d{4}\s*)'
+input = '01603 123123'
+matches = [[0, 12]]
+
+# alternation in lookahead
+
+[[test]]
+pattern = '(pm\b|p\.m\.|p\b)'
+input = 'p. m'
+matches = [[0, 1]]
+
+[[test]]
+pattern = '(pm\b|p\.m\.|p\b|p m\b)'
+input = 'p. m'
+matches = [[0, 1]]
+
+[[test]]
+pattern = '(aa|ab|a\b)'
+input = 'a c'
+matches = [[0, 1]]
+
+[[test]]
+pattern = '(pm(?=b|\z)|p\.m\.|p(?=b|\z))'
+input = 'pb m'
+matches = [[0, 1]]

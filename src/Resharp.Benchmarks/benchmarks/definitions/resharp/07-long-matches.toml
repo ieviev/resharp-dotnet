@@ -1,0 +1,240 @@
+analysis = '''
+This benchmark shows the performance of long matching patterns.
+
+The input is same as used in the permutations benchmark, but each 100 lines are 
+merged into a single line. This results the average length of the lines to be
+around 3000 characters, when it was originally 30.
+
+The patterns in this benchmark have many opportunities to skip characters during 
+the inner loop of matching, 
+and some engines take advantage of this to skip over large parts of the input. This
+benchmark is designed to test the engines' ability to skip over input outside
+of initial prefix matching.
+
+The patterns used are all configured with the `(?m)` flag to enable multiline mode,
+so that the `^` and `$` anchors can match the start and end of a line. The patterns
+are designed so that the engine has to scan the entire line
+to find a match.
+
+The initial hypothesis was that backtracking engines would perform well in this
+benchmark, because they can skip over large parts of the input. However, it 
+seems only `dotnet/compiled` and `resharp` take advantage of this, while the other
+engines are several orders of magnitude slower. 
+
+An interesting observation is that the `skip-5` is the exact same pattern as `skip-5-loop`,
+but many of the engines don't optimize the loop construct and perform poorly.
+the throughput of `dotnet/compiled` falls from 2.0GB/s to 15.5MB/s, prce2/jit 
+from 200MB/s to 70MB/s, and python/re from 57.8 MB/s to 7.8 MB/s.
+
+
+'''
+
+[[bench]]
+model = "count-spans"
+name = "skip-2"
+regex = '(?m)^.*1.*1.*$'
+unicode = true
+haystack = { path = "resharp/mariomka-long.txt", line-end = 500 }
+count = [
+    { engine = 'resharp|^dotnet.*|javascript/v8|java/hotspot|perl', count = 1343073 },
+    { engine = '.*', count = 1387005 },
+]
+engines = [
+    'hyperscan',
+    'resharp',
+    'pcre2/jit',
+    'dotnet/compiled',
+    'dotnet/nobacktrack',
+    'go/regexp',
+    'java/hotspot',
+#     'javascript/v8', # unsupported
+    'pcre2',
+    'perl',
+    'python/re',
+    'python/regex',
+    're2',
+    # 'regress', # unsupported
+    'rust/regex',
+]
+
+
+[[bench]]
+model = "count-spans"
+name = "skip-3"
+regex = '(?m)^.*1.*1.*1.*$'
+unicode = true
+haystack = { path = "resharp/mariomka-long.txt", line-end = 500 }
+count = [
+    { engine = 'resharp|^dotnet.*|javascript/v8|java/hotspot|perl', count = 1202243 },
+    { engine = '.*', count = 1242520 },
+]
+engines = [
+    'hyperscan',
+    'resharp',
+    'pcre2/jit',
+    'dotnet/compiled',
+    'dotnet/nobacktrack',
+    'go/regexp',
+    'java/hotspot',
+#     'javascript/v8', # unsupported
+    'pcre2',
+    'perl',
+    'python/re',
+    'python/regex',
+    're2',
+    # 'regress', # unsupported
+    'rust/regex',
+]
+
+
+[[bench]]
+model = "count-spans"
+name = "skip-5"
+regex = '(?m)^.*1.*1.*1.*1.*1.*$'
+unicode = true
+haystack = { path = "resharp/mariomka-long.txt", line-end = 500 }
+count = [
+    { engine = 'resharp|^dotnet.*|javascript/v8|java/hotspot|perl', count = 1002787 },
+    { engine = '.*', count = 1036575 },
+]
+engines = [
+    'hyperscan',
+    'resharp',
+    'pcre2/jit',
+    'dotnet/compiled',
+    'dotnet/nobacktrack',
+    'go/regexp',
+    'java/hotspot',
+#     'javascript/v8', # unsupported
+    'pcre2',
+    'perl',
+    'python/re',
+    'python/regex',
+    're2',
+    # 'regress', # unsupported
+    'rust/regex',
+]
+
+
+[[bench]]
+model = "count-spans"
+name = "skip-5-loop"
+regex = '(?m)^.*(1.*){5}$'
+unicode = true
+haystack = { path = "resharp/mariomka-long.txt", line-end = 500 }
+count = [
+    { engine = 'resharp|^dotnet.*|javascript/v8|java/hotspot|perl', count = 1002787 },
+    { engine = '.*', count = 1036575 },
+]
+engines = [
+    'hyperscan',
+    'resharp',
+    'pcre2/jit',
+    'dotnet/compiled',
+    'dotnet/nobacktrack',
+    'go/regexp',
+    'java/hotspot',
+#     'javascript/v8', # unsupported
+    'pcre2',
+    'perl',
+    'python/re',
+    'python/regex',
+    're2',
+    # 'regress', # unsupported
+    'rust/regex',
+]
+
+[[bench]]
+model = "count-spans"
+name = "skip-5-concat"
+regex = '(?m)^.*(100.*){5}$'
+unicode = true
+haystack = { path = "resharp/mariomka-long.txt", line-end = 500 }
+count = [
+    { engine = 'resharp|^dotnet.*|javascript/v8|java/hotspot|perl', count = 21980 },
+    { engine = '.*', count = 22165 },
+]
+engines = [
+    'hyperscan',
+    'resharp',
+    'pcre2/jit',
+    'dotnet/compiled',
+    'dotnet/nobacktrack',
+    'go/regexp',
+    'java/hotspot',
+#     'javascript/v8', # unsupported
+    'pcre2',
+    'perl',
+    'python/re',
+    'python/regex',
+    're2',
+    # 'regress', # unsupported
+    'rust/regex',
+]
+
+
+# оеа
+# number of lines that contain this unicode character:
+# ('é', 673); ('á', 503); ('ó', 483); ('í', 454); ('ú', 406); ('ê', 346);
+#     ('ç', 323); ('à', 271); ('用', 238); ('的', 236); ('ã', 234); ('以', 232);
+#     ('è', 228); ('一', 228); ('可', 226); ('数', 222); ('。', 218); ('使', 214);
+#     ('，', 213); ('在', 207); ('ö', 206); ('是', 205); ('有', 200); ('个', 195);
+#     ('õ', 191); ('不', 190); ('行', 189); ('ü', 188); ('中', 186); ('和', 184);
+#     ('定', 183); ('要', 182); ('作', 182); ('з', 173); ('р', 172); ('а', 172);
+
+
+[[bench]]
+model = "count-spans"
+name = "skip-5-unicode-char"
+regex = '(?m)^.*é.*é.*é.*é.*é.*$'
+unicode = true
+haystack = { path = "resharp/mariomka-long.txt", line-end = 500 }
+count = [
+    { engine = 'resharp|^dotnet.*|javascript/v8|java/hotspot|perl', count = 318846 },
+    { engine = '.*', count = 327297 },
+]
+engines = [
+    'hyperscan',
+    'resharp',
+    'pcre2/jit',
+    'dotnet/compiled',
+    'dotnet/nobacktrack',
+    'go/regexp',
+    'java/hotspot',
+#     'javascript/v8', # unsupported
+    'pcre2',
+    'perl',
+    'python/re',
+    'python/regex',
+    're2',
+    # 'regress', # unsupported
+    'rust/regex',
+]
+
+[[bench]]
+model = "count-spans"
+name = "skip-5-unicode-set"
+regex = '(?m)^.*[éá].*[éá].*[éá].*[éá].*[éá].*$'
+unicode = true
+haystack = { path = "resharp/mariomka-long.txt", line-end = 500 }
+count = [
+    { engine = 'resharp|^dotnet.*|javascript/v8|java/hotspot|perl', count = 585031 },
+    { engine = '.*', count = 596175 },
+]
+engines = [
+    'hyperscan',
+    'resharp',
+    'pcre2/jit',
+    'dotnet/compiled',
+    'dotnet/nobacktrack',
+    'go/regexp',
+    'java/hotspot',
+#     'javascript/v8', # unsupported
+    'pcre2',
+    'perl',
+    'python/re',
+    'python/regex',
+    're2',
+    # 'regress', # unsupported
+    'rust/regex',
+]

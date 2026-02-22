@@ -1,0 +1,122 @@
+description = '''
+semantic tests: boolean ops, lookbehind/ahead, startset, word boundaries
+'''
+
+# --- boolean / complement tests ---
+
+[[test]]
+# web app debug: complement + quantifier intersection
+pattern = '~(.*\d\d.*)&[a-zA-Z\d]{8,}'
+input = 'y tej55zhA25wXu8bvQxFxt o'
+matches = [[11, 23]]
+
+[[test]]
+# web app test 1: intersection with lowercase requirement
+pattern = '.*[a-z].*&[a-zA-Z\d]{8,}'
+input = 'y tej55zhA25wXu8bvQxFxt o'
+matches = [[2, 23]]
+
+[[test]]
+# web app test 2: multi-intersection with complement
+pattern = '.*[a-z].*&.*[A-Z].*&.*\d.*&[a-zA-Z\d]{8,}&~(.*\d\d.*)'
+input = 'y tej55zhA25wXu8bvQxFxt o'
+matches = [[11, 23]]
+
+[[test]]
+# web app test 3: permutation matching with wildcard
+pattern = '\((_*A_*B_*C_*|_*A_*C_*B_*|_*B_*A_*C_*|_*B_*C_*A_*|_*C_*A_*B_*|_*C_*B_*A_*)\)'
+input = '(A----B----C)'
+matches = [[0, 13]]
+
+[[test]]
+# intersection subsumption
+pattern = '.*a.*&.*b.*&.*c.*'
+input = '"$odd" style="background-color:#f1f1f1">{{ x.Country }}'
+matches = [[0, 55]]
+
+# --- startset / greedy tests ---
+
+[[test]]
+# startset small input
+pattern = 'lethargy.*air'
+input = '''
+
+lethargy, and and the air tainted with
+c
+'''
+matches = [[1, 26]]
+
+[[test]]
+# startset larger input
+pattern = 'lethargy.*air'
+input = '''
+
+lethargy, and and the air tainted with
+chloroform!  I saw two men in the room, and one was saying to the other,
+in a hoarse whisper, 'I told her I would, if she made a noise, and as
+for the child--'
+half
+consciousness out of a long, exhausting lethargy; when the first faint
+balmy airs go wandering about, whispering the secret of the coming
+change; when the abused brown grass, newly relieved of snow, seems
+'''
+matches = [[1, 26]]
+
+[[test]]
+# out of range / no-crash test
+pattern = '<!--[\s\S]*--[ \t\n\r]*>'
+input = '<!-- anything -- >'
+matches = [[0, 18]]
+
+# --- multiline boolean + complement ---
+
+[[test]]
+# web app test 6: multiline complement with newline
+pattern = '~(_*(\n_*){2})&_*g_*&~(_*")&[A-Za-z]{5}_*'
+input = '''
+
+The fists of all the generals came down this time, and again the
+King's eye sparkled with pleasure. The Chancellor sprang to his
+feet and appealed to his Majesty:
+
+"Sire, I claim your protection."
+
+But the King waved him to his seat again, saying:
+'''
+matches = [[5, 129], [212, 249]]
+
+# --- lookbehind / lookahead with boolean ---
+
+[[test]]
+# lookback 1
+pattern = '(?<=6|8\(|4|8|0\().*&~(.*\)\:.*)&\w.*&.*\w&.*(?=.*\)\:)&.*(?=\)\:|\)\:)'
+input = '''
+
+Jan 12 06:26:19: ACCEPT service http from 119.63.193.196 to firewall(pub-nic), prefix: "none" (in: eth0 119.63.193.196(5c:0a:5b:63:4a:82):4399 -> 140.105.63.164(50:06:04:92:53:44):80 TCP flags: ****S* len:60 ttl:32)
+Jan 12 06:26:20: ACCEPT service dns from 140.105.48.16 to firewall(pub-nic-dns), prefix: "none" (in: eth0 140.105.48.16(00:21:dd:bc:95:44):4263 -> 140.105.63.158(00:14:31:83:c6:8d):53 UDP len:76 ttl:62)
+Jan 12 06:27:09: DROP service 68->67(udp) from 216.34.211.83 to 216.34.253.94, prefix: "spoof iana-0/8" (in: eth0 213.92.153.78(00:1f:d6:19:0a:80):68 -> 69.43.177.110(00:30:fe:fd:d6:51):67 UDP len:576 ttl:64)'''
+matches = [[48, 137], [140, 179], [260, 354], [357, 396], [451, 565], [568, 604]]
+
+[[test]]
+# lookback 2
+pattern = '(?<=6|8\(.*).*&(?<=6|8\(|4|8|0\().*&~(.*\)\:.*)&\w.*&.*\w&.*(?=.*\)\:)&.*(?=\)\:|\)\:)'
+input = '''
+
+Jan 12 06:26:19: ACCEPT service http from 119.63.193.196 to firewall(pub-nic), prefix: "none" (in: eth0 119.63.193.196(5c:0a:5b:63:4a:82):4399 -> 140.105.63.164(50:06:04:92:53:44):80 TCP flags: ****S* len:60 ttl:32)
+Jan 12 06:26:20: ACCEPT service dns from 140.105.48.16 to firewall(pub-nic-dns), prefix: "none" (in: eth0 140.105.48.16(00:21:dd:bc:95:44):4263 -> 140.105.63.158(00:14:31:83:c6:8d):53 UDP len:76 ttl:62)
+Jan 12 06:27:09: DROP service 68->67(udp) from 216.34.211.83 to 216.34.253.94, prefix: "spoof iana-0/8" (in: eth0 213.92.153.78(00:1f:d6:19:0a:80):68 -> 69.43.177.110(00:30:fe:fd:d6:51):67 UDP len:576 ttl:64)'''
+matches = [[48, 137], [156, 179], [359, 396], [451, 565], [577, 604]]
+
+# --- no-match tests ---
+
+[[test]]
+# learning sample 1: no match expected
+pattern = '<h.{1,60}>.*<\/h(5|3|2|1|4)>'
+input = '<li><a href="/wiki/Lattes_Editori" title="Lattes Editori">Lattes Editori</a></li>'
+matches = []
+
+[[test]]
+# word boundary with negative lookbehind
+pattern = '(?<!鿛)(apres)\b'
+input = '鿛apres'
+matches = []

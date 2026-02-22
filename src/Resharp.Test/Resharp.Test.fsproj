@@ -1,0 +1,48 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <IsPackable>false</IsPackable>
+        <GenerateProgramFile>false</GenerateProgramFile>
+        <TargetFrameworks>net10.0</TargetFrameworks>
+        <WarnOn>1182</WarnOn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="Common.fs" />
+        <Compile Include="_01_ParserTests.fs" />
+        <Compile Include="_02_NodeTests.fs" />
+        <Compile Include="_03_SubsumptionTests.fs" />
+        <Compile Include="_04_DerivativeTests.fs" />
+        <Compile Include="_05_SemanticsTests.fs" />
+        <Compile Include="_06_MatchTests.fs" />
+        <Compile Include="_07_ComparisonTests.fs" />
+        <Compile Include="_08_IntersectionTests.fs" />
+        <Compile Include="_10_RexTests.fs" />
+        <Compile Include="_11_LookaroundTests.fs" />
+        <Compile Include="_12_NegLookaroundTests.fs" />
+        <Compile Include="_13_OptimizationTests.fs" />
+        <Compile Include="_16_ComplementTests.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="FSharp.Core" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="Tommy" />
+        <PackageReference Include="xunit" />
+        <PackageReference Include="xunit.runner.visualstudio">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="coverlet.collector">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <DefaultReferenceExclusion Include="System.Text.RegularExpressions" />
+        <ProjectReference Include="..\Resharp.Runtime\Resharp.Runtime.csproj" />
+        <ProjectReference Include="..\Resharp\Resharp.fsproj" />
+    </ItemGroup>
+
+</Project>

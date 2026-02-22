@@ -1,0 +1,159 @@
+analysis = '''
+This benchmark shows the performance of the regex engine when 
+using a lookbehind assertion with a long context. 
+The regex engine must scan the entire context for each match, 
+which can be slow. 
+The performance of the regex engine is expected to decrease as 
+the length of the context increases.
+
+the regex on all benchmarks is `(?<=Valid[^—]*).+@.+`
+
+the input is a text file with the following content:
+```
+— Valid
+email@foo.com (repeated)
+— Invalid
+email@foo.com (repeated)
+```
+
+The benchmark measures the time it takes to find all the email addresses 
+only in the valid section of the input file.
+
+'''
+
+
+[[bench]]
+model = "count-spans"
+name = "context-behind-12"
+regex = '(?<=Valid[^—]*).+@.+'
+unicode = true
+haystack = { path = "resharp/context-length-12.txt" }
+count = [
+    { engine = '.*', count = 156 },
+]
+engines = [
+    
+    'dotnet/compiled',
+    'java/hotspot',
+    'resharp',
+    'javascript/v8',
+    'python/regex',
+    'regress',
+]
+
+
+[[bench]]
+model = "count-spans"
+name = "context-behind-25"
+regex = '(?<=Valid[^—]*).+@.+'
+unicode = true
+haystack = { path = "resharp/context-length-25.txt" }
+count = [
+    { engine = '.*', count = 325 },
+]
+engines = [
+    
+    'dotnet/compiled',
+    'java/hotspot',
+    'resharp',
+    'javascript/v8',
+    'python/regex',
+    'regress',
+]
+
+[[bench]]
+model = "count-spans"
+name = "context-behind-50"
+regex = '(?<=Valid[^—]*).+@.+'
+unicode = true
+haystack = { path = "resharp/context-length-50.txt" }
+count = [
+    { engine = '.*', count = 650 },
+]
+engines = [
+    
+    'dotnet/compiled',
+    'java/hotspot',
+    'resharp',
+    'javascript/v8',
+    'python/regex',
+    'regress',
+]
+
+
+[[bench]]
+model = "count-spans"
+name = "context-behind-100"
+regex = '(?<=Valid[^—]*).+@.+'
+unicode = true
+haystack = { path = "resharp/context-length-100.txt" }
+count = [
+    { engine = '.*', count = 1300 },
+]
+engines = [
+    
+    'dotnet/compiled',
+    'java/hotspot',
+    'resharp',
+    'javascript/v8',
+    'python/regex',
+    'regress',
+]
+
+
+[[bench]]
+model = "count-spans"
+name = "context-behind-200"
+regex = '(?<=Valid[^—]*).+@.+'
+unicode = true
+haystack = { path = "resharp/context-length-200.txt" }
+count = [
+    { engine = '.*', count = 2600 },
+]
+engines = [
+    
+    'dotnet/compiled',
+    'java/hotspot',
+    'resharp',
+    'javascript/v8',
+    'python/regex',
+    'regress',
+]
+
+[[bench]]
+model = "count-spans"
+name = "context-behind-400"
+regex = '(?<=Valid[^—]*).+@.+'
+unicode = true
+haystack = { path = "resharp/context-length-400.txt" }
+count = [
+    { engine = '.*', count = 5200 },
+]
+engines = [
+    
+    'dotnet/compiled',
+    'java/hotspot',
+    'resharp',
+    'javascript/v8',
+    'python/regex',
+    'regress',
+]
+
+[[bench]]
+model = "count-spans"
+name = "context-behind-800"
+regex = '(?<=Valid[^—]*).+@.+'
+unicode = true
+haystack = { path = "resharp/context-length-800.txt" }
+count = [
+    { engine = '.*', count = 10400 },
+]
+engines = [
+    
+    'dotnet/compiled',
+    'java/hotspot',
+    'resharp',
+    'javascript/v8',
+    'python/regex',
+    'regress',
+]

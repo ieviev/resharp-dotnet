@@ -1,0 +1,163 @@
+analysis = '''
+This set of benchmarks makes the regexes even more difficult to match, to illustrate
+one of the strengths of the `resharp` engine.
+
+The `dictionary` regex was already very big and difficult to optimize, but adding case insensitivity
+in `dictionary-case-ig` increases the state space complexity of the regex even more. 
+
+The unicode dictionary regex is slightly smaller than the dictionary regex, but
+causes perl to be significantly slower. `dotnet/nonbacktrack`, `resharp` and `rust/regex` are the only engines that
+process over 10MB/s.
+
+The final two regexes have `.{0,50}` on either side for context of `dictionary-case-ig` and `dictionary-unicode-case-ig`, 
+which makes them difficult to optimize.
+
+'''
+
+
+[[bench]]
+model = "count-spans"
+name = "dictionary-case-ig"
+regex = { path = "resharp/dictionary-fixed.txt", literal = true, per-line = "alternate" }
+haystack = { path = "resharp/length-15-sorted-capitalized.txt" }
+case-insensitive = true
+count = 84364 
+engines = [
+  'dotnet/compiled',
+  'dotnet/nobacktrack',
+  'resharp',
+#   'hyperscan', # pattern size exceeds limit
+  'go/regexp',
+  'java/hotspot',
+  'javascript/v8', # fails to run
+  'perl',
+  'python/re', # timeout
+  'python/regex', # timeout
+  're2',
+  'regress', # fails to run
+  'rust/regex',
+]
+analysis = '''
+dictionary regex with case insensitivity
+'''
+
+
+[[bench]]
+model = "count-spans"
+name = "dictionary-unicode"
+regex = { path = "resharp/01-monster-dictionary-unicode.txt"  }
+haystack = { path = "opensubtitles/ru-sampled.txt", line-end = 2500}
+unicode = true
+count = [
+  { engine = 'dotnet.*|resharp|javascript/v8|java/hotspot|perl', count = 8776 },
+  { engine = '.*', count = 17260 },
+]
+# count = 111526
+engines = [
+  'dotnet/compiled',
+  'dotnet/nobacktrack',
+  'resharp',
+  'go/regexp',
+#   'hyperscan', # pattern size exceeds limit
+#   'pcre2/jit', # rejects pattern
+#   'pcre2', # rejects pattern
+  'java/hotspot',
+  'javascript/v8', # fails to run
+  'perl',
+  'python/re', # timeout
+  'python/regex', # timeout
+  're2',
+  'regress', # fails to run
+  'rust/regex',
+]
+analysis = '''
+a unicode dictionary regex with 2000 words of at least length 10 or more
+'''
+
+[[bench]]
+model = "count-spans"
+name = "dictionary-unicode-case-ig"
+regex = { path = "resharp/01-monster-dictionary-unicode.txt"  }
+haystack = { path = "opensubtitles/ru-sampled.txt", line-end = 2500}
+unicode = true
+case-insensitive = true
+count = [
+  { engine = 'dotnet.*|resharp|javascript/v8|java/hotspot|perl', count = 8780 },
+  { engine = '.*', count = 17267 },
+]
+engines = [
+  'dotnet/compiled',
+  'dotnet/nobacktrack',
+  'resharp',
+  'go/regexp',
+  #   'hyperscan', # pattern size exceeds limit
+#   'pcre2/jit', # rejects pattern
+#   'pcre2', # rejects pattern
+  'java/hotspot',
+  'javascript/v8', # fails to run
+  'perl',
+  'python/re', # timeout
+  'python/regex', # timeout
+  're2',
+  'regress', # fails to run
+  'rust/regex',
+]
+
+[[bench]]
+model = "count-spans"
+name = "context-case-ig"
+regex = { path = "resharp/dictionary-fixed-context.txt" }
+haystack = { path = "resharp/length-15-sorted-capitalized.txt" }
+case-insensitive = true
+count = 84364 
+engines = [
+  'dotnet/compiled',
+  'dotnet/nobacktrack',
+#   'hyperscan', # pattern size exceeds limit
+  'resharp',
+  'go/regexp',
+  'java/hotspot',
+  'javascript/v8', # fails to run
+  'perl',
+  'python/re', # timeout
+  'python/regex', # timeout
+  're2',
+  'regress', # fails to run
+  'rust/regex',
+]
+analysis = '''
+dictionary regex with case insensitivity
+'''
+
+
+[[bench]]
+model = "count-spans"
+name = "context-unicode-case-ig"
+regex = { path = "resharp/01-monster-dictionary-unicode-context.txt"  }
+haystack = { path = "opensubtitles/ru-sampled.txt", line-end = 2500}
+unicode = true
+case-insensitive = true
+count = [
+  { engine = 'dotnet.*|resharp|javascript/v8|java/hotspot|perl', count = 26001 },
+  { engine = '.*', count = 47260 },
+]
+engines = [
+  'dotnet/compiled',
+  'dotnet/nobacktrack',
+  'resharp',
+  'go/regexp',
+  #   'hyperscan', # pattern size exceeds limit
+#   'pcre2/jit', # rejects pattern
+#   'pcre2', # rejects pattern
+  'java/hotspot',
+#   'javascript/v8', # timeout
+  'perl',
+  'python/re', # timeout
+  'python/regex', # timeout
+  're2',
+  'regress', # fails to run
+  'rust/regex',
+]
+
+
+

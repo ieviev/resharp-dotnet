@@ -1,0 +1,4 @@
+# benchmarks/
+bin/
+obj/
+BenchmarkDotNet.Artifacts/

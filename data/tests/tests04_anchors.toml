@@ -1,0 +1,380 @@
+description = '''
+anchors, word boundaries, and character class tests
+'''
+
+# --- word boundaries ---
+
+[[test]]
+pattern = '\b1\b'
+input = '1'
+matches = [[0, 1]]
+
+[[test]]
+pattern = '\b11\b'
+input = '11'
+matches = [[0, 2]]
+
+[[test]]
+pattern = '\b11\b'
+input = ' 11'
+matches = [[1, 3]]
+
+[[test]]
+pattern = '\b11\b'
+input = '11 '
+matches = [[0, 2]]
+
+[[test]]
+pattern = '\b11\b'
+input = ' 11 '
+matches = [[1, 3]]
+
+[[test]]
+pattern = '\b11'
+input = ' 11'
+matches = [[1, 3]]
+
+[[test]]
+pattern = '11\b'
+input = '11'
+matches = [[0, 2]]
+
+[[test]]
+pattern = '11\b'
+input = '11 '
+matches = [[0, 2]]
+
+[[test]]
+pattern = '\b\w*a\w*\b'
+input = 'ffaff'
+matches = [[0, 5]]
+
+[[test]]
+pattern = 'a\b.*'
+input = 'a-ffff'
+matches = [[0, 6]]
+
+[[test]]
+pattern = '\b-'
+input = '1-2'
+matches = [[1, 2]]
+
+[[test]]
+pattern = '1\b-'
+input = '1-2'
+matches = [[0, 2]]
+
+[[test]]
+pattern = '1\b-2'
+input = '1-2'
+matches = [[0, 3]]
+
+[[test]]
+pattern = 'a\b'
+input = 'a '
+matches = [[0, 1]]
+
+# word boundary with unicode
+
+[[test]]
+pattern = '\b\w{1,2}\b'
+input = 'мультипространственных'
+matches = []
+
+# word boundary alternatives
+
+[[test]]
+pattern = '(?<=\W|\A)11'
+input = '11'
+matches = [[0, 2]]
+
+[[test]]
+pattern = '(\A|(?<=\W))11'
+input = '11'
+matches = [[0, 2]]
+
+[[test]]
+pattern = '(?<=\W|\A)11'
+input = ' 11'
+matches = [[1, 3]]
+
+[[test]]
+pattern = '11(?=\W|\z)'
+input = '11'
+matches = [[0, 2]]
+
+[[test]]
+pattern = '11(?=\W|\z)'
+input = '11 '
+matches = [[0, 2]]
+
+[[test]]
+pattern = '(?<=(\W|\A))11'
+input = '11'
+matches = [[0, 2]]
+
+# --- start/end of string anchors ---
+
+[[test]]
+pattern = '^\d$'
+input = '1'
+matches = [[0, 1]]
+
+[[test]]
+pattern = '^\d$'
+input = '324'
+matches = []
+
+[[test]]
+pattern = '^\d$'
+input = 'a'
+matches = []
+
+[[test]]
+pattern = '^\d*$'
+input = '123'
+matches = [[0, 3]]
+
+[[test]]
+pattern = '^.{4,8}$'
+input = 'asd'
+matches = []
+
+[[test]]
+pattern = '^.{4,8}$'
+input = 'asdf'
+matches = [[0, 4]]
+
+[[test]]
+pattern = '^.{4,8}$'
+input = 'asdfghjk'
+matches = [[0, 8]]
+
+[[test]]
+pattern = '^.{4,8}$'
+input = 'asdfghjkl'
+matches = []
+
+[[test]]
+pattern = '\A[0-2](\.[0-9]+)+\z'
+input = '2.0'
+matches = [[0, 3]]
+
+[[test]]
+pattern = '\A[0-2](\.[0-9]+)+\z'
+input = '1.2.3'
+matches = [[0, 5]]
+
+[[test]]
+pattern = '\A[0-2](\.[0-9]+)+\z'
+input = '3.0'
+matches = []
+
+# --- $ anchor with newlines ---
+
+[[test]]
+pattern = '^Purchase receipt$'
+input = ''
+matches = []
+
+[[test]]
+pattern = '^\d*\.?\d*$'
+input = '3.14159'
+matches = [[0, 7]]
+
+# --- character classes ---
+
+[[test]]
+pattern = 'q[\d\D]*q'
+input = 'q my comment q'
+matches = [[0, 14]]
+
+[[test]]
+pattern = '/\*[\d\D]*\*/'
+input = '/* my comment */'
+matches = [[0, 16]]
+
+[[test]]
+pattern = 'a[^a]{0,4}a'
+input = ' a____a '
+matches = [[1, 7]]
+
+[[test]]
+pattern = 'a[^a]{0,5}a'
+input = ' a____a '
+matches = [[1, 7]]
+
+[[test]]
+pattern = '[a-z0-9.-]{1,}/[a-z0-9.-_]{1,}'
+input = 'a/.'
+matches = [[0, 3]]
+
+# quoted strings with punctuation
+
+[[test]]
+pattern = "[\"'][^\"']{0,30}[?!\\.][\"']"
+input = ' hello!" '
+matches = []
+
+[[test]]
+pattern = "[\"'][^\"']{0,30}[?!\\.][\"']"
+input = ' "hello!" '
+matches = [[1, 9]]
+
+# --- quantifiers ---
+
+[[test]]
+pattern = 'ab{0,5}c'
+input = 'bbabbbbbc'
+matches = [[2, 9]]
+
+[[test]]
+pattern = 'ab{0,5}c'
+input = 'bbbabbbbc'
+matches = [[3, 9]]
+
+[[test]]
+pattern = 'ab{0,5}c'
+input = 'bbbbabbbc'
+matches = [[4, 9]]
+
+[[test]]
+pattern = 'ab{0,5}c'
+input = 'bbbbbbbac'
+matches = [[7, 9]]
+
+[[test]]
+pattern = 'ab{0,5}c'
+input = 'bbabbbcbbac'
+matches = [[2, 7], [9, 11]]
+
+[[test]]
+pattern = '(ab)+'
+input = '__abab__ab__'
+matches = [[2, 6], [8, 10]]
+
+[[test]]
+pattern = 'a+'
+input = ' aaa '
+matches = [[1, 4]]
+
+[[test]]
+pattern = 'a*'
+input = 'bbbbaaabbbbb'
+matches = [[0,0],[1,1],[2,2],[3,3],[4,7],[7,7],[8,8],[9,9],[10,10],[11,11],[12,12]]
+
+[[test]]
+pattern = 'a*'
+input = 'bbbb'
+matches = [[0,0],[1,1],[2,2],[3,3],[4,4]]
+
+[[test]]
+pattern = '_*'
+input = ''
+matches = [[0,0]]
+
+[[test]]
+pattern = '.*a{3}'
+input = 'aa aaa'
+matches = [[0, 6]]
+
+# --- groups and alternation ---
+
+[[test]]
+pattern = 'a( |)b( |)c( |)d'
+input = 'a b c d'
+matches = [[0, 7]]
+
+[[test]]
+pattern = '.*b|a'
+input = ' aaab '
+matches = [[0, 5]]
+
+[[test]]
+pattern = '(\s|\n|^)(\w+://[^\s\n]+)'
+input = '<a href="http://acme.com">http://www.acme.com</a>'
+matches = []
+
+[[test]]
+pattern = '..g'
+input = 'dfdff dfggg gfgdfg gddfdf'
+matches = [[6, 9], [10, 13], [15, 18]]
+
+# --- complex real-world patterns ---
+
+# IP address validation
+[[test]]
+pattern = '^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$'
+input = '0.0.0.0'
+matches = [[0, 7]]
+
+# phone number
+[[test]]
+pattern = '^(\(?\+?[0-9]*\)?)?[0-9_\- \(\)]*$'
+input = '(+44)(0)20-12341234'
+matches = [[0, 19]]
+
+[[test]]
+pattern = '^([0-9]( |-)?)?(\(?[0-9]{3}\)?|[0-9]{3})( |-)?([0-9]{3}( |-)?[0-9]{4}|[a-zA-Z0-9]{7})$'
+input = '1-(123)-123-1234'
+matches = [[0, 16]]
+
+# address - no match
+[[test]]
+pattern = '\d{1,3}.?\d{0,3}\s[a-zA-Z]{2,30}\s[a-zA-Z]{2,15}'
+input = '65 Beechworth/ Rd'
+matches = []
+
+# date validation
+[[test]]
+pattern = '((\d{2})|(\d))\/((\d{2})|(\d))\/((\d{4})|(\d{2}))'
+input = '4/05/89'
+matches = [[0, 7]]
+
+# port number range
+[[test]]
+pattern = '^(6[0-4]\d\d\d|65[0-4]\d\d|655[0-2]\d|6553[0-5])$'
+input = '65535'
+matches = [[0, 5]]
+
+# currency amount - no match
+[[test]]
+pattern = '(^\d{3,5}\,\d{2}$)|(^\d{3,5}$)'
+input = '1300333444'
+matches = []
+
+# large alternation
+[[test]]
+pattern = '[du]{2}|[gu]{2}|[tu]{2}|[ds]{2}|[gs]{2}|[da]{2}|[ga]{2}|[ta]{2}|[dq]{2}|[gq]{2}|[tq]{2}|[DU]{2}|[GU]{2}|[TU]{2}|[DS]{2}|[GS]{2}|[DA]{2}|[GA]{2}|[TA]{2}|[DQ]{2}|[GQ]{2}|[TQ]{2}'
+input = 'DU'
+matches = [[0, 2]]
+
+# RE# wildcard underscore
+[[test]]
+pattern = '_*a_*'
+input = 'bbabb'
+matches = [[0, 5]]
+
+[[test]]
+pattern = 'a\_b*'
+input = 'a_b'
+matches = [[0, 3]]
+
+[[test]]
+pattern = 'class="_*'
+input = 'class="dasdasdsdasd"'
+matches = [[0, 20]]
+
+# simple literal match across newlines
+[[test]]
+pattern = 'Pu'
+input = """[assembly: InternalsVisibleTo("Microsoft.Automata.Z3, PublicKey=" +
+
+[assembly: InternalsVisibleTo("Experimentation, PublicKey=" +"""
+matches = [[54, 56], [117, 119]]
+
+# HTML comment
+[[test]]
+pattern = '<!--[\s\S]*--[ \t]*>'
+input = '<!-- anything -- >'
+matches = [[0, 18]]

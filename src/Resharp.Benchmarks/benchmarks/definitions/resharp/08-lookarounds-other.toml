@@ -1,0 +1,211 @@
+analysis = '''
+This benchmark shows that both bounded and unbounded lookarounds in resharp are optimized 
+and perform well. 
+
+The benchmark is a simple lookbehind and lookahead for the word "author" 
+
+`lookbehind-fixed` and `lookahead-fixed` are able to process around
+10GB of data in 1 second, as all the input-parallel optimizations in resharp apply 
+to lookarounds as well.
+
+In the context-ahead benchmarks `context-ahead-10`, `context-ahead-20`, `context-ahead-50`
+dotnet/compiled is the fastest engine, as it has a lower overhead for processing
+the lookahead. Both of the engines have quadratic behavior, which is illustrated by the
+relative throughput ratios staying constant as the input size increases, although
+this is not true for all engines e.g. java/hotspot, which implies that java has a
+worse algorithmic complexity for processing lookaheads.
+
+In the `context-both-20`, `context-both-50` benchmark java/hotspot times out in 1 minute
+and is not included in the results. pcre2, pcre2/jit, perl, python/re are not included
+as they do not support unbounded lookbehinds.
+
+
+'''
+
+[[bench]]
+model = "count-spans"
+name = "lookbehind-fixed"
+regex = '(?<=author).*'
+unicode = true
+haystack = { path = "imported/lh3lh3-reb-howto.txt", utf8-lossy = true, line-end = 5_000  }
+count = [
+    { engine = '.*', count = 234 },
+]
+engines = [
+    'dotnet/compiled',
+    'java/hotspot', 
+    'resharp',
+    'javascript/v8',
+    'pcre2', # timed out
+    'pcre2/jit', # timed out
+    'perl', # timed out
+    'python/re',
+    'python/regex',
+    'regress',
+]
+
+[[bench]]
+model = "count-spans"
+name = "lookahead-fixed"
+regex = '.*(?=author)'
+unicode = true
+haystack = { path = "imported/lh3lh3-reb-howto.txt", utf8-lossy = true, line-end = 5_000  }
+count = [
+    # utf-16 spans
+    { engine = '(resharp|^dotnet.*|javascript/v8|java/hotspot|perl)', count = 255 },
+    # utf-8 spans
+    # { engine = '.*', count = 36370 },
+    { engine = '.*', count = 263 },
+]
+engines = [
+    'dotnet/compiled',
+    'java/hotspot',
+    'resharp',
+    'javascript/v8',
+    'pcre2',
+    'pcre2/jit',
+    'perl',
+    'python/re',
+    'python/regex',
+    'regress',
+]
+
+
+
+[[bench]]
+model = "count-spans"
+name = "context-ahead-10"
+regex = '.+@.+(?=[^—]*— Invalid)'
+unicode = true
+haystack = { path = "resharp/email-valid-10.txt", repeat = 100 }
+count = [
+    { engine = '.*', count = 22000 },
+]
+engines = [
+    'dotnet/compiled',
+    'pcre2', 
+    'java/hotspot',
+    'resharp',
+    'javascript/v8',
+    'pcre2/jit',
+    'perl',
+    'python/re',
+    'python/regex',
+    'regress',
+]
+
+[[bench]]
+model = "count-spans"
+name = "context-ahead-20"
+regex = '.+@.+(?=[^—]*— Invalid)'
+unicode = true
+haystack = { path = "resharp/email-valid-20.txt", repeat = 100 }
+count = [
+    { engine = '.*', count = 44000 },
+]
+engines = [
+    'dotnet/compiled',
+    'pcre2',
+    'java/hotspot',
+    'resharp',
+    'javascript/v8',
+    'pcre2/jit',
+    'perl',
+    'python/re',
+    'python/regex',
+    'regress',
+]
+
+
+[[bench]]
+model = "count-spans"
+name = "context-ahead-50"
+regex = '.+@.+(?=[^—]*— Invalid)'
+unicode = true
+haystack = { path = "resharp/email-valid-50.txt", repeat = 100 }
+count = [
+    { engine = '.*', count = 110000 },
+]
+engines = [
+    'dotnet/compiled',
+    'pcre2',
+    'java/hotspot',
+    'resharp',
+    'javascript/v8',
+    'pcre2/jit',
+    'perl',
+    'python/re',
+    'python/regex',
+    'regress',
+]
+
+
+[[bench]]
+model = "count-spans"
+name = "context-both-10"
+regex = '(?<=Valid[^—]*).+@.+(?=[^—]*— Invalid)'
+unicode = true
+haystack = { path = "resharp/email-valid-10.txt", repeat = 100 }
+count = [
+    { engine = '.*', count = 22000 },
+]
+# commented ones have unsupported unbounded lookbehind 
+engines = [
+    
+    'dotnet/compiled',
+    # 'pcre2', 
+    'java/hotspot',
+    'resharp',
+    'javascript/v8',
+    # 'pcre2/jit',
+    # 'perl',
+    # 'python/re',
+    'python/regex',
+    'regress',
+]
+
+[[bench]]
+model = "count-spans"
+name = "context-both-20"
+regex = '(?<=Valid[^—]*).+@.+(?=[^—]*— Invalid)'
+unicode = true
+haystack = { path = "resharp/email-valid-20.txt", repeat = 100 }
+count = [
+    { engine = '.*', count = 44000 },
+]
+# commented ones have unsupported unbounded lookbehind 
+engines = [
+    'dotnet/compiled',
+    # 'pcre2',
+    'java/hotspot',
+    'resharp',
+    'javascript/v8',
+    # 'pcre2/jit',
+    # 'perl',
+    # 'python/re',
+    'python/regex',
+    'regress',
+]
+
+[[bench]]
+model = "count-spans"
+name = "context-both-50"
+regex = '(?<=Valid[^—]*).+@.+(?=[^—]*— Invalid)'
+unicode = true
+haystack = { path = "resharp/email-valid-50.txt", repeat = 100 }
+count = [
+    { engine = '.*', count = 110000 },
+]
+# commented ones have unsupported unbounded lookbehind 
+engines = [
+    'dotnet/compiled',
+    # 'pcre2',
+    # 'java/hotspot', # times out in 60s
+    'resharp',
+    'javascript/v8',
+    # 'pcre2/jit',
+    # 'perl',
+    # 'python/re',
+    'python/regex',
+    'regress',
+]

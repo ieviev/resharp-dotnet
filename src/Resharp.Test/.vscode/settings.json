@@ -1,0 +1,19 @@
+{
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "package-lock.json": true,
+        "**/Thumbs.db": true,
+        "node_modules/": true,
+        "fable_modules/": true,
+        ".idea/": true,
+        "**/*.fs.js": true,
+        "**/*.fs.js.map": true,
+        "venv/": true,
+        "**/bin/": true,
+        "**/obj/": true,
+    }
+}

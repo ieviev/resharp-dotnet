@@ -1,0 +1,75 @@
+analysis = '''
+Hyperscan multi-pattern mode with dictionary regexes
+
+The `single-match` benchmark is the original benchmark from the baseline with one match.
+
+The `dictionary-multi` uses the same pattern but finds 2663 matches in the haystack.
+
+The rest are the same as in the `monster` benchmarks, but with slightly different 
+match counts due to `earliest` match semantics
+'''
+
+
+[[bench]]
+model = "count"
+name = "single-match"
+regex = { path = "dictionary/english/length-15.txt", literal = true, per-line = "pattern" }
+haystack = { path = "opensubtitles/en-medium.txt" }
+count = 1
+engines = [
+  'hyperscan',
+]
+analysis = '''
+
+'''
+
+[[bench]]
+model = "count-spans"
+name = "dictionary-multi"
+regex = { path = "resharp/dictionary-fixed.txt", literal = true, per-line = "pattern" }
+haystack = { path = "resharp/length-15-sorted.txt" }
+count = 52126
+engines = [
+  'hyperscan',
+#   'rust/regex' 
+]
+
+
+
+[[bench]]
+model = "count-spans"
+name = "dictionary-case-ig-multi"
+regex = { path = "resharp/dictionary-fixed.txt", literal = true, per-line = "pattern" }
+haystack = { path = "resharp/length-15-sorted-capitalized.txt" }
+case-insensitive = true
+count = 104728 
+engines = [
+  'hyperscan',
+]
+
+
+[[bench]]
+model = "count-spans"
+name = "dictionary-unicode-multi"
+regex = { path = "resharp/01-monster-dictionary-unicode-multi.txt", literal = true, per-line = "pattern" }
+haystack = { path = "opensubtitles/ru-sampled.txt", line-end = 2500}
+unicode = true
+count = 18146 
+engines = [
+  'hyperscan',
+#   'rust/regex' # times out in 60s
+]
+
+
+[[bench]]
+model = "count-spans"
+name = "dictionary-unicode-case-ig-multi"
+regex = { path = "resharp/01-monster-dictionary-unicode-multi.txt", literal = true, per-line = "pattern" }
+haystack = { path = "opensubtitles/ru-sampled.txt", line-end = 2500}
+unicode = true
+case-insensitive = true
+count = 20106 
+engines = [
+  'hyperscan',
+#   'rust/regex' # times out in 60s
+]

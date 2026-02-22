@@ -1,0 +1,23 @@
+description = '''
+patterns that should throw UnsupportedPatternException
+'''
+
+[[test]]
+pattern = '..(?<=a.*)'
+input = 'aa'
+
+[[test]]
+pattern = '.*(?<=aaa)'
+input = 'aa'
+
+[[test]]
+pattern = '(^1300\d{6}$)|(^1800|1900|1902\d{6}$)|(^0[2|3|7|8]{1}[0-9]{8}$)|(^13\d{4}$)|(^04\d{2,3}\d{6}$)'
+input = '0732105432'
+
+[[test]]
+pattern = 'ab(?=.*def)|de(?=.*f)'
+input = 'abcdef'
+
+[[test]]
+pattern = '\b.'
+input = 'abcdef'

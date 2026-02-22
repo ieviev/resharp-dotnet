@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Resharp.Runtime/Resharp.Runtime.csproj" />
+    <Project Path="src/Resharp.Test/Resharp.Test.fsproj" />
+    <Project Path="src/Resharp/Resharp.fsproj" />
+    <Project Path="src/Resharp.Benchmarks/Resharp.Benchmarks.fsproj" />
+  </Folder>
+</Solution>

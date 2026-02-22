@@ -1,0 +1,5000 @@
+  The Linux 3Dfx HOWTO
+  Bernd Kreimeier (bk@gamers.org)
+  v1.16, 6 February 1998
+
+  This document describes 3Dfx graphics accelerator chip support for
+  Linux. It lists some supported hardware, describes how to configure
+  the drivers, and answers frequently asked questions.
+  ______________________________________________________________________
+
+  Table of Contents
+
+
+
+  1. Introduction
+
+     1.1 Contributors and Contacts
+     1.2 Acknowledgments
+     1.3 Revision History
+     1.4 New versions of this document
+     1.5 Feedback
+     1.6 Distribution Policy
+
+  2. Graphics Accelerator Technology
+
+     2.1 Basics
+     2.2 Hardware configuration
+     2.3 A bit of Voodoo Graphics (tm) architecture
+
+  3. Installation
+
+     3.1 Installing the board
+        3.1.1 Troubleshooting the hardware installation
+        3.1.2 Configuring the kernel
+        3.1.3 Configuring devices
+     3.2 Setting up the Displays
+        3.2.1 Single screen display solution
+        3.2.2 Single screen dual cable setup
+        3.2.3 Dual screen display solution
+     3.3 Installing the Glide distribution
+        3.3.1 Using the detect program
+        3.3.2 Using the test programs
+
+  4. Answers To Frequently Asked Questions
+
+  5. FAQ: Requirements?
+
+     5.1 What are the system requirements?
+     5.2 Does it work with Linux-Alpha?
+     5.3 Which 3Dfx chipsets are supported?
+     5.4 Is the Voodoo Rush (tm) supported?
+     5.5 Which boards are supported?
+     5.6 How do boards differ?
+     5.7 What about AGP?
+
+  6. FAQ: Voodoo Graphics (tm)? 3Dfx?
+
+     6.1 Who is 3Dfx?
+     6.2 Who is Quantum3D?
+     6.3 What is the Voodoo Graphics (tm)?
+     6.4 What is the Voodoo Rush (tm)?
+     6.5 What is the Voodoo 2 (tm)?
+     6.6 What is VGA pass-though?
+     6.7 What is Texelfx or TMU?
+     6.8 What is a Pixelfx unit?
+     6.9 What is SLI mode?
+     6.10 Is there a single board SLI setup?
+     6.11 How much memory? How many buffers?
+     6.12 Does the Voodoo Graphics (tm) do 24 or 32 bit color?
+     6.13 Does the Voodoo Graphics (tm) store 24 or 32 bit z-buffer per pixel?
+     6.14 What resolutions does the Voodoo Graphics (tm) support?
+     6.15 What texture sizes are supported?
+     6.16 Does the Voodoo Graphics (tm) support paletted textures?
+     6.17 What about overclocking?
+     6.18 Where could I get additional info on Voodoo Graphics (tm)?
+
+  7. FAQ: Glide? TexUS?
+
+     7.1 What is Glide anyway?
+     7.2 What is TexUS?
+     7.3 Is Glide freeware?
+     7.4 Where do I get Glide?
+     7.5 Is the Glide source available?
+     7.6 Is Linux Glide supported?
+     7.7 Where could I post Glide questions?
+     7.8 Where to send bug reports?
+     7.9 Who is maintaining it?
+     7.10 How can I contribute to Linux Glide?
+     7.11 Do I have to use Glide?
+     7.12 Should I program using the Glide API?
+     7.13 What is the Glide current version?
+     7.14 Does it support multiple Texelfx already?
+     7.15 Is Linux Glide identical to DOS/Windows Glide?
+     7.16 Where to I get information on Glide?
+     7.17 Where to get some Glide demos?
+     7.18 What is ATB?
+
+  8. FAQ: Glide and XFree86?
+
+     8.1 Does it run with XFree86?
+     8.2 Does it only run full screen?
+     8.3 What is the problem with AT3D/Voodoo Rush (tm) boards?
+     8.4 What about GLX for XFree86?
+     8.5 Glide and commerical X Servers?
+     8.6 Glide and SVGA?
+     8.7 Glide and GGI?
+
+  9. FAQ: OpenGL/Mesa?
+
+     9.1 What is OpenGL?
+     9.2 Where to get additional information on OpenGL?
+     9.3 Is Glide an OpenGL implementation?
+     9.4 Is there an OpenGL driver from 3Dfx?
+     9.5 Is there a commercial OpenGL for Linux and 3Dfx?
+     9.6 What is Mesa?
+     9.7 Does Mesa work with 3Dfx?
+     9.8 How portable is Mesa with Glide?
+     9.9 Where to get info on Mesa?
+     9.10 Where to get information on Mesa Voodoo?
+     9.11 Does Mesa support multitexturing?
+     9.12 Does Mesa support single pass trilinear mipmapping?
+     9.13 What is the Mesa "Window Hack"?
+     9.14 How about GLUT?
+
+  10. FAQ: But Quake?
+
+     10.1 What about that 3Dfx GL driver for Quake?
+     10.2 Is there a 3Dfx based glQuake for Linux?
+     10.3 Does glQuake run in an XFree86 window?
+     10.4 Known Linux Quake problems?
+     10.5 Know Linux Quake security problems?
+     10.6 Does LinuxQuake use multitexturing?
+     10.7 Where can I get current information on Linux glQuake?
+
+  11. FAQ: Troubleshooting?
+
+     11.1 Has this hardware been tested?
+     11.2 Failed to change I/O privilege?
+     11.3 Does it work without root privilege?
+     11.4 Displayed images looks awful (single screen)?
+     11.5 The last frame is still there (single or dual screen)?
+     11.6 Powersave kicks in (dual screen)?
+     11.7 My machine seem to lock (X11, single screen)?
+     11.8 My machine locks (single or dual screen)?
+     11.9 My machine locks (used with S3 VGA board)?
+     11.10 No address conflict, but locks anyway?
+     11.11 Mesa runs, but does not access the board?
+     11.12 Resetting dual board SLI?
+     11.13 Resetting single board SLI?
+
+
+  ______________________________________________________________________
+
+
+
+  1.  Introduction
+
+  This is the Linux 3Dfx HOWTO document. It is intended as a quick
+  reference covering everything you need to know to install and
+  configure 3Dfx support under Linux. Frequently asked questions
+  regarding the 3Dfx support are answered, and references are given to
+  some other sources of information on a variety of topics related to
+  computer generated, hardware accelerated 3D graphics.
+
+  This information is only valid for Linux on the Intel platform.  Some
+  information may be applicable to other processor architectures, but I
+  have no first hand experience or information on this. It is only
+  applicable to boards based on 3Dfx technology, any other graphics
+  accelerator hardware is beyond the scope of this document.
+
+
+
+  1.1.  Contributors and Contacts
+
+  This document would not have been possible without all the information
+  contributed by other people - those involved in the Linux Glide port
+  and the beta testing process, in the development of Mesa and the Mesa
+  Voodoo drivers, or rewieving the document on behalf of 3Dfx and
+  Quantum3D.  Some of them contributed entire sections to this document.
+
+  Daryll Strauss daryll@harlot.rb.ca.us did the port, Paul J. Metzger
+  pjm@rbd.com modified the Mesa Voodoo driver (written by David
+  Bucciarelli tech.hmw@plus.it) for Linux, Brian Paul brianp@RA.AVID.COM
+  integrated it with his famous Mesa library. With respect to Voodoo
+  Graphics (tm) accelerated Mesa, additional thanks has to go to Henri
+  Fousse, Gary McTaggart, and the maintainer of the 3Dfx Mesa for DOS,
+  Charlie Wallace Charlie.Wallace@unistudios.com.  The folks at 3Dfx,
+  notably Gary Sanders, Rod Hughes, and Marty Franz, provided valuable
+  input, as did Ross Q. Smith of Quantum3D. The pages on the Voodoo
+  Extreme and Operation 3Dfx websites provided useful info as well, and
+  in some case I relied on the 3Dfx local Newsgroups. The Linux glQuake2
+  port that uses Linux Glide and Mesa is maintained by Dave Kirsch
+  zoid@idsoftware.com.  Thanks to all those who sent e-mail regarding
+  corrections and updates, and special thanks to Mark Atkinson for
+  reminding me of the dual cable setup.
+
+  Thanks to the SGML-Tools package (formerly known as Linuxdoc-SGML),
+  this HOWTO is available in several formats, all generated from a
+  common source file. For information on SGML-Tools see its homepage at
+  pobox.com/~cg/sgmltools.
+
+
+
+  1.2.  Acknowledgments
+
+  3Dfx, the 3Dfx Interactive logo, Voodoo Graphics (tm), and Voodoo Rush
+  (tm) are registered trademarks of 3Dfx Interactive, Inc.  Glide,
+  TexUS, Pixelfx and Texelfx are trademarks of 3Dfx Interactive, Inc.
+  OpenGL is a registered trademark of Silicon Graphics. Obsidian is a
+  trademark of Quantum3D.  Other product names are trademarks of the
+  respective holders, and are hereby considered properly acknowledged.
+
+
+  1.3.  Revision History
+
+
+     Version 1.03
+        First version for public release.
+
+     Version 1.16
+        Current version v1.16 6 February 1998.
+
+
+
+  1.4.  New versions of this document
+
+  You will find the most recent version of this document at
+  www.gamers.org/dEngine/xf3D/.
+
+  New versions of this document will be periodically posted to the
+  comp.os.linux.answers newsgroup. They will also be uploaded to various
+  anonymous ftp sites that archive such information including
+  ftp://sunsite.unc.edu/pub/Linux/docs/HOWTO/.
+
+  Hypertext versions of this and other Linux HOWTOs are available on
+  many World-Wide-Web sites, including sunsite.unc.edu/LDP/. Most Linux
+  CD-ROM distributions include the HOWTOs, often under the
+  /usr/doc/directory, and you can also buy printed copies from several
+  vendors.
+
+  If you make a translation of this document into another language, let
+  me know and I'll include a reference to it here.
+
+
+
+  1.5.  Feedback
+
+  I rely on you, the reader, to make this HOWTO useful. If you have any
+  suggestions, corrections, or comments, please send them to me (
+  bk@gamers.org), and I will try to incorporate them in the next
+  revision.  Please add HOWTO 3Dfx to the Subject-line of the mail, so
+  procmail will dump it in the appropriate folder.
+
+  Before sending bug reports or questions, please read all of the
+  information in this HOWTO, and send detailed information about the
+  problem.
+
+  If you publish this document on a CD-ROM or in hardcopy form, a
+  complimentary copy would be appreciated. Mail me for my postal
+  address. Also consider making a donation to the Linux Documentation
+  Project to help support free documentation for Linux. Contact the
+  Linux HOWTO coordinator, Tim Bynum (linux-howto@sunsite.unc.edu), for
+  more information.
+
+
+
+  1.6.  Distribution Policy
+
+  Copyright (c) 1997, 1998 by Bernd Kreimeier.  This document may be
+  distributed under the terms set forth in the LDP license at
+  sunsite.unc.edu/LDP/COPYRIGHT.html.
+
+  This HOWTO is free documentation; you can redistribute it and/or
+  modify it under the terms of the LDP license.  This document is
+  distributed in the hope that it will be useful, but without any
+  warranty; without even the implied warranty of merchantability or
+  fitness for a particular purpose.  See the LDP license for more
+  details.
+
+
+
+  2.  Graphics Accelerator Technology
+
+  2.1.  Basics
+
+  This section gives a very cursory overview of computer graphics
+  accelerator technology, in order to help you understand the concepts
+  used later in the document. You should consult e.g.  a book on OpenGL
+  in order to learn more.
+
+
+  2.2.  Hardware configuration
+
+  Graphics accelerators come in different flavors: either as a separate
+  PCI board that is able to pass through the video signal of a (possibly
+  2D or video accelerated) VGA board, or as a PCI board that does both
+  VGA and 3D graphics (effectively replacing older VGA controllers).
+  The 3Dfx boards based on the Voodoo Graphics (tm) belong to the former
+  category. We will get into this again later.
+
+
+  If there is no address conflict, any 3D accelerator board could be
+  present under Linux without interfering, but in order to access the
+  accelerator, you will need a driver. A combined 2D/3D accelerator
+  might behave differently.
+
+
+  2.3.  A bit of Voodoo Graphics (tm) architecture
+
+  Usually, accessing texture memory and frame/depth buffer is a major
+  bottleneck. For each pixel on the screen, there are at least one
+  (nearest), four (bi-linear), or eight (tri-linear mipmapped) read
+  accesses to texture memory, plus a read/write to the depth buffer, and
+  a read/write to frame buffer memory.
+
+  The Voodoo Graphics (tm) architecture separates texture memory from
+  frame/depth buffer memory by introducing two separate rendering
+  stages, with two corresponding units (Pixelfx and Texelfx), each
+  having a separate memory interface to dedicated memory. This gives an
+  above-average fill rate, paid for restrictions in memory management
+  (e.g. unused framebuffer memory can not be used for texture caching).
+
+  Moreover, a Voodoo Graphics (tm) could use two TMU's (texture
+  management or texelfx units), and finally, two Voodoo Graphics (tm)
+  could be combined with a mechanism called Scan-Line Interleaving
+  (SLI). SLI essentially means that each Pixelfx unit effectively
+  provides only every other scanline, which decreases bandwidth impact
+  on each Pixelfx' framebuffer memory.
+
+
+
+  3.  Installation
+
+  Configuring Linux to support 3Dfx accelerators involves the following
+  steps:
+
+  1. Installing the board.
+
+  2. Installing the Glide distribution.
+
+  3. Compiling, linking and/or running the application.
+
+  The next sections will cover each of these steps in detail.
+
+
+  3.1.  Installing the board
+
+  Follow the manufacturer's instructions for installing the hardware or
+  have your dealer perform the installation.  It should not be necessary
+  to select settings for IRQ, DMA channel, either Plug&Pray (tm) or
+  factory defaults should work. The add-on boards described here are
+  memory mapped devices and do not use IRQ's. The only kind of conflict
+  to avoid is memory overlap with other devices.
+
+  As 3Dfx does not develop or sell any boards, do not contact them on
+  any problems.
+
+
+  3.1.1.  Troubleshooting the hardware installation
+
+  To check the installation and the memory mapping, do cat /proc/pci.
+  The output should contain something like
+
+  ______________________________________________________________________
+    Bus  0, device  12, function  0:
+      VGA compatible controller: S3 Inc. Vision 968 (rev 0).
+        Medium devsel.  IRQ 11.
+        Non-prefetchable 32 bit memory at 0xf4000000.
+
+    Bus  0, device   9, function  0:
+      Multimedia video controller: Unknown vendor Unknown device (rev 2).
+        Vendor id=121a. Device id=1.
+        Fast devsel.  Fast back-to-back capable.
+        Prefetchable 32 bit memory at 0xfb000000.
+  ______________________________________________________________________
+
+
+  for a Diamond Monster 3D used with a Diamond Stealth-64. Additionally
+  a cat /proc/cpuinfo /proc/meminfo might be helpfull for tracking down
+  conflicts and/or submitting a bug report.
+
+  With current kernels, you will probably get a boot warning like
+
+  ______________________________________________________________________
+  Jun 12 12:31:52 hal kernel: Warning : Unknown PCI device (121a:1).
+  Please read include/linux/pci.h
+  ______________________________________________________________________
+
+
+  which could be safely ignored. If you happen to have a board not very
+  common, or have encountered a new revision, you should take the time
+  to follow the advice in /usr/include/linux/pci.h and send all neces-
+  sary information to linux-pcisupport@cao-vlsi.ibp.fr.
+
+  If you experience any problems with the board, you should try to
+  verify that DOS and/or Win95 or NT support works. You will probably
+  not receive any useful response from a board manufacturer on a bug
+  report or request regarding Linux. Having dealt with the Diamond
+  support e-mail system, I would not expect useful responses for other
+  operating systems either.
+
+
+  3.1.2.  Configuring the kernel
+
+  There is no kernel configuration necessary, as long as PCI support is
+  enabled.  The Linux Kernel HOWTO
+  <http://sunsite.unc.edu/mdw/HOWTO/Kernel-HOWTO.html> should be
+  consulted for the details of building a kernel.
+
+
+
+  3.1.3.  Configuring devices
+
+  The current drivers do not (yet) require any special devices.  This is
+  different from other driver developments (e.g. the sound drivers,
+  where you will find a /dev/dsp and /dev/audio). The driver uses the
+  /dev/mem device which should always be available. In consequence, you
+  need to use setuid or root privileges to access the accelerator board.
+
+
+  3.2.  Setting up the Displays
+
+  There are two possible setups with add-on boards. You could either
+  pass-through the video signal from your regular VGA board via the
+  accelerator board to the display, or you could use two displays at the
+  same time.  Rely to the manual provided by the board manufacturer for
+  details. Both configurations have been tried with the Monster 3D
+  board.
+
+
+  3.2.1.  Single screen display solution
+
+  This configuration allows you to check basic operations of the
+  accelerator board - if the video signal is not transmitted to the
+  display, hardware failure is possible.
+
+  Beware that the video output signal might deteoriate significantly if
+  passed through the video board. To a degree, this is inevitable.
+  However, reviews have complained about below-average of the cables
+  provided e.g. with the Monster 3D, and judging from the one I tested,
+  this has not changed.
+
+  There are other pitfalls in single screen configurations.  Switching
+  from the VGA display mode to the accelerated display mode will change
+  resolution and refresh rate as well, even if you are using 640x480
+  e.g. with X11, too.  Moreover, if you are running X11, your
+  application is responsible for demanding all keyboard and mouse
+  events, or you might get stuck because of changed scope and exposure
+  on the X11 display (that is effectively invisible when the accelerated
+  mode is used) You could use SVGA console mode instead of X11.
+
+  If you are going to use a single screen configuration and switch modes
+  often, remember that your monitor hardware might not enjoy this kind
+  of use.
+
+
+
+  3.2.2.  Single screen dual cable setup
+
+  Some high end monitors (e.g. the EIZO F-784-T) come with two
+  connectors, one with 5 BNC connectors for RGB, HSync, VSync, the other
+  e.g. a regular VGA or a 13W3 Sub-D VGA.  These displays usually also
+  feature a front panel input selector to safely switch from one to the
+  other. It is thus possible to use e.g. a VGA-to-BNC cable with your
+  high end 2D card, and a VGA-to-13W3 Sub-D cable with your 3Dfx, and
+  effectively run dual screen on one display.
+
+
+  3.2.3.  Dual screen display solution
+
+  The accelerator board does not need the VGA input signal.  Instead of
+  routing the common video output through the accelerator board, you
+  could attach a second monitor to its output, and use both at the same
+  time. This solution is more expensive, but gives best results, as your
+  main display will still be hires and without the signal quality losses
+  involved in a pass-through solution. In addition, you could use X11
+  and the accelerated full screen display in parallel, for development
+  and debugging.
+
+  A common problem is that the accelerator board will not provide any
+  video signal when not used. In consequence, each time the graphics
+  application terminates, the hardware screensave/powersave might kick
+  in depending on your monitors configuration. Again, your hardware
+  might not enjoy being treated like this. You should use
+
+  ______________________________________________________________________
+  setenv SST_DUALSCREEN 1
+  ______________________________________________________________________
+
+
+  to force continued video output in this setup.
+
+
+  3.3.  Installing the Glide distribution
+
+  The Glide driver and library are provided as a single compressed
+  archive. Use tar and gzip to unpack, and follow the instructions in
+  the README and INSTALL accompanying the distribution.  Read the
+  install script and run it. Installation puts everything in
+  /usr/local/glide/include,lib,bin and sets the ld.conf to look there.
+  Where it installs and setting ld.conf are independent actions. If you
+  skip the ld.conf step then you need the LD_LIBRARY_PATH.
+
+  You will need to install the header files in a location available at
+  compile time, if you want to compile your own graphics applications.
+  If you do not want to use the installation as above (i.e. you insist
+  on a different location), make sure that any application could access
+  the shared libary at runtime, or you will get a response like can't
+  load library 'libglide.so'.
+
+
+
+  3.3.1.  Using the detect program
+
+  There is a bin/detect program in the distribution (the source is not
+  available). You have to run it as root, and you will get something
+  like
+
+  ______________________________________________________________________
+  slot  vendorId   devId   baseAddr0  command  description
+  ----  --------  ------  ----------  -------  -----------
+    00    0x8086  0x122d  0x00000000   0x0006  Intel:430FX (Triton)
+    07    0x8086  0x122e  0x00000000   0x0007  Intel:ISA bridge
+    09    0x121a  0x0001  0xfb000008   0x0002  3Dfx:video multimedia adapter
+    10    0x1000  0x0001  0x0000e401   0x0007  ???:SCSI bus controller
+    11    0x9004  0x8178  0x0000e001   0x0017  Adaptec:SCSI bus controller
+    12    0x5333  0x88f0  0xf4000000   0x0083  S3:VGA-compatible display co
+  ______________________________________________________________________
+
+
+  as a result. If you do not have root privileges, the program will bail
+  out with
+
+  ______________________________________________________________________
+  Permission denied: Failed to change I/O privilege. Are you root?
+  ______________________________________________________________________
+
+
+  output might come handy for a bug report as well.
+
+
+
+  3.3.2.  Using the test programs
+
+  Within the Glide distribution, you will find a folder with test
+  programs. Note that these test programs are under 3Dfx copyright, and
+  are legally available for use only if you have purchased a board with
+  a 3Dfx chipset. See the LICENSE file in the distribution, or their web
+  site www.3dfx.com for details.
+
+  It is recommend to compile and link the test programs even if there
+  happen to be binaries in the distribution. Note that some of the
+  programs will requires some files like alpha.3df from the distribution
+  to be available in the same folder.  All test programs use the 640x480
+  screen resolution. Some will request a veriety of single character
+  inputs, others will just state Press A Key To Begin Test. Beware of
+  loss of input scope if running X11 on the same screen at the same
+  time.
+
+  See the README.test for a list of programs, and other details.
+
+
+
+  4.  Answers To Frequently Asked Questions
+
+  The following section answers some of the questions that (will) have
+  been asked on the Usenet news groups and mailing lists. The FAQ has
+  been subdivided into several parts for convenience, namely
+
+  o  FAQ: Requirements?
+
+  o  FAQ: Voodoo Graphics (tm)? 3Dfx?
+
+  o  FAQ: Glide?
+
+  o  FAQ: Glide and SVGA?
+
+  o  FAQ: Glide and XFree86?
+
+  o  FAQ: Glide versus OpenGL/Mesa?
+
+  o  FAQ: But Quake?
+
+  o  FAQ: Troubleshooting?
+
+     Each section lists several questions and answers, which will
+     hopefully address most problems.
+
+
+
+  5.  FAQ: Requirements?
+
+
+
+  5.1.  What are the system requirements?
+
+  A Linux PC, PCI 2.1 compliant, a monitor capable of 640x480, and a 3D
+  accelerator board based on the 3Dfx Voodoo Graphics (tm). It will work
+  on a P5 or P6, with or without MMX. The current version does not use
+  MMX, but it has some optimized code paths for P6.
+
+  At one point, some 3Dfx statements seemed to imply that using Linux
+  Glide required using a RedHat distribution. Note that while Linux
+  Glide has originally been ported in a RedHat 4.1 environment, it has
+  been used and tested with many other Linux distributions, including
+  homebrew, Slackware, and Debian 1.3.1.
+
+
+  5.2.  Does it work with Linux-Alpha?
+
+  There is currently no Linux Glide distribution available for any
+  platform besides i586. As the Glide sources are not available for
+  distribution, you will have to wait for the binary. Quantum3D has DEC
+  Alpha support announced for 2H97. Please contact Daryll Strauss if you
+  are interested in supporting this.
+
+  There is also the issue of porting the the assembly modules. While
+  there are alternative C paths in the code, the assembly module in
+  Glide (essentially triangle setup) offered significant performance
+  gains depending on the P5 CPU used.
+
+
+
+  5.3.  Which 3Dfx chipsets are supported?
+
+  Currently, the  3Dfx Voodoo Graphics (tm) chipset is supported under
+  Linux. The Voodoo Rush (tm) chipset is not yet supported.
+
+
+  5.4.  Is the Voodoo Rush (tm) supported?
+
+  The current port of Glide to Linux does not support the Voodoo Rush
+  (tm). An update is in the works.
+
+  The problem is that at one point the Voodoo Rush (tm) driver code in
+  Glide depended on Direct Draw. There was an SST96 based DOS portion in
+  the library that could theoretically be used for Linux, as soon as all
+  portions residing in the 2D/Direct Draw/D3D combo driver are replaced.
+
+  Thus Voodoo Rush (tm) based boards like the Hercules Stingray 128/3D
+  or Intergraph Intense Rush are not supported yet.
+
+
+
+  5.5.  Which boards are supported?
+
+  There are no officially supported boards, as 3Dfx does not sell any
+  boards. This section does not attempt to list all boards, it will just
+  give an overview, and will list only boards that have been found to
+  cause trouble.
+
+  It is important to recognize that Linux support for a given board does
+  not only require a driver for the 3D accelerator component. If a board
+  features its own VGA core as well, support by either Linux SVGA or
+  XFree86 is required as well (see section about Voodoo Rush (tm)
+  chipset).  Currently, an add-on solution is recommended, as it allows
+  you to choose a regular graphics board well supported for Linux. There
+  are other aspects discussed below.
+
+
+  All Quantum3D Obsidian boards, independend of texture memory, frame
+  buffer memory, number of Pixelfx and Texelfx units, and SLI should
+  work. Same for all other Voodoo Graphics (tm) based boards, like
+  Orchid Righteous 3D, Canopus Pure 3D, Flash 3D, and Diamond Monster
+  3D.  Voodoo Rush (tm) based boards are not yet supported.
+
+  Boards that are not based on 3Dfx chipsets (e.g. manufactured by S3,
+  Matrox, 3Dlabs, Videologic) do not work with the 3Dfx drivers and are
+  beyond the scope of this document.
+
+
+
+  5.6.  How do boards differ?
+
+  As the board manufacturers are using the same chipset, any differences
+  are due to board design. Examples are quality of the pass-through
+  cable and connectors (reportedly, Orchid provided better quality than
+  Diamond), availability of a TV-compliant video signal output (Canopus
+  Pure 3D), and, most notably, memory size on board.
+
+  Most common were boards for games with 2MB texture cache and 2 MB
+  framebuffer memory, however, the Canopus Pure3D comes with a maximal 4
+  MB texture cache, which is an advantage e.g.  with games using
+  dynamically changed textures, and/or illumation textures (Quake, most
+  notably).  The memory architecture of a typical Voodoo Graphics (tm)
+  board is described below, in a separate section.
+
+  Quantum 3D offers the widest selection of 3Dfx-based boards, and is
+  probably the place to go if you are looking for a high end Voodoo
+  Graphics (tm) based board configuration.  Quantum 3D is addressing the
+  visual simulation market, while most of the other vendors are only
+  targetting the consumer-level PC-game market.
+
+
+
+  5.7.  What about AGP?
+
+  There is no Voodoo Graphics (tm) or Voodoo Rush (tm) AGP board that I
+  am aware of. I am not aware of AGP support under Linux, and I do not
+  know whether upcmong AGP boards using 3Dfx technology might possibly
+  be supported with Linux.
+
+
+
+  6.  FAQ: Voodoo Graphics (tm)? 3Dfx?
+
+  6.1.  Who is 3Dfx?
+
+  3Dfx is a San Jose based manufacturer of 3D graphics accelerator
+  hardware for arcade games, game consoles, and PC boards.  Their
+  official website is www.3dfx.com. 3Dfx does not sell any boards, but
+  other companies do, e.g. Quantum3D.
+
+
+
+  6.2.  Who is Quantum3D?
+
+  Quantum3D started as a 3Dfx spin-off, manufacturing high end
+  accelerator boards based on 3Dfx chip technology for consumer and
+  business market, and supplying arcade game technology. See their home
+  page at www.quantum3d.com for additional information. For general
+  inquiries regarding Quantum3D, please send mail to info@quantum3d.
+
+
+  6.3.  What is the Voodoo Graphics (tm)?
+
+  The Voodoo Graphics (tm) is a chipset manufactured by 3Dfx. It is used
+  in hardware acceleration boards for the PC.  See the HOWTO section on
+  supported hardware.
+
+
+  6.4.  What is the Voodoo Rush (tm)?
+
+  The Voodoo Rush (tm) is a derivate of the Voodoo Graphics (tm) that
+  has an interface to cooperate with a 2D VGA video accelerator,
+  effectively supporting accelerated graphics in windows. This combo is
+  currently not supported with Linux.
+
+
+  6.5.  What is the Voodoo 2 (tm)?
+
+  The Voodoo 2 (tm) is the successor of the Voodoo Graphics (tm)
+  chipset, featuring several improvements. It is announced for late
+  March 1998, and annoucements of Voodoo 2 (tm) based boards have been
+  published e.g. by Quantum 3D, by Creative Labs, Orchid Technologies,
+  and Diamond Multimedia.
+
+  The Voodoo 2 (tm) is supposed to be backwards compatible.  However, a
+  new version of Glide will have to be ported to Linux.
+
+
+
+  6.6.  What is VGA pass-though?
+
+  The Voodoo Graphics (tm) (but not the Voodoo Rush (tm)) boards are
+  add-on boards, meant to be used with a regular 2D VGA video
+  accelerator board. In short, the video output of your regular VGA
+  board is used as input for the Voodoo Graphics (tm) based add-on
+  board, which by default passes it through to the display also
+  connected to the Voodoo Graphics (tm) board. If the Voodoo Graphics
+  (tm) is used (e.g. by a game), it will disconnect the VGA input
+  signal, switch the display to a 640x480 fullscreen mode with the
+  refresh rate configured by SST variables and the application/driver,
+  and generate the video signal itself. The VGA doesn't need to be aware
+  of this, and won't be.
+
+  This setup has several advantages: free choice of 2D VGA board, which
+  is an issue with Linux, as XFree86 drivers aren't available for all
+  chipsets and revisions, and a cost effective migration path to
+  accelerated 3D graphics. It also has several disadvantages: an
+  application using the Voodoo Graphics (tm) might not re-enable video
+  output when crashing, and regular VGA video signal deteoriates in the
+  the pass-through process.
+
+
+  6.7.  What is Texelfx or TMU?
+
+  Voodoo Graphics (tm) chipsets have two units. The first one interfaces
+  the texture memory on the board, does the texture mapping, and
+  ultimately generates the input for the second unit that interfaces the
+  framebuffer. This one is called Texelfx, aka Texture Management Unit,
+  aka TMU. The neat thing about this is that a board can use two Texelfx
+  instead of only one, like some of the Quantum3D Obsidian boards did,
+  effectively doubling the processing power in some cases, depending on
+  the application.
+
+  As each Texelfx can address 4MB texture memory, a dual Texelfx setup
+  has an effective texture cache of up to 8MB.  This can be true even if
+  only one Texelfx is actually needed by a particular application, as
+  textures can be distributed to both Texelfx, which are used depending
+  on the requested texture. Both Texelfx are used together to perform
+  certain operations as trilinear filtering and illumination
+  texture/lightmap passes (e.g. in glQuake) in a single pass instead of
+  the two passes that are required with only one Texelfx. To actually
+  exploit the theoretically available speedup and cache size increase, a
+  Glide application has to use both Texelfx properly.
+
+  The two Texelfx can not be used separately to each draw a textured
+  triangle at the same time. A triangle is always drawn using whatever
+  the current setup is, which can be to use both Texelfx for a single
+  pass operation combining two textures, or one Texelfx for only a
+  single texture. Each Texelfx can only access its own memory.
+
+
+
+  6.8.  What is a Pixelfx unit?
+
+  Voodoo Graphics (tm) chipsets have two units. The second one
+  interfaces the framebuffer and ultimately generates the depth buffer
+  and pixel color updates. This one is called Pixelfx. The neat thing
+  here is that two Pixelfx units can cooperate in SLI mode, like with
+  some of the Quantum3D Obsidian boards, effectively doubling the frame
+  rate.
+
+
+
+  6.9.  What is SLI mode?
+
+  SLI means "Scanline Interleave". In this mode, two Pixelfx are
+  connected and render in alternate turns, one handling odd, the other
+  handling even scanlines of the actual output.  Inthis mode, each
+  Pixelfx stores only half of the image and half of the depth buffer
+  data in its own local framebuffer, effectively doubling the number of
+  pixels.
+
+  The Pixelfx in question can be on the same board, or on two boards
+  properly connected. Some Quantum3D Obsidian boards support SLI with
+  Voodoo Graphics (tm).
+
+  As two cards can decode the same PCI addresses and receive the same
+  data, there is not necessarily additional bus bandwidth required by
+  SLI. On the other hand, texture data will have to be replicated on
+  both boards, thus the amount of texture memory effectively stays the
+  same.
+
+
+
+  6.10.  Is there a single board SLI setup?
+
+  There are now two types of Quantum3D SLI boards.  The intial setup
+  used two boards, two PCI slots, and an interconnect (e.g. the Obsidian
+  100-4440).  The later revision which performs identically is contained
+  on one full-length PCI board (e.g.  Obsidian 100-4440SB). Thus a
+  single board SLI solution is possible, and has been done.
+
+
+
+  6.11.  How much memory? How many buffers?
+
+  The most essential difference between different boards using the
+  Voodoo Graphics (tm) chipset is the amount and organization of memory.
+  Quantum3D used a three digit scheme to descibe boards. Here is a
+  slightly modifed one (anticipating Voodoo 2 (tm)). Note that if you
+  use more than one Texelfx, they need the same amount of texture cache
+  memory each, and if you combine two Pixelfx, each needs the same
+  amount of frame buffer memory.
+  ______________________________________________________________________
+      "SLI / Pixelfx / Texelfx1 / Texelfx2 "
+  ______________________________________________________________________
+
+
+  It means that a common 2MB+2MB board would be a 1/2/2/0 solution, with
+  the minimally required total 4Mb of memory. A Canopus Pure 3D would be
+  1/2/4/0, or 6MB. An Obsidian-2220 board with two Texelfx would be
+  1/2/2/2, and an Obsidian SLI-2440 board would be 2/2/4/4.  A fully
+  featured dual board solution (2 Pixelfx, each with 2 Texelfx and 4MB
+  frame buffer, each Texelfx 4 MB texture cache) would be 2/4/4/4, and
+  the total amount of memory would be SLI*(Pixelfx+Texelfx1+Texelfx2),
+  or 24 MB.
+
+  So there.
+
+
+  6.12.  Does the Voodoo Graphics (tm) do 24 or 32 bit color?
+
+  No. The Voodoo Graphics (tm) architecture uses 16bpp internally.  This
+  is true for  Voodoo Graphics (tm), Voodoo Rush (tm) and Voodoo 2 (tm)
+  alike. Quantum3D claims to implement 22-bpp effective color depth with
+  an enhanced 16-bpp frame buffer, though.
+
+
+  6.13.  Does the Voodoo Graphics (tm) store 24 or 32 bit z-buffer per
+  pixel?
+
+  No. The Voodoo Graphics (tm) architecture uses 16bpp internally for
+  the depth buffer, too. This again is true for  Voodoo Graphics (tm),
+  Voodoo Rush (tm) and Voodoo 2 (tm) alike. Again, Quantum3D claims that
+  using the floating point 16-bits per pixel (bpp) depth buffering
+  provides 22-bpp effective Z-buffer precision.
+
+
+  6.14.  What resolutions does the Voodoo Graphics (tm) support?
+
+  The Voodoo Graphics (tm) chipset supports up to 4 MB frame buffer
+  memory. Presuming double buffering and a depth buffer, a 2MB
+  framebuffer will support a resolution of 640x480.  With 4 MB frame
+  buffer, 800x600 is possible.
+
+  Unfortunately 960x720 is not supported. The Voodoo Graphics (tm)
+  chipset requires that the amount of memory for a particular resolution
+  must be such that the vertical and horizontal resolutions must be
+  evenly divisible by 32. The video refresh controller, though can
+  output any particular resolution, but the "virtual" size required for
+  the memory footprint must be in dimensions evenly divisible by 32.
+  So, 960x720 actually requires 960x736 amount of memory, and
+  960x736x2x3 = 4.04MBytes.
+
+  However, using two boards with SLI, or a dual Pixelfx SLI board means
+  that each framebuffer will only have to store half of the image. Thus
+  2 times 4 MB in SLI mode are good up to 1024x768, which is the maximum
+  because of the overall hardware design. You will be able to do
+  1024x768 tripled buffered with Z, but you will not be able to do e.g.
+  1280x960 with double buffering.
+
+  Note that triple buffering (no VSync synchonization required by the
+  application), stereo buffering (for interfacing LCD shutters) and
+  other more demanding setups will severely decrease the available
+  resolution.
+
+
+
+  6.15.  What texture sizes are supported?
+
+  The maximum texture size for the Voodoo Graphics (tm) chipset is
+  256x256, and you have to use powers of two. Note that for really small
+  textures (e.g. 16x16) you are better off merging them into a large
+  texture, and adjusting your effective texture coordinates
+  appropriately.
+
+
+  6.16.  Does the Voodoo Graphics (tm) support paletted textures?
+
+  The Voodoo Graphics (tm) hardware and Glide support the palette
+  extension to OpenGL. The most recent version of Mesa does support the
+  GL_EXT_paletted_texture and GL_EXT_shared_texture_palette extensions.
+
+
+
+  6.17.  What about overclocking?
+
+  If you want to put aside considerations about warranty and
+  overheating, and want to do overclocking to boost up performance even
+  further, there is related info out on the web. The basic mechanism is
+  to use Glide environment variables to adjust the clock.
+
+  Note that the actual recommended clock is board dependend. While the
+  default clock speed is 50 Mhz, the Diamond Monster 3D property sheet
+  lets you set up a clock of 57 MHz. It all comes down to the design of
+  a specific board, and which components are used with the Voodoo
+  Graphics (tm) chipset - most notably access speed of the RAM in
+  question. If you exceed the limits of your hardware, rendering
+  artifacts will occur to say the least. Reportedly, 57 MHz usually
+  works, while 60 MHz or more is already pushing it.
+
+  Increasing the clock frequency also means increasing the waste heat
+  disposed in the chips, in a nonlinear dependency (10% increase in
+  frequency means a lot larger increase in heating). In consequence, for
+  permanent overclocking you might want to educate yourself about ways
+  to  add cooling fans to the board in a way that does not affect
+  warranty. A very recommendable source is the "3Dfx Voodoo Heat Report"
+  by Eric van Ballegoie, available on the web.
+
+
+
+  6.18.  Where could I get additional info on Voodoo Graphics (tm)?
+
+  There is a FAQ by 3Dfx, which should be available at their web site.
+  You will find retail information at the following locations:
+  www.3dfx.com and www.quantum3d.com.
+
+  Inofficial sites that have good info are "Voodoo Extreme" at
+  www.ve3d.com, and "Operation 3Dfx" at www.ve3d.com.
+
+
+
+  7.  FAQ: Glide? TexUS?
+
+  7.1.  What is Glide anyway?
+
+  Glide is a proprietary API plus drivers to access 3D graphics
+  accelerator hardware based on chipsets manufactured by 3Dfx. Glide has
+  been developed and implemented for DOS, Windows, and Macintosh, and
+  has been ported to Linux by Daryll Strauss.
+
+
+
+  7.2.  What is TexUS?
+
+  In the distribution is a libtexus.so, which is the 3Dfx Interactive
+  Texture Utility Software.  It is an image processing libary and
+  utility program for preparing images for use with the 3Dfx Interactive
+  Glide library. Features of TexUS include file format conversion,
+  MIPmap creation, and support for 3Dfx Interactive Narrow Channel
+  Compression textures.
+
+  The TexUS utility program texus reads images in several popular
+  formats (TGA, PPM, RGT), generates MIPmaps, and writes the images as
+  3Dfx Interactive textures files (see e.g. alpha.3df, as found in the
+  distribution) or as an image file for inspection. For details on the
+  parameters for texus, and the API, see the TexUS documentation.
+
+
+
+  7.3.  Is Glide freeware?
+
+  Nope. Glide is neither GPL'ed nor subject to any other public license.
+  See LICENSE in the distribution for any details. Effectively, by
+  downloading and using it, you agree to the End User License Agreement
+  (EULA) on the 3Dfx web site. Glide is provided as binary only, and you
+  should neither use nor distribute any files but the ones released to
+  the public, if you have not signed an NDA. The Glide distribution
+  including the test program sources are copyrighted by 3Dfx.
+
+  The same is true for all the sources in the Glide distribution. In the
+  words of 3Dfx: These are not public domain, but they can be freely
+  distributed to owners of 3Dfx products only.  No card, No code!
+
+
+  7.4.  Where do I get Glide?
+
+  The entire 3Dfx SDK is available for download off their public web-
+  site located at www.3dfx.com/software/download_glide.html. Anything
+  else 3Dfx publicly released by 3Dfx is nearby on their website, too.
+
+  There is also an FTP site, ftp.3dfx.com. The FTP has a longer timeout,
+  and some of the larger files have been broken into 3 files (approx.
+  3MB each).
+
+
+
+  7.5.  Is the Glide source available?
+
+  Nope. The Glide source is made available only based on a special
+  agreement and NDA with 3Dfx.
+
+
+  7.6.  Is Linux Glide supported?
+
+  Currently, Linux Glide is unsupported. Basically, it is provided under
+  the same disclaimers as the 3Dfx GL DLL (see below).
+
+  However, 3Dfx definitely wants to provide as much support as possible,
+  and is in the process of setting up some prerequisites. For the time
+  being, you will have to rely on the 3Dfx newsgroup (see below).
+
+  In addition, the Quantum3D web page claims that Linux support (for
+  Obsidian) is planned for both Intel and AXP architecture systems in
+  2H97.
+
+
+
+  7.7.  Where could I post Glide questions?
+
+  There are newsgroups currently available only on the NNTP server
+  news.3dfx.com run by 3Dfx.  This USENET groups are dedicated to 3Dfx
+  and Glide in general, and will mainly provide assistance for DOS,
+  Win95, and NT. The current list includes:
+
+  ______________________________________________________________________
+  3dfx.events
+  3dfx.games.glquake
+  3dfx.glide
+  3dfx.glide.linux
+  3dfx.products
+  3dfx.test
+  ______________________________________________________________________
+
+
+  and the 3dfx.oem.products.* group for specific boards, eg.
+  3dfx.oem.products.quantum3d.obsidian.  Please use
+  news.3dfx.com/3dfx.glide.linux for all Lnux Glide related questions.
+
+  A mailing list dedicated to Linux Glide is in preparation for 1Q98.
+  Send mail to majordomo@gamers.org, no subject, body of the message
+  info linux-3dfx to get information about the posting guidelines, the
+  hypermail archive and how to subscribe to the list or the digest.
+
+
+
+  7.8.  Where to send bug reports?
+
+  Currently, you should rely on the newsgroup (see above), that is
+  news.3dfx.com/3dfx.glide.linux.  There is no official support e-mail
+  set up yet.  For questions not specific to Linux Glide, make sure to
+  use the other newsgroups.
+
+
+  7.9.  Who is maintaining it?
+
+  3Dfx will appoint an official maintainer soon.  Currently, inofficial
+  maintainer of the Linux Glide port is Daryll Strauss. Please post bug
+  reports in the newsgroup (above). If you are confident that you found
+  a bug not previously reported, please mail to Daryll at
+  daryll@harlot.rb.ca.us
+
+
+  7.10.  How can I contribute to Linux Glide?
+
+  You could submit precise bug reports. Providing sample programs to be
+  included in the distribution is another possibility. A major
+  contribution would be adding code to the Glide based Mesa Voodoo
+  driver source.  See section on Mesa Voodoo below.
+
+
+
+  7.11.  Do I have to use Glide?
+
+  Yes. As of now, there is no other Voodoo Graphics (tm) driver
+  available for Linux. At the lowest level, Glide is the only interface
+  that talks directly to the hardware. However, you can write OpenGL
+  code without knowing anything about Glide, and use Mesa with the Glide
+  based Mesa Voodoo driver.  It helps to be aware of the involvement of
+  Glide for recognizing driver limitations and bugs, though.
+
+
+
+  7.12.  Should I program using the Glide API?
+
+  That depends on the application you are heading for.  Glide is a
+  proprietary API that is partly similar to OpenGL or Mesa, partly
+  contains features only available as EXTensions to some OpenGL
+  implementations, and partly contains features not available anywhere
+  but within Glide.
+
+  If you want to use the OpenGL API, you will need Mesa (see below).
+  Mesa, namely the Mesa Voodoo driver, offers an API resembling the well
+  documented and widely used OpenGL API. However, the Mesa Voodoo driver
+  is in early alpha, and you will have to accept performance losses and
+  lack of support for some features.
+
+  In summary, the decision is up to you - if you are heading for maximum
+  performance while accepting potential problems with porting to
+  non-3Dfx hardware, Glide is not a bad choice. If you care about
+  maintenance, OpenGL might be the best bet in the long run.
+
+
+
+  7.13.  What is the Glide current version?
+
+  The current version of Linux Glide is 2.4.  The next version will
+  probably be identical to the current version for DOS/Windows, which is
+  2.4.3, which comes in two distributions. Right now, various parts of
+  Glide are different for Voodoo Rush (tm) (VR) and Voodoo Graphics (tm)
+  (VG) boards. Thus you have to pick up separate distributions (under
+  Windows) for VR and VG.  The same will be true for Linux. There will
+  possibly be another chunk of code and another distribution for Voodoo
+  2 (tm) (V2) boards.
+
+  There is also a Glide 3.0 in preparation that will extend the API for
+  use of triangle fans and triangle strips, and provide better state
+  change optimization. Support for fans and strips will in some
+  situations significantly reduce the amount of data sent ber triangle,
+  and the Mesa driver will benefit from this, as the OpenGL API has
+  separate modes for this. For a detailed explanation on this see e.g.
+  the OpenGL documentation.
+
+
+
+  7.14.  Does it support multiple Texelfx already?
+
+  Multiple Texelfx/TMU's can be used for single pass trilinear
+  mipmapping for improvement image quality without performance penalty
+  in current Linux Glide already. You will need a board with two Texelfx
+  (that is, one of the appropriate Quantum3D Obsidian boards). The
+  application needs to specify the use of both Texelfx accordingly, it
+  does not happen automatically.
+
+  Note that because most applications are implemented for consumer
+  boards with a single Texelfx, they might not query the presence of a
+  second Texelfx, and thus not use it. This is not a flaw of Glide but
+  of the application.
+
+
+
+  7.15.  Is Linux Glide identical to DOS/Windows Glide?
+
+  The publicly available version of Linux Glide should be identical to
+  the respective DOS/Windows versions.  Delays in releasing the Linux
+  port of newer DOS/Windows releases are possible.
+
+
+  7.16.  Where to I get information on Glide?
+
+  There is exhaustive information available from 3Dfx. You could
+  download it from their home page at
+  www.3dfx.com/software/download_glide.html.  These are for free,
+  presuming you bought a 3Dfx hardware based board. Please read the
+  licensing regulations.
+
+  Basically, you should look for some of the following:
+
+  o  Glide Release Notes
+
+  o  Glide Programming Guide
+
+  o  Glide Reference Manual
+
+  o  Glide Porting Guide
+
+  o  TexUs Texture Utility Software
+
+  o  ATB Release Notes
+
+  o  Installing and Using the Obsidian
+
+     These are available as Microsoft Word documents, and part of the
+     Windows Glide distribution, i.e.  the self-extracting archive file.
+     Postscript copies for separate download should be available at
+     www.3dfx.com as well. Note that the release numbers are not always
+     in sync with those of Glide.
+
+
+
+  7.17.  Where to get some Glide demos?
+
+  You will find demo sources for Glide within the distribution (test
+  programs), and on the 3Dfx home page. The problem with the latter is
+  that some require ATB. To port these demos to Linux, the event
+  handling has to be completely rewritten.
+
+  In addition, you might find useful some of the OpenGL demo sources
+  accompanying Mesa and GLUT. While the Glide API is different from the
+  OpenGL API, they target the same hardware rendering pipeline.
+
+
+
+  7.18.  What is ATB?
+
+  Some of the 3Dfx demo programs for Glide depend not only on Glide but
+  also on 3Dfx's proprietary Arcade Toolbox (ATB), which is available
+  for DOS and Win32, but has not been ported for Linux. If you are a
+  devleoper, the sources are available within the Total Immersion
+  program, so porting ATB to Linux would be possible.
+
+
+
+  8.  FAQ: Glide and XFree86?
+
+
+  8.1.  Does it run with XFree86?
+
+  Basically, the Voodoo Graphics (tm) hardware does not care about X.
+  The X server will not even notice that the video signal generated by
+  the VGA hardware does not reach the display in single screen
+  configurations. If your application is not written X aware, Glide
+  switching to full screen mode might cause problems (see
+  troubleshooting section). If you do not want the overhead of writing
+  an X11-aware application, you might want to use SVGA console mode
+  instead.
+
+  So yes, it does run with XFree86, but no, it is not cooperating if you
+  don't write your application accordingly. You can use the Mesa "window
+  hack", which will be significantly slower than fullscreen, but still a
+  lot faster than software rendering (see section below).
+
+
+
+  8.2.  Does it only run full screen?
+
+  See above. The Voodoo Graphics (tm) hardware is not window environment
+  aware, neither is Linux Glide. Again, the experimental Mesa "window
+  hack" covered below will allow for pasting the Voodoo Graphics (tm)
+  board framebuffer's content into an X11 window.
+
+
+
+  8.3.  What is the problem with AT3D/Voodoo Rush (tm) boards?
+
+  There is an inherent problem when using Voodoo Rush (tm) boards with
+  Linux: Basically, these boards are meant to be VGA 2D/3D accelerator
+  boards, either as a single board solution, or with a Voodoo Rush (tm)
+  based daughterboard used transparently. The VGA component tied to the
+  Voodoo Rush (tm) is a Alliance Semiconductor's ProMotion-AT3D
+  multimedia accelerator.  To use this e.g. with XFree86 at all, you
+  need a driver for the AT3D chipset.
+
+  There is a mailing list on this, and a web site with FAQ at
+  www.frozenwave.com/linux-stingray128.  Look there for most current
+  info.  There is a SuSE maintained driver at
+  ftp.suse.com/suse_update/special/xat3d.tgz.  Reportedly, the XFree86
+  SVGA server also works, supporting 8, 16 and 32 bpp.  Official support
+  will probably be in XFree86 4.0.  XFree86 decided to prepare an
+  intermediate XFree86 3.3.2 release as well, which might already
+  address the issues.
+
+  The following XF86Config settings reportedly work.
+
+  ______________________________________________________________________
+  # device section settings
+  Chipset "AT24"
+  Videoram 4032
+
+  # videomodes tested by Oliver Schaertel
+  #  25.18  28.32  for 640 x 480   (70hz)
+  #  61.60         for 1024 x 786  (60hz)
+  #  120           for 1280 x 1024 (66hz)
+  ______________________________________________________________________
+
+
+  In summary, there is nothing prohibiting this except for the fact that
+  the drivers in XFree86 are not yet finished.
+
+  If you want a more technical explanation: Voodoo Rush (tm) support
+  requires X server changes to support grabbing a buffer area in the
+  video memory on the AT3D board, as the Voodoo Rush (tm) based boards
+  need to store their back buffer and z buffer there. This  memory
+  allocation and locking requirement is not a 3Dfx specific problem, it
+  is also needed e.g. for support of TV capture cards, and is thus under
+  active development for XFree86. This means changes at the device
+  dependend X level (thus XAA), which are currently implemented as an
+  extension to XFree86 DGA (Direct Graphics Access, an X11 extension
+  proposal implemented in different ways by Sun and XFree86, that is not
+  part of the final X11R6.1 standard and thus not portable). It might be
+  part of an XFree86 GLX implementation later on. The currently
+  distributed X servers assume they have full control of the
+  framebuffer, and use anything that is not used by the visual region of
+  the framebuffer as pixmap cache, e.g. for caching fonts.
+
+
+
+  8.4.  What about GLX for XFree86?
+
+  There are a couple of problems.
+
+  The currently supported Voodoo Graphics (tm) hardware and the
+  available revision of Linux Glide are full screen only, and not set up
+  to share a framebuffer with a window environment. Thus GLX or other
+  integration with X11 is not yet possible.
+
+  The Voodoo Rush (tm) might be capable of cooperating with XFree86
+  (that is, an SVGA compliant board will work with the XFree86 SVGA
+  server), but it is not yet supported by Linux Glide, nor do S3 or
+  other XFree86 servers support these boards yet.
+
+  In addition, GLX is tied to OpenGL or, in the Linux case, to Mesa.
+  The XFree86 team is currently working on integrating Mesa with their X
+  Server. GLX is in beta, XFree86 3.3 has the hooks for GLX.  See Steve
+  Parker's GLX pages at www.cs.utah.edu/~sparker/xfree86-3d/ for the
+  most recent information.  Moreover, there is a joint effort by XFree86
+  and SuSe, which includes a GLX, see www.suse.de/~sim/.  Currently,
+  Mesa still uses its GLX emulation with Linux.
+
+
+
+  8.5.  Glide and commerical X Servers?
+
+  I have not received any mail regarding use of Glide and/or Mesa with
+  commercial X Servers.  I would be interested to get confirmation on
+  this, especially on Mesa and Glide with a commercial X Server that has
+  GLX support.
+
+
+
+  8.6.  Glide and SVGA?
+
+  You should have no problems running Glide based applications either
+  single or dual screen using VGA modes. It might be a good idea to set
+  up the 640x480 resolution in the SVGA modes, too, if you are using a
+  single screen setup.
+
+
+  8.7.  Glide and GGI?
+
+  A GGI driver for Glide is under development by Jon M. Taylor, but has
+  not officially been released and was put on hold till completion of
+  GGI 0.0.9. For information about GGI see synergy.caltech.edu/~ggi/.
+  If you are adventurous, you might find the combination of XGGI (a GGI
+  based X Server for XFree86) and GGI for Glide an interesting prospect.
+  There is also a GGI driver interfacing the OpenGL API; tested with
+  unaccelerated Mesa. Essentially, this means X11R6 running on a Voodoo
+  Graphics (tm), using either Mesa or Glide directly.
+
+
+
+  9.  FAQ: OpenGL/Mesa?
+
+
+
+  9.1.  What is OpenGL?
+
+  OpenGL is an immediate mode graphics programming API originally
+  developed by SGI based on their previous proprietary Iris GL, and
+  became in industry standard several years ago. It is defined and
+  maintained by the Architectural Revision Board (ARB), an organization
+  that includes members as SGI, IBM, and DEC, and Microsoft.
+
+  OpenGL provides a complete feature set for 2D and 3D graphics
+  operations in a pipelined hardware accelerated architecture for
+  triangle and polygon rendering. In a broader sense, OpenGL is a
+  powerful and generic toolset for hardware assisted computer graphics.
+
+
+
+  9.2.  Where to get additional information on OpenGL?
+
+  The official site for OpenGL maintained by the members of the ARB, is
+  www.opengl.org,
+
+  A most recommended site is Mark Kilgard's Gateway to OpenGL Info at
+  reality.sgi.com/mjk_asd/opengl-links.html: it provides pointers to
+  book, online manual pages, GLUT, GLE, Mesa, ports to several OS, tons
+  of demos and tools.
+
+  If you are interested in game programming using OpenGL, there is the
+  OpenGL-GameDev-L@fatcity.com at Listserv@fatcity.com. Be warned, this
+  is a high traffic list with very technical content, and you will
+  probably prefer to use procmail to handle the 100 messages per day
+  coming in. You cut down bandwidth using the SET OpenGL-GameDev-L
+  DIGEST command. It is also not appropriate if you are looking for
+  introductions.  The archive is handled by the ListServ software, use
+  the INDEX OpenGL-GameDev-L and GET OpenGL-GameDev-L "filename"
+  commands to get a preview before subscribing.
+
+
+
+  9.3.  Is Glide an OpenGL implementation?
+
+  No, Glide is a proprietary 3Dfx API which several features specific to
+  the Voodoo Graphics (tm) and Voodoo Rush (tm). A 3Dfx OpenGL is in
+  preparation (see below). Several Glide features would require
+  EXTensions to OpenGL, some of which already found in other
+  implementations (e.g. paletted textures).
+
+  The closest thing to a hardware accelerated Linux OpenGL you could
+  currently get is Brian Paul's Mesa along with David Bucciarelli's Mesa
+  Voodoo driver (see below).
+
+
+
+  9.4.  Is there an OpenGL driver from 3Dfx?
+
+  Both the 3Dfx website and the Quantum3D website announced OpenGL for
+  Voodoo Graphics (tm) to be available 4Q97.  The driver is currently in
+  Beta, and accessible only to registered deverloper's under written
+  Beta test agreement.
+
+  A linux port has not been announced yet.
+
+
+
+  9.5.  Is there a commercial OpenGL for Linux and 3Dfx?
+
+  I am not aware of any third party commercial OpenGL that supports the
+  Voodoo Graphics (tm). Last time I paid attention, neither MetroX nor
+  XInside OpenGL did.
+
+
+
+  9.6.  What is Mesa?
+
+  Mesa is a free implementation of the OpenGL API, designed and written
+  by Brian Paul, with contributions from many others. Its performance is
+  competitive, and while it is not officially certified, it is an almost
+  fully compliant OpenGL implementation conforming to the ARB
+  specifications - more complete than some commercial products out,
+  actually.
+
+
+
+  9.7.  Does Mesa work with 3Dfx?
+
+  The latest Mesa MesaVer; release works with Linux Glide 2.4. In fact,
+  support was included in earlier versions, however, this driver is
+  still under development, so be prepared for bugs and less than optimal
+  performance. It is steadily improving, though, and bugs are usually
+  fixed very fast.
+
+  You will need to get the Mesa library archive from the
+  iris.ssec.wisc.edu FTP site.  It is recommended to subscribe to the
+  mailing list as well, especially when trying to track down bugs,
+  hardware, or driver limitations. Make sure to get the most recent
+  distribution. A Mesa-3.0 is in preparation.
+
+
+
+  9.8.  How portable is Mesa with Glide?
+
+  It is available for Linux and Win32, and any application based on Mesa
+  will only have the usual system specific code, which should usually
+  mean XWindows vs. Windows, or GLX vs. WGL. If you use e.g. GLUT or Qt,
+  you should get away with any system specifics at all for virtually
+  most applications. There are only a few issues (like sampling relative
+  mouse movement) that are not adressed by the available portable GUI
+  toolkits.
+
+  Mesa/Glide is also available for DOS. The port which is 32bit DOS is
+  maintained by Charlie Wallace and kept up to date with the main Mesa
+  base. See www.geocities.com/~charlie_x/.for the most current releases.
+
+
+
+  9.9.  Where to get info on Mesa?
+
+  The Mesa home page is at www.ssec.wisc.edu/~brianp/Mesa.html.  There
+  is an archive of the Mesa mailing list.  at www.iqm.unicamp.br/mesa/.
+  This list is not specific to 3Dfx and Glide, but if you are interested
+  in using 3Dfx hardware to accelerate Mesa, it is a good place to
+  start.
+
+
+  9.10.  Where to get information on Mesa Voodoo?
+
+  For latest information on the Mesa Voodoo driver maintained by David
+  Bucciarelli tech.hmw@plus.it see the home page at www-
+  hmw.caribel.pisa.it/fxmesa/.
+
+  9.11.  Does Mesa support multitexturing?
+
+  Not yet (as of Mesa 2.6), but it is on the list.  In Mesa you will
+  probably have to use the OpenGL EXT_multitexture extension once it is
+  available. There is no final specification for multitextures in
+  OpenGL, which is supposed to be part of the upcoming OpenGL 1.2
+  revision. There might be a Glide driver specific implementation of the
+  extension in upcoming Mesa releases, but as long as only certain
+  Quantum3D Obsidian boards come with multiple TMU's, it is not a top
+  priority. This will surely change once Voodoo 2 (tm) based boards are
+  in widespread use.
+
+
+
+  9.12.  Does Mesa support single pass trilinear mipmapping?
+
+  Multiple TMU's should be used for single pass trilinear mipmapping for
+  improvement image quality without performance penalty in current Linux
+  Glide already. Mesa support is not yet done (as of Mesa 2.6), but is
+  in preparation.
+
+
+
+  9.13.  What is the Mesa "Window Hack"?
+
+  The most recent revisions of Mesa contain an experimental feature for
+  Linux XFree86. Basically, the GLX emulation used by Mesa copies the
+  contents of the Voodoo Graphics (tm) board's most recently finished
+  framebuffer content into video memory on each glXSwapBuffers call.
+  This feature is also available with Mesa for Windows.
+
+  This obviously puts some drain on the PCI, doubled by the fact that
+  this uses X11 MIT SHM, not XFree86 DGA to access the video memory. The
+  same approach could theoretically be used with e.g. SVGA. The major
+  benefit is that you could use a Voodoo Graphics (tm) board for
+  accelerated rendering into a window, and that you don't have to use
+  the VGA passthrough mode (video output of the VGA board deteoriates in
+  passing through, which is very visible with high end monitors like
+  e.g. EIZO F784-T).
+
+  Note that this experimental feature is NOT Voodoo Rush (tm) support by
+  any means. It applies only to the Voodoo Graphics (tm) based boards.
+  Moreover, you need to use a modified GLUT, as interfacing the window
+  management system and handling the events appropriately has to be done
+  by the application, it is not handled in the driver.
+
+  Make really sure that you have enabled the following environment
+  variables:
+
+  ______________________________________________________________________
+  export SST_VGA_PASS=1          # to stop video signal switching
+  export SST_NOSHUTDOWN=1        # to stop video signal switching
+  export MESA_GLX_FX="window"    # to initiate Mesa window mode
+  ______________________________________________________________________
+
+
+  If you manage to forget one of the SST variables, your VGA board will
+  be shut off, and you will loose the display (but not the actual X). It
+  is pretty hard to get that back being effectively blind.
+
+  Finally, note that the libMesaGL.a (or .so) library can contain
+  multiple client interfaces.  I.e. the GLX, OSMesa, and fxMesa (and
+  even SVGAMesa) interfaces call all be compiled into the same
+  libMesaGL.a. The client program can use any of them freely, even
+  simultaneously if it's careful.
+
+
+
+  9.14.  How about GLUT?
+
+  Mark Kilgard's GLUT distribution is a very good place to get sample
+  applications plus a lot of useful utilities.  You will find it at
+  reality.sgi.com/mjk_asd/glut3/, and you should get it anyway. The
+  current release is GLUT 3.6, and discussion on a GLUT 3.7 (aka
+  GameGLUT) has begun. Note that Mark Kilgard has left SGI recently, so
+  the archive might move some time this year - for the time being it
+  will be kept at SGI.
+
+  There is also a GLUT mailing list, glut@perp.com. Send mail to
+  majordomo@perp.com, with the (on of the) following in the body of your
+  email message:
+
+  ______________________________________________________________________
+     help
+     info glut
+     subscribe glut
+     end
+  ______________________________________________________________________
+
+
+
+  As GLUT handles double buffers, windows, events, and other operations
+  closely tied to hardware and operating system, using GLUT with Voodoo
+  Graphics (tm) requires support, which is currently in development
+  within GLX for Mesa. It already works for most cases.
+
+
+
+  10.  FAQ: But Quake?
+
+  10.1.  What about that 3Dfx GL driver for Quake?
+
+  The 3Dfx Quake GL, aka mini-driver, aka miniport, aka Game GL, aka
+  3Dfx GL alpha, implemented only a Quake-specific subset of OpenGL (see
+  http://www.cs.unc.edu/~martin/3dfx.html for an inofficial list of
+  supported code paths). It is not supported, and not updated anymore.
+  It was a Win32 DLL (opengl32.dll) released by 3Dfx and was available
+  for Windows only. This DLL is not, and will not be ported to Linux.
+
+
+  10.2.  Is there a 3Dfx based glQuake for Linux?
+
+  Yes. A Quake linuxquake v0.97 binary has been released based on Mesa
+  with Glide. The Quake2 q2test binary for Linux and Voodoo Graphics
+  (tm) has been made available as well.  A full Quake2 for Linux was
+  released in January 1998, with linuxquake2-3.10. Dave "Zoid" Kirsch is
+  the official maintainer of all Linux ports of Quake, Quakeworld, and
+  Quake2, including all the recent Mesa based ports. Note that all Linux
+  ports, including the Mesa based ones, are not officially supported by
+  id Software.
+
+  See ftp.idsoftware.com/idstuff/quake/unix/ for the latest releases.
+
+
+
+  10.3.  Does glQuake run in an XFree86 window?
+
+  A revision of Mesa and the Mesa-based Linux glQuake is in preparation.
+  Mesa already does support this by GLX, but Linux glQuake does not use
+  GLX.
+
+
+
+  10.4.  Known Linux Quake problems?
+
+  Here is an excerpt, as of January 7th, 1998. I omitted most stuff not
+  specific to &3Dfx; hardware.
+
+  o  You really should run Quake2 as root when using the SVGALib and/or
+     GL renders. You don't have to run as root for the X11 refresh, but
+     the modes on the mouse and sound devices must be read/writable by
+     whatever user you run it as. Dedicated server requires no special
+     permissions.
+
+  o  X11 has some garbage on the screen when 'loading'. This is normal
+     in 16bit color mode. X11 doesn't work in 24bit (TrueColor). It
+     would be very slow in any case.
+
+  o  Some people are experiencing crashes with the GL renderer. Make
+     sure you install the libMesa that comes with Quake2! Older versions
+     of libMesa don't work properly.
+
+  o  If you are experience video 'lag' in the GL renderer (the frame
+     rate feels like it's lagging behind your mouse movement) type
+     "gl_finish 1" in the console. This forces update on a per frame
+     basis.
+
+  o  When running the GL renderer, make sure you have killed selection
+     and/or gpm or the mouse won't work as they won't "release" it while
+     Quake2 is running in GL mode.
+
+
+  10.5.  Know Linux Quake security problems?
+
+  As Dave Kirsch posted on January 28th, 1998: an exploit for Quake2
+  under Linux has been published. Quake2 is using shared libraries.
+  While the READMRE so far does not specifically mention it, note that
+  Quake2 should not be setuid.
+
+  If you want to use the ref_soft and ref_gl renderers, you should run
+  Quake2  as root. Do not make the binary setuid. You can only run both
+  those renderers at the console only, so being root is not that much of
+  an issue.
+
+  The X11 render does not need any root permissions (if /dev/dsp is
+  writable by others for sound).  The dedicated server mode does not
+  need to be root either, obviously.
+
+  Problems such as root requirements for games has been sort of a sore
+  spot in Linux for a number of years now. This is one of the goals that
+  e.g. GGI is targetting to fix.  A ref_ggi might be supported in the
+  near future.
+
+
+  10.6.  Does LinuxQuake use multitexturing?
+
+  To my understadnding, glQuake will use a multitexture EXTension if the
+  OpenGL driver in question offers it.  The current Mesa implementation
+  and the Glide driver for Linux do not yet support this extension, so
+  for the time being the answer is no. See section on Mesa and
+  multitexturing for details.
+  10.7.  Where can I get current information on Linux glQuake?
+
+  Try some of these sites: the "The Linux Quake Resource" at
+  linuxquake.telefragged.com, or the "Linux Quake Page" at
+  www.planetquake.com/threewave/linux/.  Alternatively, you could look
+  for Linux Quake sites in the "SlipgateCentral" database at
+  www.slipgatecentral.com.
+
+
+
+  11.  FAQ: Troubleshooting?
+
+  11.1.  Has this hardware been tested?
+
+  See hardware requirements list above. I currently do not maintain a
+  conclusive list of vendors and boards, as no particular board specific
+  problems have been verified.  Currently, only 3Dfx and Quantum3D
+  provide boards for testing to the developers, so Quantum3D consumer
+  boards are a safe bet. Every other Voodoo Graphics (tm) based board
+  should work, too. I have reports regarding the Orchid Righteous 3D,
+  Guillemot Maxi 3D Gamer, and Diamond Monster 3D.
+
+  If you are a board manufacturer who wants to make sure his Voodoo
+  Graphics (tm), Voodoo Rush (tm) or Voodoo 2 (tm) boards work with
+  upcoming releases of Linux, Xfree86, Linux Glide and/or Mesa, please
+  contact me, and I will happily forward your request to the persons
+  maintaining the drivers in question. If you are interested in support
+  for Linux Glide on other then the PC platfrom, e.g. DEC Alpha, please
+  contact the maintainer of Linux Glide Daryll Strauss, at
+  daryll@harlot.rb.ca.us
+
+
+
+  11.2.  Failed to change I/O privilege?
+
+  You need to be root, or setuid your application to run a Glide based
+  application.  For DMA, the driver accesses /dev/mem, which is not
+  writeable for anybody but root, with good reasons. See the README in
+  the Glide distribution for Linux.
+
+
+
+  11.3.  Does it work without root privilege?
+
+  There are compelling case where the setuid requirement is a problem,
+  obviously. There are currently solutions in preparation, which require
+  changes to the library internals itself.
+
+
+
+  11.4.  Displayed images looks awful (single screen)?
+
+  If you are using the analog pass through configuration, the common
+  SVGA or X11 display might look pretty bad.  You could try to get a
+  better connector cable than the one provided with the accelerator
+  board (the ones delivered with the Diamond Monster 3D are reportedly
+  worse then the one accompanying the Orchid Righteous 3D), but up to a
+  degree there will inevitably be signal loss with an additional
+  transmission added.
+
+  If the 640x480 full screen image created by the accelerator board does
+  look awful, this might indicate a real hardware problem. You will have
+  to contact the board manufacturer, not 3Dfx for details, as the
+  quality of the video signal has nothing to do with the accelerator -
+  the board manufacturer chooses the RAMDAC, output drivers, and other
+  components responsible.
+
+
+
+  11.5.  The last frame is still there (single or dual screen)?
+
+  You terminated your application with Ctrl-C, or it did not exit
+  normally. The accelerator board will dutifully provide the current
+  content of the framebuffer as a video signal unless told otherwise.
+
+
+
+  11.6.  Powersave kicks in (dual screen)?
+
+  When you application terminates in dual screen setups, the accelerator
+  board does not provide video output any longer. Thus powersave kicks
+  each time. To avoid this, use
+
+  ______________________________________________________________________
+  setenv SST_DUALSCREEN 1
+  ______________________________________________________________________
+
+
+
+  11.7.  My machine seem to lock (X11, single screen)?
+
+  If you are running X when calling a Glide application, you probably
+  moved the mouse out of the window, and the keyboard inputs do not
+  reach the application anymore.
+
+  If you application is supposed to run concurrently with X11, it is
+  recommend to expose a full screen window, or use the XGrabPointer and
+  XGrabServer functions to redirect all inputs to the application while
+  the X server cannot access the display. Note that grabbing all input
+  with XGrabPointer and XGrabServer does not qualify as well-behaved
+  application, and that your program might block the entire system.
+
+  If you experience this problem without running X, be sure that there
+  is no hardware conflict (see below).
+
+
+  11.8.  My machine locks (single or dual screen)?
+
+  If the system definitely does not respond to any inputs (you are
+  running two displays and know about the loss of focus), you might
+  experience a more or less subtle hardware conflict.  See installation
+  troubleshooting section for details.
+
+  If there is no obvious address conflict, there might still be other
+  problems (below). If you are writing your own code the most common
+  reason for locking is that you didn't snap your vertices. See the
+  section on snapping in the Glide documentation.
+
+
+  11.9.  My machine locks (used with S3 VGA board)?
+
+  It is possible you have a problem with memory region overlap specific
+  to S3. There is some info and a patch to the so-called S3 problem in
+  the 3Dfx web site, but these apply to Windows only. To my
+  understanding, the cause of the problem is that some S3 boards (older
+  revisions of Diamond Stealth S3 968) reserve more memory space than
+  actually used, thus the Voodoo Graphics (tm) has to be mapped to a
+  different location. However, this has not been reported as a problem
+  with Linux, and might be Windows-specific.
+  11.10.  No address conflict, but locks anyway?
+
+  If you happen to use a motherboard with non-standard or incomplete PCI
+  support, you could try to shuffle the boards a bit. I am running an
+  ASUS TP4XE that has that non-standard modified "Media Slot", i.e. PCI
+  slot4 with additional connector for ASUS-manufactured SCSI/Sound combo
+  boards, and I experienced severe problems while running a Diamond
+  Monster 3D in that slot. The system operates flawlessly since I put
+  the board in one of the regular slots.
+
+
+
+  11.11.  Mesa runs, but does not access the board?
+
+  Be sure that you recompiled all the libraries (including the toolkits
+  the demo programs use - remember that GLUT does not yet support Voodoo
+  Graphics (tm)), and that you removed the older libraries, run
+  ldconfig, and/or set your LD_LIBRARY_PATH properly.  Mesa supports
+  several drivers in parallel (you could use X11 SHM, off screen
+  rendering, and Mesa Voodoo at the same time), and you might have to
+  create and switch contexts explicitely (see MakeCurrent function) if
+  the Voodoo Graphics (tm) isn't chosen by default.
+
+
+
+  11.12.  Resetting dual board SLI?
+
+  If a Quantum 3D Obsidian board using in an SLI setup exits abruptly
+  (i.e., the application crashes, or is aborted by user), the boards are
+  left in an undefined state.  With the dual-board set, you can run a
+  program called resetsli to reset them. Until you run the resetsli
+  program, you will not be able to re-initialize the Obsidian board.
+
+
+
+  11.13.  Resetting single board SLI?
+
+  The resetsli program mentioned above does not yet work with a single
+  board Obsidian SLI (e.g. the Obsidian 100-4440SB). You will have to
+  reboot your system by reset in order to reset the board.
+
+
+
+  4mb Laptop HOWTO
+  Bruce Richardson <brichardson@lineone.net>
+
+  25 March 2000
+
+  How to put a "grown-up" Linux on a small-spec (4mb RAM, <=200mb hard
+  disk) laptop.
+
+  ______________________________________________________________________
+
+  Table of Contents
+
+
+
+  1. Introduction
+
+     1.1 Why this document was written.
+     1.2 What use is a small laptop?
+     1.3 Why not just upgrade the laptop?
+     1.4 What about 4mb desktop machines?
+     1.5 What this document doesn't do.
+     1.6 Where to find this document.
+     1.7 Copyright
+
+  2. The Laptops
+
+     2.1 Basic Specifications
+        2.1.1 Compaq Contura Aero
+        2.1.2 Toshiba T1910
+     2.2 The Problem
+     2.3 The Solution
+
+  3. Choices Made
+
+     3.1 What to use to create the initial root partition?
+     3.2 The Distribution
+           3.2..1 But I don't like Slackware!
+     3.3 Which installation method to use?
+     3.4 Partition Layout
+        3.4.1 Basic Requirement
+        3.4.2 How complex a layout?
+     3.5 Which components to install?
+
+  4. The Pre-installation Procedure
+
+     4.1 muLinux Preparation
+     4.2 Prepare the installation root files.
+     4.3 Create the partitions.
+        4.3.1 Mini-Linuces and ext2 file-systems - an important note.
+        4.3.2 Procedure
+
+  5. The Installation
+
+     5.1 Boot the machine
+     5.2 Floppy/Parport CD-ROM Install
+     5.3 Network/PCMCIA Install
+        5.3.1 PCMCIA install on the Aero
+     5.4 Set-up
+        5.4.1 AddSwap
+        5.4.2 Target
+        5.4.3 Select
+        5.4.4 Install
+        5.4.5 Configure
+        5.4.6 Exit
+     5.5 Pre-reboot Configuration
+     5.6 Post-reboot Configuration.
+        5.6.1 Re-use the temporary root.
+        5.6.2 Other configuration tweaks.
+
+  6. Conclusion
+
+  7. Appendix A:
+
+     7.1 A - Base Linux System
+           7.1..1 Packages considered for omission:
+           7.1..2 Packages installed:
+     7.2 AP - Non-X Applications
+           7.2..1 Packages considered for inclusion:
+           7.2..2 Packages installed:
+     7.3 D - Development Tools
+           7.3..1 Packages installed:
+     7.4 E - Emacs
+           7.4..1 Packages installed:
+     7.5 F - FAQs and HOWTOs
+           7.5..1 Packages installed:
+     7.6 K - Kernel Source
+           7.6..1 Packages Installed:
+     7.7 N - Networking Tools and Apps
+           7.7..1 Packages installed:
+     7.8 Tetex
+           7.8..1 Packages installed:
+     7.9 Y - BSD Games Collection
+           7.9..1 Packages installed:
+     7.10 End result
+
+  8. Appendix B: Resources relevant to this HOWTO
+
+
+
+  ______________________________________________________________________
+
+  1.  Introduction
+
+  1.1.  Why this document was written.
+
+  I got my hands on two elderly laptops, both with just 4mb RAM and
+  small (<=200mb) hard drives. I wanted to install Linux on them. The
+  documentation for this kind of laptop all recommends installing either
+  a mini-Linux or an old (and therefor compact) version of one of the
+  professional distributions.  I wanted to install an up-to-date
+  professional distribution.
+
+  1.2.  What use is a small laptop?
+
+  Plenty. It isn't going to run X or be a development box (see ``Which
+  components to install?'') but if you are happy at the console you have
+  a machine that can do e-mail, networking, writing etc. Laptops also
+  make excellent diagnostic/repair tools and the utilities for that will
+  easily fit onto small laptops.
+
+  1.3.  Why not just upgrade the laptop?
+
+  Upgrading old laptops is not much cheaper than upgrading new ones.
+  That's a lot to spend on an old machine, especially considering that
+  the manufacturer isn't supporting it any more and spare parts are hard
+  to find.
+
+  1.4.  What about 4mb desktop machines?
+
+  The procedure described in this document will work perfectly well on a
+  desktop PC. On the other hand, upgrading a desktop machine is far
+  easier and cheaper than upgrading a laptop. Even if you don't upgrade
+  it, there are still simpler options. You could take out the hard disk,
+  put it in a more powerful machine, install Linux, trim it to fit and
+  then put the disk back in the old machine.
+
+  1.5.  What this document doesn't do.
+
+  This document is not a general HOWTO about installing Linux on laptops
+  or even a specific HOWTO for either of the two machines mentioned
+  here. It simply describes a way of squeezing a large Linux into a very
+  small space, citing two specific machines as examples.
+
+
+
+  1.6.  Where to find this document.
+
+  The latest copy of this document can be found in several formats at
+  http://website.lineone.net/~brichardson/linux/4mb_laptops/.
+
+  1.7.  Copyright
+
+  This document is copyright (c) Bruce Richardson 2000. It may be
+  distributed under the terms set forth in the LDP license at
+  sunsite.unc.edu/LDP/COPYRIGHT.html.
+
+  This HOWTO is free documentation; you can redistribute it and/or
+  modify it under the terms of the LDP license. This document is
+  distributed in the hope that it will be useful, but without any
+  warranty; without even the implied warranty of merchantability or
+  fitness for a particular purpose. See the LDP license for more
+  details.
+
+  Toshiba and T1910 are trademarks of Toshiba Corporation. Compaq and
+  Contura Aero are trademarks of Compaq Computer Corporation.
+
+  2.  The Laptops
+
+  This section describes the laptops that I have used this procedure on,
+  the problems faced when installing Linux on them and the solutions to
+  those problems (in outline).
+
+  2.1.  Basic Specifications
+
+  2.1.1.  Compaq Contura Aero
+
+
+  �  25MHz 486SX CPU
+
+  �  4mb RAM
+
+  �  170mb Hard Disk
+
+  �  1 PCMCIA Type II slot
+
+  �  External PCMCIA 3.5" Floppy drive   (-- The PCMCIA floppy drive has
+     a proprietary interface which is partly handled by the Aero's
+     unique BIOS. The Linux PCMCIA drivers can't work with it. According
+     to the PCMCIA-HOWTO, if the drive is connected when the laptop
+     boots it will work as a standard drive and Card Services will
+     ignore the socket but it is not hot-swappable. However, I found
+     that the drive becomes inaccessible as soon as Card Services start
+     unless there is a mounted disk in the drive. This has implications
+     for the installation process - these are covered at the relevant
+     points.  --)
+
+
+  2.1.2.  Toshiba T1910
+
+
+  �  33MHz 486SX CPU
+
+  �  4mb RAM
+
+  �  200 mb Hard Disk
+
+  �  Internal 3.5" Floppy drive
+
+  �  1 PCMCIA Type II/III slot
+
+
+  2.2.  The Problem
+
+  The small hard disks and the lack of an internal floppy on the Aero
+  make the installation more tricky than normal but the real problem is
+  the RAM. None of the current distributions has an installation disk
+  that will boot in 4mb, not even if the whole hard disk is a swap
+  partition.
+
+  The standard installation uses a boot disk to uncompress a root-
+  partition image (either from a second floppy or from CD-ROM) into a
+  ram-disk. The root-image is around 4mb in size. That's all the RAM
+  available in this scenario. Try it and it freezes while unpacking the
+  root-image.
+
+  2.3.  The Solution
+
+  The answer is to eliminate the ram-disk. If you can mount root on a
+  physical partition you will have enough memory to do the install.
+  Since the uncompressed ram-disk is too big to fit on a floppy, the
+  only place left is on the hard disk of the laptop. The steps are:
+
+
+  1. Find something that will boot in 4mb ram and which can also create
+     ext2 partitions.
+
+  2. Use it to create a swap partition and a small ext2 partition on the
+     laptop's hard disk.
+
+  3. Uncompress the installation root-image and copy it onto the ext2
+     partition.
+
+  4. Boot the laptop from the installation boot-disk, pointing it at the
+     ext2 partition on the hard disk.
+
+  5. The installation should go more or less as normal from here.
+
+  The only question was whether a distribution that wouldn't install
+  (under normal circumstances) on the laptops would run on them. The
+  short answer is "Yes".
+
+  If you're an old Linux hand then that's all you need to know. If not,
+  read on - some of the steps listed above aren't as simple as they
+  look.
+
+  3.  Choices Made
+
+  This section describes the choices available, which options are
+  practical, which ones I decided on and why.
+
+  3.1.  What to use to create the initial root partition?
+
+  The best tool for this is a mini-Linux. There's a wide selection of
+  small Linuces available on the net, but most of them won't boot in 4mb
+  RAM. I found two that will:
+
+
+     SmallLinux  http://smalllinux.netpedia.net/
+        SmallLinux will boot in as little as 2mb RAM but its root disk
+        can't be taken out of the drive, which is a shame since
+        otherwise it has everything we need (i.e. fdisk, mkswap and
+        mkfs.ext2). SmallLinux can create the needed partitions but
+        can't be used to copy the root partition.
+
+     muLinux  http://sunsite.auc.dk/mulinux/
+        muLinux will boot in 4mb but only in a limited single-user mode.
+        In this mode fdisk and mkswap are available but mkfs.ext2 and
+        the libraries needed to run it are on the /usr partition which
+        is not available in maintenance mode. To use muLinux to do the
+        whole pre-installation procedure the files needed to create ext2
+        file-systems must be extracted from the usr disk image and
+        copied onto a floppy.
+
+  This gives the option of either using SmallLinux to create the
+  partitions and muLinux to copy the root partition or using muLinux to
+  do the whole job.  Since I had two laptops I tried both.
+
+  3.2.  The Distribution
+
+  It didn't take much time to choose Slackware. Apart from the fact that
+  I like it but haven't used it much and want to learn more, I
+  considered the following points:
+
+
+  �  Slackware has possibly the most low-tech DIY install of all the
+     major distributions.  It is also one of the most flexible, coming
+     with a wide range of boot-disk kernels to suit many different
+     machines. This makes it well suited to the kind of hacking about
+     required in this scenario.
+
+  �  Slackware supports all the methods listed in ``Which Installation
+     method to use?''.
+
+  �  Slackware is a distribution designed by one person. I'm sure
+     Patrick Volkerding won't object if I say this means its
+     configuration tools are simpler and more streamlined. In my opinion
+     this makes the job of trimming the installation to fit cramped
+     conditions easier.
+
+  Version 7.0 was the latest version when I tried this so that's what I
+  used.
+
+  3.2.0.1.  But I don't like Slackware!
+
+  You don't have to use it. I can't answer for all the distributions but
+  I know that Debian, Red Hat and SuSE offer a range of installation
+  methods and have an "expert" installation procedure   (-- Does Debian
+  do any other kind?  --)
+
+  which can be used here. Most of the steps in this document would apply
+  to any of the distributions without change.
+
+  If you haven't used the expert method with your preferred distribution
+  before, do a trial run on a simple desktop machine to get the feel of
+  it and to explore the options it offers.
+
+  3.3.  Which installation method to use?
+
+
+     Floppy Install
+        This means churning out 15 floppies - which only gives you an
+        absolute minimal install and requires a second stage to get the
+        apps you want on. It's also very slow on such low-spec machines.
+        This is a last resort if you can't make the others work.
+
+     Parallel-port Install
+        Where the parallel port has an IDE device, parallel cable or
+        pocket ethernet adaptor   (-- A pocket lan adaptor installation
+        onto these machines will be very slow.  --)
+
+        attached. This would be a good choice for the Aero, leaving the
+        PCMCIA slot free to run the floppy drive.
+
+     PCMCIA Install
+        As above, this could be a CD-ROM or network install.  This would
+        be the best method for the T1910 - on the Aero it's a bit more
+        awkward.
+
+     ISA/PCI Ethernet Install
+        Not an option for the laptops, obviously, but included in case
+        your target machine is a desktop PC.
+
+
+       The tools I had to hand dictated a PCMCIA network install. I
+       will point out where steps differ for the other methods.
+       Whichever method you choose, you need to have a higher-spec
+       machine available - even if only to create the disks for a
+       floppy install.
+
+
+  3.4.  Partition Layout
+
+  3.4.1.  Basic Requirement
+
+  This procedure requires at least two Linux Native partitions in
+  addition to a Swap partition. Since one of the ext2 partitions will be
+  in use as temporary root during the installation it will not be
+  available as a target partition and so should be small - though no
+  smaller than 5mb. It makes sense to create for this a partition that
+  you will re-use as /home after installation is complete.  Another
+  option would be to re-create it as a DOS partition to give you a dual
+  boot laptop.
+
+  3.4.2.  How complex a layout?
+
+  There isn't room to get too clever here. There is an argument for
+  having a single ext2 partition and using a swap file to avoid wasting
+  space but I would strongly urge creating a separate partition for
+  /usr. If you have only one partition and something goes wrong with it
+  you may well be faced with a complete re-installation. Separating /usr
+  and having a small partition for / makes disaster recovery a more
+  likely prospect. On both machines I created 4 partitions in total:
+
+
+  1. A swap partition -- 16mb on the T1910, 20 on the Aero (I'm more
+     likely to upgrade the memory on the Aero).
+
+  2. /home (temporary root during installation) -- 10mb
+
+  3. / -- 40mb on the T1910, 30mb on the Aero.
+
+  4. /usr -- All the remainder.
+
+  In addition, the Aero uses hda3 for a 2mb DOS partition containing
+  configuration utilities. See the Aero FAQs for details.
+
+  3.5.  Which components to install?
+
+  The full glibc libraries alone would nearly fill the hard disks so
+  there's no question of building a development machine. It looks as if
+  a minimal X installation can be squeezed in but I'm sure it would
+  crawl and I don't want it anyway.  I decide to install the following
+  (for a full listing see ``Appendix A''):
+
+
+  �  The core Linux utilities
+
+  �  Assorted text apps from the ap1 file set:
+
+  �  Info/FAQ/HOWTO documentation
+
+  �  Basic networking utilities
+
+  �  The BSD games
+
+  This selection matches the kind of machine described in ``What use is
+  a small laptop?''.
+
+  4.  The Pre-installation Procedure
+
+  This section covers creating a swap partition and a temporary root
+  partition on the laptop's hard disk. Nothing here is Slackware-
+  specific.
+
+  4.1.  muLinux Preparation
+
+  If you are going to use only muLinux to for this procedure then you
+  need to prepare a disk with mkfs.ext2 and supporting libraries on it.
+  From the muLinux setup files uncompress USR.bz2 and mount it as a loop
+  file-system. If you are in the same directory as the USR file and you
+  want to mount it as /tmpusr then the sequence for this is:
+
+
+  ______________________________________________________________________
+  losetup /dev/loop0 USR
+  mount -t ext2 /dev/loop0 /tmpusr
+
+  ______________________________________________________________________
+
+
+
+  >From there copy mkfs.ext2, libext2fs.so.2, libcomerr.so.2 and
+  libuuid.so.1 onto a floppy.
+
+  4.2.  Prepare the installation root files.
+
+  Select the root disk you want - I used the color one with no problems
+  but the text one would be slightly faster in these low memory
+  conditions. Uncompress the image and mount it as a loop device. The
+  procedure is the same as in the above section but the root disk image
+  is a minix file-system.
+
+  Next you need 3 1722 floppies or 4 1440 floppies with ext2 file-
+  systems - it's better with 1722 disks as you don't need to split the
+  /lib directory.  Give one floppy twice the default number of inodes so
+  it can take the /dev directory. That's 432 nodes for a 1722 disk or
+  368 for a 1440. If you specify /dev/fd0H1722 or /dev/fd0H1440 then you
+  don't have to give any other parameters so for a 1722 disk do
+
+
+  ______________________________________________________________________
+  mke2fs -N 432 /dev/fd0H1722
+
+  ______________________________________________________________________
+
+
+
+  If you have mounted the root image as /tmproot and the destination
+  floppy as /floppy then cd to /tmproot. To copy the dev directory the
+  command is
+
+
+
+  ______________________________________________________________________
+  cp -dpPR dev/* /floppy/
+
+  ______________________________________________________________________
+
+
+
+  For the other directories with files in (bin, etc, lib, mnt, sbin,
+  usr, var) it's
+
+
+  ______________________________________________________________________
+  cp -dpPr directoryname/* /floppy/
+
+  ______________________________________________________________________
+
+
+
+  Don't bother with the empty ones (floppy, proc, root, tag, tmp)
+  because you can simply create them on the laptop. boot and cdrom are
+  soft links pointing to /mnt/boot and /var/log/mount respectively - you
+  can also create them on the laptop.
+
+  4.3.  Create the partitions.
+
+  4.3.1.  Mini-Linuces and ext2 file-systems - an important note.
+
+  To save space, small-Linux designers sometimes use older libc5
+  librariesand where they do use up-to-date libc6 they leave out may of
+  the options compiled into full distributions, including some optional
+  features of the ext2 file-system.  This has two consequences:
+
+
+  �  Trying to mount ext2 disks formatted using a modern Linux system
+     can generate error messages if you mount them read-write. Be sure
+     to use the -r option when mounting floppies on the laptops.
+
+  �  It is not wise to use the mkfs.ext2 that comes with the mini-Linux
+     to create file-systems on the partitions into which SlackWare will
+     be installed. It should only be used to create the file-system on
+     the temporary root partition. Once installation is complete this
+     partition can be reformatted and re-used.
+
+  4.3.2.  Procedure
+
+  If installing on an Aero, make sure the floppy drive is inserted
+  before switching on and do not remove it.
+
+
+  1. Boot from the mini-Linux   (-- With muLinux, wait until the boot-
+     process complains about the small memory space and offers the
+     option of dropping into a shell - take that option and work in the
+     limited single-user mode it gives you.  --)
+
+
+
+  2. Use fdisk to create the partitions.
+
+  3. Reboot on leaving fdisk (with muLinux you may simply have to turn
+     off and on again at this point).
+
+  4. Use mkswap on the swap partition and then activate it (this will
+     make muLinux much happier).
+
+  5. If using muLinux then mount the extra floppy created in ``muLinux
+     Preparation'', copy mkfs.ext2 into /bin and the libraries into
+     /lib.
+
+  6. Use mkfs.ext2 to create the file-system on the temporary root
+     partition.
+
+  7. If you have been using SmallLinux, shut down and reboot using
+     muLinux.  Don't forget to activate the swap partition again.
+
+  8. muLinux will have mounted the boot floppy on /startup - unmount it
+     to free the floppy drive.
+
+  9. Now mount the temporary root partition and copy onto it the
+     contents of the disks you created in ``Prepare the installation
+     root files''. Do not be alarmed by the error messages: if, for
+     example, you copy usr from the floppy to the temporary root
+     partition by typing "cp -dpPr usr/* /tmproot/" then you'll get the
+     error message "cp: sr: no such file or directory". Ignore this,
+     nothing is wrong.
+
+  10.
+     cd to the temporary root partition and create the empty folders
+     (floppy, proc, root, tag, tmp) and the soft links boot (pointing to
+     mnt/boot) and cdrom (to var/log/mount).
+
+  11.
+     Unmount the temporary root partition - this syncs the disk.
+
+  12.
+     You can simply turn off the machine now.
+
+  5.  The Installation
+
+  This section does not give much detail on the Slackware installation
+  process.  In fact, it assumes you are familiar with it. Instead, this
+  section concentrates on those areas where special care or unusual
+  steps are required.
+
+  5.1.  Boot the machine
+
+  Make a boot-disk from one of the images. I recommend you use bareapm.i
+  on a laptop and bare.i on a desktop - unless you have a parallel-port
+  IDE device (pportide.i). Boot the laptop from it. When the boot:
+  prompt appears, type "mount root=/dev/hdax" where x is the temporary
+  root partition. Log in as root.  Then activate the swap partition.
+
+  5.2.  Floppy/Parport CD-ROM Install
+
+  In both these cases, no extra work should be necessary to access the
+  installation media. Simply run setup.
+
+  5.3.  Network/PCMCIA Install
+
+  Slackware has supplementary disks with tools for these and
+  instructions for their use greet you when you log in. Use the network
+  disk on a desktop PC with ethernet card or a laptop with pocket
+  ethernet adaptor. Use the PCMCIA disk for PCMCIA install. Once your
+  network adapter/PCMCIA socket has been identified, run setup.
+
+  5.3.1.  PCMCIA install on the Aero
+
+  The Slackware installation process runs the PCMCIA drivers from the
+  supplementary floppy. Because the Aero has a PCMCIA floppy drive, this
+  means you can't remove the floppy drive to insert the PCMCIA CD-
+  ROM/ethernet card. The solution is simple: the Slackware PCMCIA setup
+  routine creates /pcmcia and mounts the supplementary disk there, so
+
+  1. Create the /pcmcia directory yourself
+
+  2. Mount the supplementary disk to /mnt. Be sure to specify the type
+     as vfat - if you don't, it'll be incorrectly identified as UMSDOS
+     and long filenames will be mis-copied.
+
+  3. cd /mnt;cp -dpPr ./* /pcmcia/
+
+  4. Unmount the floppy.
+
+  5. Run pcmcia. When the script complains that there is no disk in the
+     drive simply hit Enter: Card Sevices will start. Connect your
+     PCMCIA device and hit Enter.
+
+  6. Run setup
+
+  5.4.  Set-up
+
+  The Slackware set-up program is straightforward. Start with the Keymap
+  section and it'll take you forward step by step.
+
+  5.4.1.  AddSwap
+
+  You do need to do this step so it can put the correct entry in fstab
+  but make sure it doesn't run mkswap - you're already using the
+  partition.
+
+  5.4.2.  Target
+
+  In this section Slackware asks which partitions will be mounted as
+  what and then formats them if you want.
+
+  The safest bet here is to leave your temporary root partition out
+  altogether and just edit fstab later once you know you don't need it
+  for it's temporary purpose anymore. If you're going to reuse it as
+  /home then it is OK to designate it as /home - obviously, don't format
+  it now! If you intend to re-use it as a part of the directory
+  structure that will have files placed in it during installation (/var,
+  for example) then you absolutely must ignore it in this step: after
+  the installation is complete you can move the files across.
+
+  5.4.3.  Select
+
+  Here you choose which general categories of software to install. I
+  chose as follows:
+
+
+  �  A - Base Linux System
+
+  �  AP -Non-X applications
+
+  �  F - FAQs and HOWTOs
+
+  �  N - Networking tools and apps
+
+  �  Y - BSD games collection
+
+  I wouldn't recommend adding to this - if anything, prune it back to A,
+  AP and N. That gives you a core Linux setup to which you can add
+  according to your needs.
+
+  5.4.4.  Install
+
+  Choose the Expert installation method. This allows you to
+  select/reject for installation individual packages from the categories
+  you chose in the Selection step. ``Appendix A'' goes through the
+  precise choices I made .
+
+  This part takes about 3 hours for a PCMCIA network install. You are
+  prompted to select individual packages before the installation of each
+  category, so you can't just walk away and leave it to run through.
+
+  5.4.5.  Configure
+
+  Once the packages are all installed, you are prompted to do final
+  configuration for your machine. This covers areas like networking,
+  Lilo, selecting a kernel etc. Some points to look out for:
+
+
+  �  If you did a PCMCIA install, don't accept the offer to configure
+     your network with netconfig. This will ruin your pcmcia networking.
+     Wait until you've rebooted and then edit /etc/pcmcia/network.opts
+
+  �  This is the point where you should install a kernel. For a laptop
+     the bareapm kernel is best, for a desktop simply the bare one.
+
+  5.4.6.  Exit
+
+  The set-up process is finished but you are not. Do not reboot yet!
+  There is another vital step to complete.
+
+  5.5.  Pre-reboot Configuration
+
+  On a normal machine you would simply reboot once the installation is
+  complete.  If you do that here you may have to wait 6 or 8 hours for a
+  login prompt to appear and another half hour to get to the command
+  prompt. Before rebooting you need to change or remove the elements
+  that cause this slowdown. This involves editing config files so you
+  need to be familiar with vi, ed or sed.
+
+  At this stage your future root partition is still mounted as /mnt so
+  remember to at that to the paths given here.
+
+
+     /etc/passwd
+        Edit this to change root's login shell to ash. ash really is the
+        only practical login shell for 4mb RAM.
+
+     /etc/rc.d/rc.modules
+        Comment out the line 'depmod -a'. You only need to update module
+        dependencies if you have changed your module configuration
+        (recompiled or added new ones, for example). On a standard
+        system it only takes a second or two and so it doesn't matter
+        that it's needlessly performed each time. On a 4mb laptop it can
+        take as much as 8 hours.  When you do change your module set-up
+        you can simply uncomment this line and reboot. Alternatively,
+        change this part of the script so that it will only run if you
+        pass a parameter at the boot-prompt. For example:
+
+        ________________________________________________________________
+        if [ "NEWMODULES" == "1" ] ; then
+            depmod -a
+        fi
+
+        ________________________________________________________________
+
+
+
+     /etc/rc.d/rc.inet2
+        This script starts network services like nfs.  You probably
+        don't need these and certainly not at start-up. Rename this
+        script to something like RC.inet2 - that will stop it from being
+        run at boot and you can run it manually when you need it.
+
+     /etc/rc.d/rc.pcmcia
+        On the Aero you should also rename this script, otherwise you'll
+        lose the use of your floppy drive on start-up. It's worth
+        considering for any other small laptop as well - you can always
+        run it manually before inserting a card.
+
+  Once these changes have been made, you are ready to reboot.
+
+  5.6.  Post-reboot Configuration.
+
+  If you made the changes recommended in section ``Pre-reboot
+  configuration'' then the boot process will only take a few minutes, as
+  opposed to several hours. Login as root and check that everything is
+  functioning properly.
+
+  5.6.1.  Re-use the temporary root.
+
+  Once you are sure the installation is solid you can reclaim the
+  partition you used as the temporary root. Don't just delete the
+  contents, reformat the filesystem. Remember, the mke2fs that came with
+  the mini-Linux is out of date.
+
+  If you intend to re-use this partition as /home, remember not to
+  create any user accounts until you have completed this step.
+
+  5.6.2.  Other configuration tweaks.
+
+  In such a small RAM space, every little helps. Go through SlackWare's
+  BSD-style init scripts in /etc/rc.d/ and comment out anything you
+  don't need. Have a look at Todd Burgess' Small Memory mini-HOWTO
+  http://eddie.cis.uoguelph.ca/~tburgess/ for more ideas.
+
+  6.  Conclusion
+
+  That's it all done. You now have a laptop with the core utilities in
+  place and 50 to 70mb spare for whichever extras you need. Don't mess
+  it up because it's a lot easier to modify an existing installation on
+  such cramped old machines than it is to start from scratch again.
+
+  7.  Appendix A:
+
+  This appendix lists which packages (if any) from each category might
+  be included in the installation and gives my reasons for including or
+  omitting them. I made no attempt to install X so those categories are
+  ignored.
+
+  Although this appendix refers specifically to the Slackware
+  distribution it can be used as a guide with any of the major
+  distributions.
+
+  7.1.  A - Base Linux System
+
+  Most of the packages in this category are essential, even those that
+  aren't listed as required by the Slackware set-up program. Because of
+  this, I've listed those packages that I felt could reasonably be left
+  out rather than all the non-compulsory packages that I installed.
+
+  7.1.0.1.  Packages considered for omission:
+
+
+     kernels (ide, scsi etc.)
+        There's no need to install any of these, you get a chance to
+        select a kernel at the very end of the installation process.
+
+     aoutlibs
+        This is only needed if you intend to run executables compiled in
+        the old a.out format. Omitting it saves a lot of space. Omitted.
+
+     bash1
+        Bash2 (simply called bash in the Slackware package list) is
+        required for the Slackware configuration scripts but there are a
+        lot of scripts that need bash1. I included it.
+
+     getty
+        agetty is Slackware's default getty, this package contains getty
+        and uugetty as alternatives. Only include it if you need their
+        extra functionality. Omitted.
+
+     gpm
+        Personally, I find this very useful at the console (and the
+        Aero's trackball is very handy) but it's not essential.
+        Included.
+
+     icbs2
+        Not needed. Omitted.
+
+     isapnp
+        No use here. Omitted.
+
+     loadlin
+        Not needed with the setup described here - unless your old
+        laptop has some peculiarity that requires a DOS driver to
+        initialise some of its devices. Omitted.
+
+     lpr
+        You could argue that you can do your printing from whichever
+        desktop is nearest but I always find it useful to be have
+        printing capabilities on a laptop. Included.
+
+     minicom
+        Not a compulsory include but I want the laptop to do dial-up
+        connection. Very handy. Included.
+
+     pciutils
+        Not needed on these old laptops. Omitted.
+
+     quota
+        Not vital but it can be used to set limits that stop you from
+        overflowing the limited space available in these laptops.
+        Included.
+
+     tcsh
+        I recommend using ash as your login shell. Only include this if
+        you need it for scripts. Omitted.
+
+     umsprogs
+        You can leave this out and still be able to access UMSDOS
+        floppies. Omitted.
+
+     scsimods
+        No use on these laptops. Omitted.
+
+     sysklogd
+        This can interfere with apmd but it does provide essential
+        information. Included.
+
+  7.1.0.2.  Packages installed:
+
+  aaa_base, bash, bash1, bin, bzip2, cpio, cxxlibs, devs, e2fsprog,
+  elflibs, elvis, etc, fileutils, find, floppy, fsmods, glibcso, gpm,
+  grep, gzip, hdsetup, infozip, kbd, ldso, less, lilo, man, modules,
+  modutils, pcmcia, sh_utils, shadow, sudo, sysklogd, sysvinit, tar,
+  txtutils, util, zoneinfo
+
+  Combined size: 33.4
+
+  7.2.  AP - Non-X Applications
+
+  None of these packages are, strictly speaking, essential - although
+  ash is really required for sensible operation in 4mb. Leaving them all
+  out could save the vital space for you to squeeze in your favourite
+  app. I selected a minimal set of tools that I don't like to do
+  without.
+
+  7.2.0.1.  Packages considered for inclusion:
+
+
+     apsfilter
+        Not much point having printing if you can only print text files.
+        Included.
+
+     ash
+        This is the shell for low-memory machines, only taking up 60k.
+        Use it as the default login shell unless you like waiting 10
+        seconds for the command prompt to reappear each time. Included.
+
+     editors (jed, joe jove vim)
+        elvis is the default Slackware editor and a required part of the
+        installation. If, like me, you are a vi fan then that's all you
+        need: installing vim would be wasteful duplication given the
+        space restrictions. If you can't stand vi and need a more DOS-
+        style editor then joe is small. Emacs fans with some self-
+        discipline might consider jed or jove rather than pigging out on
+        the full-size beast. Omitted.
+
+     enscript
+        If you already have apsfilter you don't really need this.
+        Omitted.
+
+     ghostscript
+        Including the fonts this comes to about 7.5mb. One to leave
+        until after the core installation, then consider if you need it.
+        Omitted.
+
+     groff
+        Needed for the man pages. Included.
+
+     ispell
+        Not an essential butvery useful to the overenthusiastic touch-
+        typist.  included.
+
+     manpages
+        Included!
+
+     mc Slackware offers a lightweight compilation of mc but I'm happier
+        at the command prompt. Omitted.
+
+     quota
+        Not necessary on what is not a multi-user machine but you
+        may,like me, find it handy to stop you from forgetfully wasting
+        the little space you have. Included.
+
+     rpm
+        Don't bother. If you do have an rpm that you would like to
+        squeeze in, use rpm2tgz on a desktop machine to turn it into a
+        tgz package - then you can use the standard Slackware
+        installation tools. Omitted.
+
+     sc A useful little spreadsheet packed very small. Included.
+
+     sudo
+        Not essential but I find it useful here: it's a cramped
+        environment and an awkward reinstall if you mess things up -
+        sudo helps create user profiles with the power to do the things
+        you need without carelessly wiping your disk.  Included.
+
+     texinfo
+        Info documentation. Included.
+
+     zsh
+        Leave this out unless you're addicted to it or have scripts that
+        must use it. Omitted.
+
+  7.2.0.2.  Packages installed:
+
+  apsfilter,ash, diff, groff, ispell, manpages, quota, sc, sudo, texinfo
+
+  Combined size: 8.1 mb
+
+  7.3.  D - Development Tools
+
+  You could fit C or C++ into this space but the glibc library package
+  is too big, so some pruning would be needed. Do the main installation
+  first and then try it.
+
+  There is room for Perl and Python.
+
+  7.3.0.1.  Packages installed:
+
+  None
+
+  7.4.  E - Emacs
+
+  I don't use Emacs and so saved myself some space. On the other hand,
+  if you are an Emacs fan then you probably use it for e-mail, news and
+  coding so you'll claim some of that space back by omitting other
+  packages.
+
+  If you do want Emacs it might be an idea to leave this out while doing
+  the core installation. Once the laptop is up you can try fitting in
+  what you want/need at your leisure.
+
+  7.4.0.1.  Packages installed:
+
+  None.
+
+  7.5.  F - FAQs and HOWTOs
+
+  If you know it all you don't need these. I installed the lot.
+
+  7.5.0.1.  Packages installed:
+
+  howto, manyfaqs, mini
+
+  Combined size: 12.4 mb
+
+  7.6.  K - Kernel Source
+
+  You can just squeeze it in. If all you want to do is read the source,
+  go ahead.
+
+
+  7.6.0.1.  Packages Installed:
+
+  None
+
+  7.7.  N - Networking Tools and Apps
+
+  These packages were selected to provide core networking tools, dial-up
+  capability, e-mail, web and news.
+
+  7.7.0.1.  Packages installed:
+
+  dip, elm, fetchmail, mailx, lynx, netmods, netpipes, ppp, procmail,
+  trn, tcpip1, tcpip2, uucp, wget
+
+  Combined size: 15.1 mb
+
+  7.8.  Tetex
+
+  Another set that will barely squeeze in. I can't say how it would run
+  in the space available.
+
+  7.8.0.1.  Packages installed:
+
+  None
+
+  7.9.  Y - BSD Games Collection
+
+  I'm addicted to several of these. If I really need that last 5mb they
+  can go.
+
+  7.9.0.1.  Packages installed:
+
+  bsdgames
+
+  Combined size: 5.4 mb
+
+  7.10.  End result
+
+  In total the installed packages plus kernel took up about 75mb of disk
+  space of which 19.5mb was in the root partition and 55.5 in /usr. On
+  the Aero that left 39mb in /usr, 74mb on the T1910.
+
+  8.  Appendix B: Resources relevant to this HOWTO
+
+
+     Linux Laptop HOWTO
+        http://www.snafu.de/~wehe/Laptop-HOWTO.html
+
+     Small Memory mini-HOWTO
+        http://eddie.cis.uoguelph.ca/~tburgess/
+
+     Linux on Laptops
+        http://www.cs.utexas.edu/users/kharker/linux-laptop/ HOWTOs and
+        installation FAQs for a wide range of machines.
+
+     Linux T1910 FAQ
+        http://members.tripod.com/~Cyberpvnk/linux.htm
+
+     Linux Contura Aero FAQ
+        http://domen.uninett.no/~hta/linux/aero-faq.html
+
+     Contura Aero FAQ
+        http://www.reed.edu/~pwilk/aero/aero.faq Comprehensive FAQ on
+        all aspects of the Contura Aero compiled by the moderators of
+        the Aero mailing list. Good Linux section .
+
+
+
+  GNU/Linux AI & Alife HOWTO
+  by John Eikenberry
+  v1.4, 23 June 2000
+
+  This howto mainly contains information about, and links to, various AI
+  related software libraries, applications, etc. that work on the
+  GNU/Linux platform. All of it is (at least) free for personal use. The
+  new master page for this document is http://zhar.net/gnu-linux/howto/
+  ______________________________________________________________________
+
+  Table of Contents
+
+
+  1. Introduction
+
+     1.1 Purpose
+     1.2 Where to find this software
+     1.3 Updates and comments
+     1.4 Copyright/License
+
+  2. Traditional Artificial Intelligence
+
+     2.1 AI class/code libraries
+     2.2 AI software kits, applications, etc.
+
+  3. Connectionism
+
+     3.1 Connectionist class/code libraries
+     3.2 Connectionist software kits/applications
+
+  4. Evolutionary Computing
+
+     4.1 EC class/code libraries
+     4.2 EC software kits/applications
+
+  5. Alife & Complex Systems
+
+     5.1 Alife & CS class/code libraries
+     5.2 Alife & CS software kits, applications, etc.
+
+  6. Autonomous Agents
+
+  7. Programming languages
+
+
+
+  ______________________________________________________________________
+
+  1.  Introduction
+
+
+
+  1.1.  Purpose
+
+
+  The GNU/Linux OS has evolved from its origins in hackerdom to a full
+  blown UNIX, capable of rivaling any commercial UNIX.  It now provides
+  an inexpensive base to build a great workstation.  It has shed its
+  hardware dependencies, having been ported to DEC Alphas, Sparcs,
+  PowerPCs, and many others.  This potential speed boost along with its
+  networking support will make it great for workstation clusters.  As a
+  workstation it allows for all sorts of research and development,
+  including artificial intelligence and artificial life.
+
+
+
+  The purpose of this Mini-Howto is to provide a source to find out
+  about various software packages, code libraries, and anything else
+  that will help someone get started working with (and find resources
+  for) artificial intelligence, artificial life, etc.  All done with
+  GNU/Linux specifically in mind.
+
+
+
+  1.2.  Where to find this software
+
+
+  All this software should be available via the net (ftp || http).  The
+  links to where to find it will be provided in the description of each
+  package.  There will also be plenty of software not covered on these
+  pages (which is usually platform independent) located on one of the
+  resources listed on the links section of the Master Site (given
+  above).
+
+
+
+  1.3.  Updates and comments
+
+
+
+  If you find any mistakes, know of updates to one of the items below,
+  or have problems compiling and of the applications, please mail me at:
+  jae@NOSPAM-zhar.net and I'll see what I can do.
+
+
+  If you know of any AI/Alife applications, class libraries, etc. Please
+  email me about them. Include your name, ftp and/or http sites where
+  they can be found, plus a brief overview/commentary on the software
+  (this info would make things a lot easier on me... but don't feel
+  obligated ;).
+
+
+  I know that keeping this list up to date and expanding it will take
+  quite a bit of work. So please be patient (I do have other projects).
+  I hope you will find this document helpful.
+
+
+  1.4.  Copyright/License
+
+  Copyright (c) 1996-2000 John A. Eikenberry
+
+  LICENSE
+
+  This document may be reproduced and distributed in whole or in part,
+  in any medium physical or electronic, provided that this license
+  notice is displayed in the reproduction. Commercial redistribution is
+  permitted and encouraged. Thirty days advance notice, via email to the
+  author, of redistribution is appreciated, to give the authors time to
+  provide updated documents.
+
+  A. REQUIREMENTS OF MODIFIED WORKS
+
+  All modified documents, including translations, anthologies, and
+  partial documents, must meet the following requirements:
+
+
+
+  �  The modified version must be labeled as such.
+
+  �  The person making the modifications must be identified.
+
+
+  �  Acknowledgement of the original author must be retained.
+
+  �  The location of the original unmodified document be identified.
+
+  �  The original author's name(s) may not be used to assert or imply
+     endorsement of the resulting document without the original author's
+     permission.
+
+  In addition it is requested (not required) that:
+
+
+  �  The modifications (including deletions) be noted.
+
+  �  The author be notified by email of the modification in advance of
+     redistribution, if an email address is provided in the document.
+
+  As a special exception, anthologies of LDP documents may include a
+  single copy of these license terms in a conspicuous location within
+  the anthology and replace other copies of this license with a
+  reference to the single copy of the license without the document being
+  considered "modified" for the purposes of this section.
+
+  Mere aggregation of LDP documents with other documents or programs on
+  the same media shall not cause this license to apply to those other
+  works.
+
+  All translations, derivative documents, or modified documents that
+  incorporate this document may not have more restrictive license terms
+  than these, except that you may require distributors to make the
+  resulting document available in source format.
+
+
+
+  2.
+
+  Traditional Artificial Intelligence
+
+  Traditional AI is based around the ideas of logic, rule systems,
+  linguistics, and the concept of rationality.  At its roots are
+  programming languages such as Lisp and Prolog.  Expert systems are the
+  largest successful example of this paradigm.  An expert system
+  consists of a detailed knowledge base and a complex rule system to
+  utilize it.  Such systems have been used for such things as medical
+  diagnosis support and credit checking systems.
+
+
+
+  2.1.  AI class/code libraries
+
+
+  These are libraries of code or classes for use in programming within
+  the artificial intelligence field.  They are not meant as stand alone
+  applications, but rather as tools for building your own applications.
+
+
+
+     ACL2
+
+     �  Web site: www.telent.net/cliki/ACL2
+
+        ACL2 (A Computational Logic for Applicative Common Lisp) is a
+        theorem prover for industrial applications. It is both a
+        mathematical logic and a system of tools for constructing proofs
+        in the logic.  ACL2 works with GCL (GNU Common Lisp).
+     AI Search II
+
+     �  WEB site: www.bell-labs.com/topic/books/ooai-book/
+
+        Submitted by: Peter M. Bouthoorn
+
+
+        Basically, the library offers the programmer a set of search
+        algorithms that may be used to solve all kind of different
+        problems. The idea is that when developing problem solving
+        software the programmer should be able to concentrate on the
+        representation of the problem to be solved and should not need
+        to bother with the implementation of the search algorithm that
+        will be used to actually conduct the search. This idea has been
+        realized by the implementation of a set of search classes that
+        may be incorporated in other software through C++'s features of
+        derivation and inheritance.  The following search algorithms
+        have been implemented:
+
+
+        - depth-first tree and graph search.  - breadth-first tree and
+        graph search.  - uniform-cost tree and graph search.  - best-
+        first search.  - bidirectional depth-first tree and graph
+        search.  - bidirectional breadth-first tree and graph search.  -
+        AND/OR depth tree search.  - AND/OR breadth tree search.
+
+
+        This library has a corresponding book, "Object-Oriented
+        Artificial Instelligence, Using C++".
+
+
+
+     Chess In Lisp (CIL)
+
+     �  FTP site: chess.onenet.net/pub/chess/uploads/projects/
+
+
+        The CIL (Chess In Lisp) foundation is a Common Lisp
+        implementaion of all the core functions needed for development
+        of chess applications.  The main purpose of the CIL project is
+        to get AI researchers interested in using Lisp to work in the
+        chess domain.
+
+
+
+     DAI
+
+     �  Web site: starship.skyport.net/crew/gandalf/DNET/AI
+
+
+        A library for the Python programming language that provides an
+        object oriented interface to the CLIPS expert system tool. It
+        includes an interface to COOL (CLIPS Object Oriented Language)
+        that allows:
+
+     �  Investigate COOL classes
+
+     �  Create and manipulate with COOL instances
+
+     �  Manipulate with COOL message-handler's
+
+     �  Manipulate with Modules
+
+     Nyquist
+
+     �  Web site:
+        www.cs.cmu.edu/afs/cs.cmu.edu/project/music/web/music.html
+
+
+        The Computer Music Project at CMU is developing computer music
+        and interactive performance technology to enhance human musical
+        experience and creativity. This interdisciplinary effort draws
+        on Music Theory, Cognitive Science, Artificial Intelligence and
+        Machine Learning, Human Computer Interaction, Real-Time Systems,
+        Computer Graphics and Animation, Multimedia, Programming
+        Languages, and Signal Processing. A paradigmatic example of
+        these interdisciplinary efforts is the creation of interactive
+        performances that couple human musical improvisation with
+        intelligent computer agents in real-time.
+
+
+
+     PDKB
+
+     �  Web site: lynx.eaze.net/~pdkb/web/
+
+     �  SourceForge site: sourceforge.net/project/?group_id=1449
+
+        Public Domain Knowledge Bank (PDKB) is an Artificial
+        Intelligence Knowledge Bank of common sense rules and facts. It
+        is based on the Cyc Upper Ontology and the MELD language.
+
+
+
+     Python Fuzzy Logic Module
+
+     �  FTP site: ftp://ftp.csh.rit.edu/pub/members/retrev/
+
+        A simple python module for fuzzy logic. The file is 'fuz.tar.gz'
+        in this directory. The author plans to also write a simple
+        genetic algorithm and a neural net library as well. Check the
+        00_index file in this directory for release info.
+
+
+
+     Screamer
+
+     �  Web site: www.cis.upenn.edu/~screamer-tools/home.html
+
+
+        Screamer is an extension of Common Lisp that adds support for
+        nondeterministic programming. Screamer consists of two levels.
+        The basic nondeterministic level adds support for backtracking
+        and undoable side effects.  On top of this nondeterministic
+        substrate, Screamer provides a comprehensive constraint
+        programming language in which one can formulate and solve mixed
+        systems of numeric and symbolic constraints. Together, these two
+        levels augment Common Lisp with practically all of the
+        functionality of both Prolog and constraint logic programming
+        languages such as CHiP and CLP(R).  Furthermore, Screamer is
+        fully integrated with Common Lisp. Screamer programs can coexist
+        and interoperate with other extensions to Common Lisp such as
+        CLOS, CLIM and Iterate.
+
+
+
+     ThoughtTreasure
+
+     �  Web site: www.signiform.com/tt/htm/tt.htm
+
+        ThoughtTreasure is a project to create a database of commonsense
+        rules for use in any application. It consists of a database of a
+        little over 100K rules and a C API to integrate it with your
+        applications. Python, Perl, Java and TCL wrappers are already
+        available.
+
+
+
+  2.2.
+
+  AI software kits, applications, etc.
+
+
+  These are various applications, software kits, etc. meant for research
+  in the field of artificial intelligence. Their ease of use will vary,
+  as they were designed to meet some particular research interest more
+  than as an easy to use commercial package.
+
+
+
+     ASA - Adaptive Simulated Annealing
+
+     �  Web site: www.ingber.com/#ASA-CODE
+
+     �  FTP site: ftp.ingber.com/
+
+
+        ASA (Adaptive Simulated Annealing) is a powerful global
+        optimization C-code algorithm especially useful for nonlinear
+        and/or stochastic systems.
+
+
+        ASA is developed to statistically find the best global fit of a
+        nonlinear non-convex cost-function over a D-dimensional space.
+        This algorithm permits an annealing schedule for 'temperature' T
+        decreasing exponentially in annealing-time k, T = T_0 exp(-c
+        k^1/D).  The introduction of re-annealing also permits
+        adaptation to changing sensitivities in the multi-dimensional
+        parameter-space. This annealing schedule is faster than fast
+        Cauchy annealing, where T = T_0/k, and much faster than
+        Boltzmann annealing, where T = T_0/ln k.
+
+
+
+     Babylon
+
+     �  FTP site: ftp.gmd.de/gmd/ai-research/Software/Babylon/
+
+
+        BABYLON is a modular, configurable, hybrid environment for
+        developing expert systems. Its features include objects, rules
+        with forward and backward chaining, logic (Prolog) and
+        constraints. BABYLON is implemented and embedded in Common Lisp.
+
+     CLEARS
+
+     �  Web site: www.coli.uni-sb.de/~clears/
+
+
+        The CLEARS system is an interactive graphical environment for
+        computational semantics. The tool allows exploration and
+        comparison of different semantic formalisms, and their
+        interaction with syntax. This enables the user to get an idea of
+        the range of possibilities of semantic construction, and also
+        where there is real convergence between theories.
+
+
+
+     CLIG
+
+     �  Web site: www.ags.uni-sb.de/~konrad/clig.html
+
+
+        CLIG is an interactive, extendible grapher for visualizing
+        linguistic data structures like trees, feature structures,
+        Discourse Representation Structures (DRS), logical formulas etc.
+        All of these can be freely mixed and embedded into each other.
+        The grapher has been designed both to be stand-alone and to be
+        used as an add-on for linguistic applications which display
+        their output in a graphical manner.
+
+
+
+     CLIPS
+
+     �  Web site: www.jsc.nasa.gov/~clips/CLIPS.html
+
+     �  FTP site: cs.cmu.edu/afs/cs.cmu.edu/project/ai-
+        repository/ai/areas/expert/systems/clips
+
+
+
+        CLIPS is a productive development and delivery expert system
+        tool which provides a complete environment for the construction
+        of rule and/or object based expert systems.
+
+
+        CLIPS provides a cohesive tool for handling a wide variety of
+        knowledge with support for three different programming
+        paradigms: rule-based, object-oriented and procedural.  Rule-
+        based programming allows knowledge to be represented as
+        heuristics, or "rules of thumb," which specify a set of actions
+        to be performed for a given situation. Object-oriented
+        programming allows complex systems to be modeled as modular
+        components (which can be easily reused to model other systems or
+        to create new components).  The procedural programming
+        capabilities provided by CLIPS are similar to capabilities found
+        in languages such as C, Pascal, Ada, and LISP.
+
+
+
+     EMA-XPS - A Hybrid Graphic Expert System Shell
+
+     �  Web site: wmwap1.math.uni-wuppertal.de:80/EMA-XPS/
+
+
+        EMA-XPS is a hybrid graphic expert system shell based on the
+        ASCII-oriented shell Babylon 2.3 of the German National Research
+        Center for Computer Sciences (GMD). In addition to Babylon's AI-
+        power (object oriented data representation, forward and backward
+        chained rules - collectible into sets, horn clauses, and
+        constraint networks) a graphic interface based on the X11 Window
+        System and the OSF/Motif Widget Library has been provided.
+
+
+
+     FOOL & FOX
+
+     �  FTP site: ntia.its.bldrdoc.gov/pub/fuzzy/prog/
+
+
+        FOOL stands for the Fuzzy Organizer OLdenburg. It is a result
+        from a project at the University of Oldenburg. FOOL is a
+        graphical user interface to develop fuzzy rulebases.  FOOL will
+        help you to invent and maintain a database that specifies the
+        behavior of a fuzzy-controller or something like that.
+
+
+        FOX is a small but powerful fuzzy engine which reads this
+        database, reads some input values and calculates the new control
+        value.
+
+
+
+     FUF and SURGE
+
+     �  Web site: www.dfki.de/lt/registry/generation/fuf.html
+
+     �  FTP site: ftp.cs.columbia.edu/pub/fuf/
+
+        FUF is an extended implementation of the formalism of functional
+        unification grammars (FUGs) introduced by Martin Kay specialized
+        to the task of natural language generation. It adds the
+        following features to the base formalism:
+
+     �  Types and inheritance.
+
+     �  Extended control facilities (goal freezing, intelligent
+        backtracking).
+
+     �  Modular syntax.
+
+        These extensions allow the development of large grammars which
+        can be processed efficiently and can be maintained and
+        understood more easily.  SURGE is a large syntactic realization
+        grammar of English written in FUF. SURGE is developed to serve
+        as a black box syntactic generation component in a larger
+        generation system that encapsulates a rich knowledge of English
+        syntax. SURGE can also be used as a platform for exploration of
+        grammar writing with a generation perspective.
+
+
+
+     The Grammar Workbench
+
+     �  Web site: www.cs.kun.nl/agfl/GWB.html
+
+
+
+        The Grammar Workbench, or GWB for short, is an environment for
+        the comfortable development of Affix Grammars in the AGFL-
+        formalism. Its purposes are:
+
+
+     �  to allow the user to input, inspect and modify a grammar;
+
+     �  to perform consistency checks on the grammar;
+
+     �  to compute grammar properties;
+
+     �  to generate example sentences;
+
+     �  to assist in performing grammar transformations.
+
+
+
+     GSM Suite
+
+     �  Web site: www.slip.net/~andrewm/gsm/
+
+
+        The GSM Suite is a set of programs for using Finite State
+        Machines in a graphical fashion. The suite consists of programs
+        that edit, compile, and print state machines. Included in the
+        suite is an editor program, gsmedit, a compiler, gsm2cc, that
+        produces a C++ implementation of a state machine, a PostScript
+        generator, gsm2ps, and two other minor programs. GSM is licensed
+        under the GNU Public License and so is free for your use under
+        the terms of that license.
+
+
+
+     Illuminator
+
+     �  Web site:
+        documents.cfar.umd.edu/resources/source/illuminator.html
+
+
+        Illuminator is a toolset for developing OCR and Image
+        Understanding applications.  Illuminator has two major parts: a
+        library for representing, storing and retrieving OCR
+        information, heretofore called dafslib, and an X-Windows "DAFS"
+        file viewer, called illum. Illuminator and DAFS lib were
+        designed to supplant existing OCR formats and become a standard
+        in the industry. They particularly are extensible to handle more
+        than just English.
+
+        The features of this release:
+
+     �  5 magnification levels for images
+
+     �  flagged characters and words
+
+     �  unicode support -- American, British, French, German, Greek,
+        Italian, MICR, Norwegian, Russian, Spanish, Swedish, keyboards
+
+     �  reads DAFS, TIFF's, PDA's (image only)
+
+     �  save to DAFS, ASCII/UTF or Unicode
+
+     �  Entity Viewer - shows properties, character choices, bounding
+        boxes image fragment for a selected entity, change type, change
+        content, hierarchy mode
+
+
+
+     Jess, the Java Expert System Shell
+
+
+     �  Web site: herzberg.ca.sandia.gov/jess/
+
+
+        Jess is a clone of the popular CLIPS expert system shell written
+        entirely in Java. With Jess, you can conveniently give your
+        applets the ability to 'reason'. Jess is compatible with all
+        versions of Java starting with version 1.0.2. Jess implements
+        the following constructs from CLIPS: defrules, deffunctions,
+        defglobals, deffacts, and deftemplates.
+
+
+
+     learn
+
+     �  FTP site: sunsite.unc.edu/pub/Linux/apps/cai/
+
+
+        Learn is a vocable learning program with memory model.
+
+
+
+     Otter: An Automated Deduction System
+
+     �  Web site: www-unix.mcs.anl.gov/AR/otter/
+
+
+        Our current automated deduction system  Otter is designed to
+        prove theorems stated in first-order logic with equality.
+        Otter's inference rules are based on resolution and
+        paramodulation, and it includes facilities for term rewriting,
+        term orderings, Knuth-Bendix completion, weighting, and
+        strategies for directing and restricting searches for proofs.
+        Otter can also be used as a symbolic calculator and has an
+        embedded equational programming system.
+
+
+
+     NICOLE
+
+     �  Web site: nicole.sourceforge.net
+
+        It is an attempt to simulate a conversation by learning how
+        words are related to other words. A Human communicates with
+        NICOLE via the keyboard and NICOLE responds back with its own
+        sentences which are automatically generated, based on what
+        NICOLE has stored in it's database.  Each new sentence that has
+        been typed in, and NICOLE doesn't know about it, it is included
+        into NICOLE's database, thus extending the knowledge base of
+        NICOLE.
+
+
+
+     PVS
+
+     �  Web site: pvs.csl.sri.com/
+
+        PVS is a verification system: that is, a specification language
+        integrated with support tools and a theorem prover. It is
+        intended to capture the state-of-the-art in mechanized formal
+        methods and to be sufficiently rugged that it can be used for
+        significant applications. PVS is a research prototype: it
+        evolves and improves as we develop or apply new capabilities,
+        and as the stress of real use exposes new requirements.
+
+     RIPPER
+
+     �  Web site: www.research.att.com/~wcohen/ripperd.html
+
+
+        Ripper is a system for fast effective rule induction. Given a
+        set of data, Ripper will learn a set of rules that will predict
+        the patterns in the data. Ripper is written in ASCI C and comes
+        with documentation and some sample problems.
+
+
+
+     SNePS
+
+     �  Web site: www.cs.buffalo.edu/pub/sneps/WWW/
+
+     �  FTP site: ftp.cs.buffalo.edu/pub/sneps/
+
+        The long-term goal of The SNePS Research Group is the design and
+        construction of a natural-language-using computerized cognitive
+        agent, and carrying out the research in artificial intelligence,
+        computational linguistics, and cognitive science necessary for
+        that endeavor. The three-part focus of the group is on knowledge
+        representation, reasoning, and natural-language understanding
+        and generation. The group is widely known for its development of
+        the SNePS knowledge representation/reasoning system, and Cassie,
+        its computerized cognitive agent.
+
+
+
+     Soar
+
+     �  Web site: bigfoot.eecs.umich.edu/~soar/
+
+     �  FTP site: cs.cmu.edu/afs/cs/project/soar/public/Soar6/
+
+
+        Soar has been developed to be a general cognitive architecture.
+        We intend ultimately to enable the Soar architecture to:
+
+     �  work on the full range of tasks expected of an intelligent
+        agent, from highly routine to extremely difficult, open-ended
+        problems
+
+     �  represent and use appropriate forms of knowledge, such as
+        procedural, declarative, episodic, and possibly iconic
+
+     �  employ the full range of problem solving methods
+
+     �  interact with the outside world and
+
+     �  learn about all aspects of the tasks and its performance on
+        them.
+
+        In other words, our intention is for Soar to support all the
+        capabilities required of a general intelligent agent.
+        http://wwwis.cs.utwente.nl:8080/ tcm/index.html
+
+
+
+     TCM
+
+
+     �  Web site: wwwis.cs.utwente.nl:8080/~tcm/index.html
+
+     �  FTP site: ftp.cs.vu.nl/pub/tcm/
+
+
+        TCM (Toolkit for Conceptual Modeling) is our suite of graphical
+        editors. TCM contains graphical editors for Entity-Relationship
+        diagrams, Class-Relationship diagrams, Data and Event Flow
+        diagrams, State Transition diagrams, Jackson Process Structure
+        diagrams and System Network diagrams, Function Refinement trees
+        and various table editors, such as a Function-Entity table
+        editor and a Function Decomposition table editor.  TCM is easy
+        to use and performs numerous consistency checks, some of them
+        immediately, some of them upon request.
+
+
+
+     WEKA
+
+     �  Web site: lucy.cs.waikato.ac.nz/~ml/
+
+
+        WEKA (Waikato Environment for Knowledge Analysis) is an state-
+        of-the-art facility for applying machine learning techniques to
+        practical problems. It is a comprehensive software "workbench"
+        that allows people to analyse real-world data. It integrates
+        different machine learning tools within a common framework and a
+        uniform user interface. It is designed to support a "simplicity-
+        first" methodology, which allows users to experiment
+        interactively with simple machine learning tools before looking
+        for more complex solutions.
+
+
+
+  3.  Connectionism
+
+  Connectionism is a technical term for a group of related techniques.
+  These techniques include areas such as Artificial Neural Networks,
+  Semantic Networks and a few other similar ideas. My present focus is
+  on neural networks (though I am looking for resources on the other
+  techniques). Neural networks are programs designed to simulate the
+  workings of the brain. They consist of a network of small
+  mathematical-based nodes, which work together to form patterns of
+  information.  They have tremendous potential and currently seem to be
+  having a great deal of success with image processing and robot
+  control.
+
+
+
+  3.1.  Connectionist class/code libraries
+
+
+  These are libraries of code or classes for use in programming within
+  the Connectionist field.  They are not meant as stand alone
+  applications, but rather as tools for building your own applications.
+
+
+
+     ANSI-C Neural Networks
+
+     �  Web site: www.geocities.com/CapeCanaveral/1624/
+
+        This site contains ANSC-C source code for 8 types of neural
+        nets, including:
+
+     �  Adaline Network
+
+     �  Backpropagation
+
+     �  Hopfield Model
+
+     �  (BAM) Bidirectional Associative Memory
+
+     �  Boltzmann Machine
+
+     �  Counterpropagation
+
+     �  (SOM) Self-Organizing Map
+
+     �  (ART1) Adaptive Resonance Theory
+
+        They were designed to help turn the theory of a particular
+        network model into the design for a simulator implementation ,
+        and to help with embeding an actual application into a
+        particular network model.
+
+
+
+     BELIEF
+
+     �  Web site: www.cs.cmu.edu/afs/cs/project/ai-
+        repository/ai/areas/reasonng/probabl/belief/
+
+
+        BELIEF is a Common Lisp implementation of the Dempster and Kong
+        fusion and propagation algorithm for Graphical Belief Function
+        Models and the Lauritzen and Spiegelhalter algorithm for
+        Graphical Probabilistic Models. It includes code for
+        manipulating graphical belief models such as Bayes Nets and
+        Relevance Diagrams (a subset of Influence Diagrams) using both
+        belief functions and probabilities as basic representations of
+        uncertainty. It uses the Shenoy and Shafer version of the
+        algorithm, so one of its unique features is that it supports
+        both probability distributions and belief functions.  It also
+        has limited support for second order models (probability
+        distributions on parameters).
+
+
+     bpnn.py
+
+     �  Web site: www.enme.ucalgary.ca/~nascheme/python/
+
+        A simple back-propogation ANN in Python.
+
+
+
+     CONICAL
+
+     �  Web site: strout.net/conical/
+
+        CONICAL is a C++ class library for building simulations common
+        in computational neuroscience. Currently its focus is on
+        compartmental modeling, with capabilities similar to GENESIS and
+        NEURON. A model neuron is built out of compartments, usually
+        with a cylindrical shape. When small enough, these open-ended
+        cylinders can approximate nearly any geometry. Future classes
+        may support reaction-diffusion kinetics and more. A key feature
+        of CONICAL is its cross-platform compatibility; it has been
+        fully co-developed and tested under Unix, DOS, and Mac OS.
+
+
+
+     IDEAL
+
+     �  Web site: www.rpal.rockwell.com/ideal.html
+
+
+
+        IDEAL is a test bed for work in influence diagrams and Bayesian
+        networks. It contains various inference algorithms for belief
+        networks and evaluation algorithms for influence diagrams. It
+        contains facilities for creating and editing influence diagrams
+        and belief networks.
+
+
+        IDEAL is written in pure Common Lisp and so it will run in
+        Common Lisp on any platform. The emphasis in writing IDEAL has
+        been on code clarity and providing high level programming
+        abstractions. It thus is very suitable for experimental
+        implementations which need or extend belief network technology.
+
+
+        At the highest level, IDEAL can be used as a subroutine library
+        which provides belief network inference and influence diagram
+        evaluation as a package. The code is documented in a detailed
+        manual and so it is also possible to work at a lower level on
+        extensions of belief network methods.
+
+
+        IDEAL comes with an optional graphic interface written in CLIM.
+        If your Common Lisp also has CLIM, you can run the graphic
+        interface.
+
+
+
+     Matrix Class
+
+     �  FTP site: ftp.cs.ucla.edu/pub/
+
+
+        A simple, fast, efficient C++ Matrix class designed for
+        scientists and engineers. The Matrix class is well suited for
+        applications with complex math algorithms. As an demonstration
+        of the Matrix class, it was used to implement the backward error
+        propagation algorithm for a multi-layer feed-forward artificial
+        neural network.
+
+
+
+     nunu
+
+     �  Web site: ruby.ddiworld.com/jreed/web/software/nn.html
+
+
+        nunu is a multi-layered, scriptable, back-propagation neural
+        network.  It is build to be used for intensive computation
+        problems scripted in shell scripts. It is written in C++ using
+        the STL. nn is based on material from the "Introduction to the
+        Theory of Neural Computation" by John Hertz, Anders Krogh, and
+        Richard G. Palmer, chapter 6.
+     Pulcinella
+
+     �  Web site: iridia.ulb.ac.be/pulcinella/Welcome.html
+
+
+        Pulcinella is written in CommonLisp, and appears as a library of
+        Lisp functions for creating, modifying and evaluating valuation
+        systems. Alternatively, the user can choose to interact with
+        Pulcinella via a graphical interface (only available in Allegro
+        CL). Pulcinella provides primitives to build and evaluate
+        uncertainty models according to several uncertainty calculi,
+        including probability theory, possibility theory, and Dempster-
+        Shafer's theory of belief functions; and the possibility theory
+        by Zadeh, Dubois and Prade's. A User's Manual is available on
+        request.
+
+
+
+     S-ElimBel
+
+     �  Web site (???): www.spaces.uci.edu/thiery/elimbel/
+
+
+        S-ElimBel is an algorithm that computes the belief in a Bayesian
+        network, implemented in MIT-Scheme. This algorithm has the
+        particularity of being rather easy to understand. Moreover, one
+        can apply it to any kind of Bayesian network - it being singly
+        connected or muliply connected. It is, however, less powerful
+        than the standard algorithm of belief propagation.  Indeed, the
+        computation has to be reconducted entirely for each new evidence
+        added to the network. Also, one needs to run the algorithm as
+        many times as one has nodes for which the belief is wanted.
+
+
+
+     Software for Flexible Bayesian Modeling
+
+     �  Web site: www.cs.utoronto.ca/~radford/fbm.software.html
+
+
+        This software implements flexible Bayesian models for regression
+        and classification applications that are based on multilayer
+        perceptron neural networks or on Gaussian processes.  The
+        implementation uses Markov chain Monte Carlo methods.  Software
+        modules that support Markov chain sampling are included in the
+        distribution, and may be useful in other applications.
+
+
+
+     Spiderweb2
+
+     �  Web site: www.cs.nyu.edu/~klap7794/spiderweb2.html
+
+
+        A C++ artificial neual net library.  Spiderweb2 is a complete
+        rewrite of the original Spiderweb library, it has grown into a
+        much more flexible and object-oriented system. The biggest
+        change is that each neuron object is responsible for its own
+        activations and updates, with the network providing only the
+        scheduling aspect. This is a very powerful change, and it allows
+        easy modification and experimentation with various network
+        architectures and neuron types.
+     Symbolic Probabilistic Inference (SPI)
+
+     �  FTP site: ftp.engr.orst.edu/pub/dambrosi/spi/
+
+     �  Paper (ijar-94.ps): ftp.engr.orst.edu/pub/dambrosi/
+
+
+        Contains Common Lisp function libraries to implement SPI type
+        baysean nets.  Documentation is very limited.  Features:
+
+     �  Probabilities, Local Expression Language Utilities, Explanation,
+        Dynamic Models, and a TCL/TK based GUI.
+
+
+
+     TresBel
+
+     �  FTP site: iridia.ulb.ac.be/pub/hongxu/software/
+
+
+        Libraries containing (Allegro) Common Lisp code for Belief
+        Functions (aka. Dempster-Shafer evidential reasoning) as a
+        representation of uncertainty. Very little documentation. Has a
+        limited GUI.
+
+
+
+     Various (C++) Neural Networks
+
+     �  Web site: www.dontveter.com/nnsoft/nnsoft.html
+
+
+        Example neural net codes from the book, The       Pattern
+        Recognition Basics of AI.  These are simple example codes of
+        these various neural nets. They work well as a good starting
+        point for simple experimentation and for learning what the code
+        is like behind the simulators. The types of networks available
+        on this site are: (implemented in C++)
+
+
+
+     �  The Backprop Package
+
+     �  The Nearest Neighbor Algorithms
+
+     �  The Interactive Activation Algorithm
+
+     �  The Hopfield and Boltzman machine Algorithms
+
+     �  The Linear Pattern Classifier
+
+     �  ART I
+
+     �  Bi-Directional Associative Memory
+
+     �  The Feedforward Counter-Propagation Network
+
+
+
+  3.2.
+
+  Connectionist software kits/applications
+
+
+  These are various applications, software kits, etc. meant for research
+  in the field of Connectionism. Their ease of use will vary, as they
+  were designed to meet some particular research interest more than as
+  an easy to use commercial package.
+
+
+
+     Aspirin - MIGRAINES
+        (am6.tar.Z on ftp site)
+
+     �  FTP site: sunsite.unc.edu/pub/academic/computer-science/neural-
+        networks/programs/Aspirin/
+
+
+        The software that we are releasing now is for creating, and
+        evaluating, feed-forward networks such as those used with the
+        backpropagation learning algorithm. The software is aimed both
+        at the expert programmer/neural network researcher who may wish
+        to tailor significant portions of the system to his/her precise
+        needs, as well as at casual users who will wish to use the
+        system with an absolute minimum of effort.
+
+
+
+     DDLab
+
+     �  Web site: www.santafe.edu/~wuensch/ddlab.html
+
+     �  FTP site: ftp.santafe.edu/pub/wuensch/
+
+        DDLab is an interactive graphics program for research into the
+        dynamics of finite binary networks, relevant to the study of
+        complexity, emergent phenomena, neural networks, and aspects of
+        theoretical biology such as gene regulatory networks. A network
+        can be set up with any architecture between regular CA (1d or
+        2d) and "random Boolean networks" (networks with arbitrary
+        connections and heterogeneous rules). The network may also have
+        heterogeneous neighborhood sizes.
+
+
+
+     GENESIS
+
+     �  Web site: www.bbb.caltech.edu/GENESIS/
+
+     �  FTP site: genesis.bbb.caltech.edu/pub/genesis/
+
+
+        GENESIS (short for GEneral NEural SImulation System) is a
+        general purpose simulation platform which was developed to
+        support the simulation of neural systems ranging from complex
+        models of single neurons to simulations of large networks made
+        up of more abstract neuronal components. GENESIS has provided
+        the basis for laboratory courses in neural simulation at both
+        Caltech and the Marine Biological Laboratory in Woods Hole, MA,
+        as well as several other institutions. Most current GENESIS
+        applications involve realistic simulations of biological neural
+        systems. Although the software can also model more abstract
+        networks, other simulators are more suitable for backpropagation
+        and similar connectionist modeling.
+     JavaBayes
+
+     �  Web site: www.cs.cmu.edu/People/javabayes/index.html/
+
+
+        The JavaBayes system is a set of tools, containing a graphical
+        editor, a core inference engine and a parser.  JavaBayes can
+        produce:
+
+     �  the marginal distribution for any variable in a network.
+
+     �  the expectations for univariate functions (for example, expected
+        value for variables).
+
+     �  configurations with maximum a posteriori probability.
+
+     �  configurations with maximum a posteriori expectation for
+        univariate functions.
+
+
+
+     Jbpe
+
+     �  Web site: cs.felk.cvut.cz/~koutnij/studium/jbpe.html
+
+
+        Jbpe is a back-propagation neural network editor/simulator.
+
+        Features
+
+     �  Standart back-propagation networks creation.
+
+     �  Saving network as a text file, which can be edited and loaded
+        back.
+
+     �  Saving/loading binary file
+
+     �  Learning from a text file (with structure specified below),
+        number of learning periods / desired network energy can be
+        specified as a criterion.
+
+     �  Network recall
+
+
+
+     Neural Network Generator
+
+     �  Web site: www.idsia.ch/~rafal/research.html
+
+     �  FTP site:  >ftp.idsia.ch/pub/rafal
+
+
+        The Neural Network Generator is a genetic algorithm for the
+        topological optimization of feedforward neural networks. It
+        implements the Semantic Changing Genetic Algorithm and the Unit-
+        Cluster Model. The Semantic Changing Genetic Algorithm is an
+        extended genetic algorithm that allows fast dynamic adaptation
+        of the genetic coding through population analysis. The Unit-
+        Cluster Model is an approach to the construction of modular
+        feedforward networks with a ''backbone'' structure.
+
+
+        NOTE: To compile this on Linux requires one change in the
+        Makefiles.  You will need to change '-ltermlib' to '-ltermcap'.
+     Neureka ANS (nn/xnn)
+
+     �  Web site: www.bgif.no/neureka/
+
+     �  FTP site: ftp.ii.uib.no/pub/neureka/
+
+
+
+        nn is a high-level neural network specification language. The
+        current version is best suited for feed-forward nets, but
+        recurrent models can and have been implemented, e.g. Hopfield
+        nets, Jordan/Elman nets, etc.  In nn, it is easy to change
+        network dynamics. The nn compiler can generate C code or
+        executable programs (so there must be a C compiler available),
+        with a powerful command line interface (but everything may also
+        be controlled via the graphical interface, xnn). It is possible
+        for the user to write C routines that can be called from inside
+        the nn specification, and to use the nn specification as a
+        function that is called from a C program. Please note that no
+        programming is necessary in order to use the network models that
+        come with the system (`netpack').
+
+
+        xnn is a graphical front end to networks generated by the nn
+        compiler, and to the compiler itself. The xnn graphical
+        interface is intuitive and easy to use for beginners, yet
+        powerful, with many possibilities for visualizing network data.
+
+
+        NOTE: You have to run the install program that comes with this
+        to get the license key installed. It gets put (by default) in
+        /usr/lib. If you (like myself) want to install the package
+        somewhere other than in the /usr directory structure (the
+        install program gives you this option) you will have to set up
+        some environmental variables (NNLIBDIR & NNINCLUDEDIR are
+        required). You can read about these (and a few other optional
+        variables) in appendix A of the documentation (pg 113).
+
+
+
+     NEURON
+
+     �  Web site: www.neuron.yale.edu/neuron.html
+
+     �  FTP site: ftp.neuron.yale.edu/neuron/unix/
+
+        NEURON is an extensible nerve modeling and simulation program.
+        It allows you to create complex nerve models by connecting
+        multiple one-dimensional sections together to form arbitrary
+        cell morphologies, and allows you to insert multiple membrane
+        properties into these sections (including channels, synapses,
+        ionic concentrations, and counters). The interface was designed
+        to present the neural modeler with a intuitive environment and
+        hide the details of the numerical methods used in the
+        simulation.
+
+
+
+     PDP++
+
+     �  Web site: www.cnbc.cmu.edu/PDP++/
+
+     �  FTP site (US): cnbc.cmu.edu/pub/pdp++/
+
+     �  FTP site (Europe): unix.hensa.ac.uk/mirrors/pdp++/
+
+
+        As the field of Connectionist modeling has grown, so has the
+        need for a comprehensive simulation environment for the
+        development and testing of Connectionist models. Our goal in
+        developing PDP++ has been to integrate several powerful software
+        development and user interface tools into a general purpose
+        simulation environment that is both user friendly and user
+        extensible. The simulator is built in the C++ programming
+        language, and incorporates a state of the art script interpreter
+        with the full expressive power of C++. The graphical user
+        interface is built with the Interviews toolkit, and allows full
+        access to the data structures and processing modules out of
+        which the simulator is built. We have constructed several useful
+        graphical modules for easy interaction with the structure and
+        the contents of neural networks, and we've made it possible to
+        change and adapt many things. At the programming level, we have
+        set things up in such a way as to make user extensions as
+        painless as possible. The programmer creates new C++ objects,
+        which might be new kinds of units or new kinds of processes;
+        once compiled and linked into the simulator, these new objects
+        can then be accessed and used like any other.
+
+
+
+     RNS
+
+     �  Web site: www.cs.cmu.edu/afs/cs/project/ai-
+        repository/ai/areas/neural/systems/rns/
+
+        RNS (Recurrent Network Simulator) is a simulator for recurrent
+        neural networks. Regular neural networks are also supported. The
+        program uses a derivative of the back-propagation algorithm, but
+        also includes other (not that well tested) algorithms.
+
+        Features include
+
+     �  freely choosable connections, no restrictions besides memory or
+        CPU constraints
+
+     �  delayed links for recurrent networks
+
+     �  fixed values or thresholds can be specified for weights
+
+     �  (recurrent) back-propagation, Hebb, differential Hebb, simulated
+        annealing and more
+
+     �  patterns can be specified with bits, floats, characters,
+        numbers, and random bit patterns with Hamming distances can be
+        chosen for you
+
+     �  user definable error functions
+
+     �  output results can be used without modification as input
+
+
+
+     Simple Neural Net (in Python)
+
+     �  Web site: starship.python.net/crew/amk/unmaintained/
+
+
+        Simple neural network code, which implements a class for 3-level
+        networks (input, hidden, and output layers). The only learning
+        rule implemented is simple backpropagation. No documentation (or
+        even comments) at all, because this is simply code that I use to
+        experiment with. Includes modules containing sample datasets
+        from Carl G. Looney's NN book. Requires the Numeric extensions.
+
+
+
+     SCNN
+
+     �  Web site: apx00.physik.uni-frankfurt.de/e_ag_rt/SCNN/
+
+
+        SCNN is an universal simulating system for Cellular Neural
+        Networks (CNN).  CNN are analog processing neural networks with
+        regular and local interconnections, governed by a set of
+        nonlinear ordinary differential equations. Due to their local
+        connectivity, CNN are realized as VLSI chips, which operates at
+        very high speed.
+
+
+
+     Semantic Networks in Python
+
+     �  Web site: strout.net/info/coding/python/ai/index.html
+
+
+        The semnet.py module defines several simple classes for building
+        and using semantic networks.  A semantic network is a way of
+        representing knowledge, and it enables the program to do simple
+        reasoning with very little effort on the part of the programmer.
+
+
+        The following classes are defined:
+
+     �  Entity: This class represents a noun; it is something which can
+        be related to other things, and about which you can store facts.
+
+     �  Relation: A Relation is a type of relationship which may exist
+        between two entities.  One special relation, "IS_A", is
+        predefined because it has special meaning (a sort of logical
+        inheritance).
+
+     �  Fact: A Fact is an assertion that a relationship exists between
+        two entities.
+
+
+        With these three object types, you can very quickly define
+        knowledge about a set of objects, and query them for logical
+        conclusions.
+
+
+
+     SNNS
+
+     �  Web site: www.informatik.uni-stuttgart.de/ipvr/bv/projekte/snns/
+
+     �  FTP site: ftp.informatik.uni-stuttgart.de/pub/SNNS/
+
+        Stuttgart Neural Net Simulator (version 4.1).  An awesome neural
+        net simulator. Better than any commercial simulator I've seen.
+        The simulator kernel is written in C (it's fast!). It supports
+        over 20 different network architectures, has 2D and 3D X-based
+        graphical representations, the 2D GUI has an integrated network
+        editor, and can generate a separate NN program in C. SNNS is
+        very powerful, though a bit difficult to learn at first. To help
+        with this it comes with example networks and tutorials for many
+        of the architectures.  ENZO, a supplementary system allows you
+        to evolve your networks with genetic algorithms.
+
+
+        There is a debian package of SNNS available. So just get it (and
+        use alien to convert it to RPM if you need to).
+
+
+
+     SPRLIB/ANNLIB
+
+     �  Web site: www.ph.tn.tudelft.nl/~sprlib/
+
+
+        SPRLIB (Statistical Pattern Recognition Library) was developed
+        to support the easy construction and simulation of pattern
+        classifiers. It consist of a library of functions (written in C)
+        that can be called from your own program. Most of the well-known
+        classifiers are present (k-nn, Fisher, Parzen, ....), as well as
+        error estimation and dataset generation routines.
+
+
+        ANNLIB (Artificial Neural Networks Library) is a neural network
+        simulation library based on the data architecture laid down by
+        SPRLIB. The library contains numerous functions for creating,
+        training and testing feed-forward networks.  Training algorithms
+        include back-propagation, pseudo-Newton, Levenberg-Marquardt,
+        conjugate gradient descent, BFGS.... Furthermore, it is possible
+        - due to the datastructures' general applicability - to build
+        Kohonen maps and other more exotic network architectures using
+        the same data types.
+
+
+
+     TOOLDIAG
+
+     �  Web site: www.inf.ufes.br/~thomas/www/home/tooldiag.html
+
+     �  FTP site: ftp.inf.ufes.br/pub/tooldiag/
+
+        TOOLDIAG is a collection of methods for statistical pattern
+        recognition. The main area of application is classification. The
+        application area is limited to multidimensional continuous
+        features, without any missing values. No symbolic features
+        (attributes) are allowed. The program in implemented in the 'C'
+        programming language and was tested in several computing
+        environments.
+
+
+
+  4.
+
+  Evolutionary Computing
+
+  Evolutionary computing is actually a broad term for a vast array of
+  programming techniques, including genetic algorithms, complex adaptive
+  systems, evolutionary programming, etc.  The main thrust of all these
+  techniques is the idea of evolution. The idea that a program can be
+  written that will evolve toward a certain goal.  This goal can be
+  anything from solving some engineering problem to winning a game.
+
+
+
+  4.1.
+
+  EC class/code libraries
+
+
+  These are libraries of code or classes for use in programming within
+  the evolutionary computation field.  They are not meant as stand alone
+  applications, but rather as tools for building your own applications.
+
+
+
+     daga
+
+     �  Web site: GARAGe.cps.msu.edu/software/software-index.html
+
+
+        daga is an experimental release of a 2-level genetic algorithm
+        compatible with the GALOPPS GA software. It is a meta-GA which
+        dynamically evolves a population of GAs to solve a problem
+        presented to the lower-level GAs. When multiple GAs (with
+        different operators, parameter settings, etc.) are
+        simultaneously applied to the same problem, the ones showing
+        better performance have a higher probability of surviving and
+        "breeding" to the next macro-generation (i.e., spawning new
+        "daughter"-GAs with characteristics inherited from the parental
+        GA or GAs.  In this way, we try to encourage good problem-
+        solving strategies to spread to the whole population of GAs.
+
+
+
+     EO
+
+     �  Web site: geneura.ugr.es/~jmerelo/EO.html
+
+        EO is a templates-based, ANSI-C++ compliant evolutionary
+        computation library. It contains classes for any kind of
+        evolutionary computation (specially genetic algorithms) you
+        might come up to. It is component-based, so that if you don't
+        find the class you need in it, it is very easy to subclass
+        existing abstract or concrete class.
+
+
+
+     FORTRAN GA
+
+     �  Web site: www.staff.uiuc.edu/~carroll/ga.html
+
+
+        This program is a FORTRAN version of a genetic algorithm driver.
+        This code initializes a random sample of individuals with
+        different parameters to be optimized using the genetic algorithm
+        approach, i.e.  evolution via survival of the fittest.  The
+        selection scheme used is tournament selection with a shuffling
+        technique for choosing random pairs for mating.  The routine
+        includes binary coding for the individuals, jump mutation, creep
+        mutation, and the option for single-point or uniform crossover.
+        Niching (sharing) and an option for the number of children per
+        pair of parents has been added.  More recently, an option for
+        the use of a micro-GA has been added.
+
+
+
+     GAGS
+
+     �  Web site: kal-el.ugr.es/gags.html
+
+     �  FTP site: kal-el.ugr.es/GAGS/
+
+
+        Genetic Algorithm  application generator and class library
+        written mainly in C++.  As a class library, and among other
+        thing, GAGS includes:
+
+     �  A chromosome hierarchy with variable length chromosomes.
+        Genetic operators: 2-point crossover, uniform crossover, bit-
+        flip mutation, transposition (gene interchange between 2 parts
+        of the chromosome), and variable-length operators: duplication,
+        elimination, and random addition.
+
+     �  Population level operators include steady state, roulette wheel
+        and tournament selection.
+
+     �  Gnuplot wrapper: turns gnuplot into a iostreams-like class.
+
+     �  Easy sample file loading and configuration file parsing.
+
+        As an application generator (written in PERL), you only need to
+        supply it with an ANSI-C or C++ fitness function, and it creates
+        a C++ program that uses the above library to 90% capacity,
+        compiles it, and runs it, saving results and presenting fitness
+        thru gnuplot.
+
+
+
+     GAlib: Matthew's Genetic Algorithms Library
+
+     �  Web Site: lancet.mit.edu/ga/
+
+     �  FTP site: lancet.mit.edu/pub/ga/
+
+     �  Register GAlib at: lancet.mit.edu/ga/Register.html
+
+
+        GAlib contains a set of C++ genetic algorithm objects.  The
+        library includes tools for using genetic algorithms to do
+        optimization in any C++ program using any representation and
+        genetic operators.  The documentation includes an extensive
+        overview of how to implement a genetic algorithm as well as
+        examples illustrating customizations to the GAlib classes.
+
+
+
+     GALOPPS
+
+     �  Web site: GARAGe.cps.msu.edu/software/software-index.html
+
+     �  FTP site: garage.cps.msu.edu/pub/GA/galopps/
+
+
+        GALOPPS is a flexible, generic GA, in 'C'.  It was based upon
+        Goldberg's Simple Genetic Algorithm (SGA) architecture, in order
+        to make it easier for users to learn to use and extend.
+
+
+        GALOPPS extends the SGA capabilities several fold:
+
+     �  (optional) A new Graphical User Interface, based on TCL/TK, for
+        Unix users, allowing easy running of GALOPPS 3.2 (single or
+        multiple subpopulations) on one or more processors.  GUI
+        writes/reads "standard" GALOPPS input and master files, and
+        displays graphical output (during or after run) of user-selected
+        variables.
+
+     �  5 selection methods: roulette wheel, stochastic remainder
+        sampling, tournament selection, stochastic universal sampling,
+        linear-ranking-then-SUS.
+
+     �  Random or superuniform initialization of "ordinary" (non-
+        permutation) binary or non-binary chromosomes; random
+        initialization of permutation-based chromosomes; or user-
+        supplied initialization of arbitrary types of chromosomes.
+
+     �  Binary or non-binary alphabetic fields on value-based
+        chromosomes, including different user-definable field sizes.
+
+     �  3 crossovers for value-based representations: 1-pt, 2-pt, and
+        uniform, all of which operate at field boundaries if a non-
+        binary alphabet is used.
+
+     �  4 crossovers for order-based reps: PMX, order-based, uniform
+        order-based, and cycle.
+
+     �  4 mutations: fast bitwise, multiple-field, swap and random
+        sublist scramble.
+
+     �  Fitness scaling: linear scaling, Boltzmann scaling, sigma
+        truncation, window scaling, ranking.
+
+     �  Plus a whole lot more....
+
+
+
+     GAS
+
+     �  Web site: starship.skyport.net/crew/gandalf
+
+     �  FTP site: ftp.coe.uga.edu/users/jae/ai
+
+
+        GAS means "Genetic Algorithms Stuff".
+
+        GAS is freeware.
+
+        Purpose of GAS is to explore and exploit artificial evolutions.
+        Primary implementation language of GAS is Python.  The GAS
+        software package is meant to be a Python framework for applying
+        genetic algorithms. It contains an example application where it
+        is tried to breed Python program strings.  This special problem
+        falls into the category of Genetic Programming (GP), and/or
+        Automatic Programming.  Nevertheless, GAS tries to be useful for
+        other applications of Genetic Algorithms as well.
+
+
+
+     GECO
+
+     �  FTP site: ftp://ftp.aic.nrl.navy.mil/pub/galist/src/
+
+
+        GECO (Genetic Evolution through Combination of Objects), an
+        extendible object-oriented tool-box for constructing genetic
+        algorithms (in Lisp).  It provides a set of extensible classes
+        and methods designed for generality. Some simple examples are
+        also provided to illustrate the intended use.
+
+
+
+     GPdata
+
+     �  FTP site: ftp.cs.bham.ac.uk/pub/authors/W.B.Langdon/gp-code/
+
+     �  Documentation (GPdata-icga-95.ps): cs.ucl.ac.uk/genetic/papers/
+
+
+        GPdata-3.0.tar.gz (C++) contains a version of Andy Singleton's
+        GP-Quick version 2.1 which has been extensively altered to
+        support:
+
+     �  Indexed memory operation (cf. teller)
+
+     �  multi tree programs
+
+     �  Adfs
+
+     �  parameter changes without recompilation
+
+     �  populations partitioned into demes
+
+     �  (A version of) pareto fitness
+
+        This ftp site also contains a small C++ program (ntrees.cc) to
+        calculate the number of different there are of a given length
+        and given function and terminal set.
+
+
+
+     gpjpp Genetic Programming in Java
+
+     �  [Dead Link] Web site: http://www.turbopower.com/~kimk/gpjpp.asp
+
+     �  Anyone who knows where to find gpjpp, please let me know.
+
+
+        gpjpp is a Java package I wrote for doing research in genetic
+        programming. It is a port of the gpc++ kernel written by Adam
+        Fraser and Thomas Weinbrenner. Included in the package are four
+        of Koza's standard examples: the artificial ant, the hopping
+        lawnmower, symbolic regression, and the boolean multiplexer.
+        Here is a partial list of its features:
+
+     �  graphic output of expression trees
+
+     �  efficient diversity checking
+
+     �  Koza's greedy over-selection option for large populations
+
+     �  extensible GPRun class that encapsulates most details of a
+        genetic programming test
+
+     �  more robust and efficient streaming code, with automatic
+        checkpoint and restart built into the GPRun class
+     �  an explicit complexity limit that can be set on each GP
+
+     �  additional configuration variables to allow more testing without
+        recompilation
+
+     �  support for automatically defined functions (ADFs)
+
+     �  tournament and fitness proportionate selection
+
+     �  demetic grouping
+
+     �  optional steady state population
+
+     �  subtree crossover
+
+     �  swap and shrink mutation
+
+
+
+     GP Kernel
+
+     �  Web site (???): www.emk.e-technik.th-
+        darmstadt.de/~thomasw/gp.html
+
+        The GP kernel is a C++ class library that can be used to apply
+        genetic programming techniques to all kinds of problems. The
+        library defines a class hierarchy. An integral component is the
+        ability to produce automatically defined functions as found in
+        Koza's "Genetic Programming II". Technical documentation
+        (postscript format) is included. There is also a short
+        introduction into genetic programming.
+
+
+        Functionality includes; Automatically defined functions (ADFs),
+        tournament and fitness proportionate selection, demetic
+        grouping, optional steady state genetic programming kernel,
+        subtree crossover, swap and shrink mutation, a way of changing
+        every parameter of the system without recompilation, capacity
+        for multiple populations, loading and saving of populations and
+        genetic programs, standard random number generator, internal
+        parameter checks.
+
+
+
+     lil-gp
+
+     �  Web site: GARAGe.cps.msu.edu/software/software-index.html#lilgp
+
+     �  FTP site: garage.cps.msu.edu/pub/GA/lilgp/
+
+
+     patched lil-gp *
+
+     �  Web site: www.cs.umd.edu/users/seanl/gp/
+
+
+        lil-gp is a generic 'C' genetic programming tool. It was written
+        with a number of goals in mind: speed, ease of use and support
+        for a number of options including:
+
+     �  Generic 'C' program that runs on UNIX workstations
+
+     �  Support for multiple population experiments, using arbitrary and
+        user settable topologies for exchange, for a single processor
+        (i.e., you can do multiple population gp experiments on your
+        PC).
+
+     �  lil-gp manipulates trees of function pointers which are
+        allocated in single, large memory blocks for speed and to avoid
+        swapping.
+
+        * The patched lil-gp kernel is strongly-typed, with
+        modifications on multithreading, coevolution, and other tweaks
+        and features.
+
+
+
+     PGAPack
+        Parallel Genetic Algorithm Library
+
+     �  Web site: www.mcs.anl.gov/~levine/PGAPACK/
+
+     �  FTP site: ftp.mcs.anl.gov/pub/pgapack/
+
+
+        PGAPack is a general-purpose, data-structure-neutral, parallel
+        genetic algorithm library. It is intended to provide most
+        capabilities desired in a genetic algorithm library, in an
+        integrated, seamless, and portable manner. Key features are in
+        PGAPack V1.0 include:
+
+     �  Callable from Fortran or C.
+
+     �  Runs on uniprocessors, parallel computers, and workstation
+        networks.
+
+     �  Binary-, integer-, real-, and character-valued native data
+        types.
+
+     �  Full extensibility to support custom operators and new data
+        types.
+
+     �  Easy-to-use interface for novice and application users.
+
+     �  Multiple levels of access for expert users.
+
+     �  Parameterized population replacement.
+
+     �  Multiple crossover, mutation, and selection operators.
+
+     �  Easy integration of hill-climbing heuristics.
+
+     �  Extensive debugging facilities.
+
+     �  Large set of example problems.
+
+     �  Detailed users guide.
+
+
+
+     PIPE
+
+     �  Web site: www.idsia.ch/~rafal/research.html
+
+     �  FTP site: ftp.idsia.ch/pub/rafal
+
+        Probabilistic Incremental Program Evolution (PIPE) is a novel
+        technique for automatic program synthesis. The software is
+        written in C. It
+     �  is easy to install (comes with an automatic installation tool).
+
+     �  is easy to use: setting up PIPE_V1.0 for different problems
+        requires a minimal amount of programming. User-written,
+        application- independent program parts can easily be reused.
+
+     �  is efficient: PIPE_V1.0 has been tuned to speed up performance.
+
+     �  is portable: comes with source code (optimized for SunOS 5.5.1).
+
+     �  is extensively documented(!) and contains three example
+        applications.
+
+     �  supports statistical evaluations: it facilitates running
+        multiple experiments and collecting results in output files.
+
+     �  includes testing tool for testing generalization of evolved
+        programs.
+
+     �  supports floating point and integer arithmetic.
+
+     �  has extensive output features.
+
+     �  For lil-gp users: Problems  set up for lil-gp 1.0 can be easily
+        ported to PIPE_v1.0.  The  testing tool can also be used to
+        process programs evolved by lil-gp 1.0.
+
+
+
+     Sugal
+
+     �  Web site: www.trajan-software.demon.co.uk/sugal.htm
+
+        Sugal [soo-gall] is the SUnderland Genetic ALgorithm system. The
+        aim of Sugal is to support research and implementation in
+        Genetic Algorithms on a common software platform. As such, Sugal
+        supports a large number of variants of Genetic Algorithms, and
+        has extensive features to support customization and extension.
+
+
+
+  4.2.
+
+  EC software kits/applications
+
+
+  These are various applications, software kits, etc. meant for research
+  in the field of evolutionary computing. Their ease of use will vary,
+  as they were designed to meet some particular research interest more
+  than as an easy to use commercial package.
+
+
+
+     ADATE
+
+     �  Web site: www-ia.hiof.no/~rolando/adate_intro.html
+
+
+        ADATE (Automatic Design of Algorithms Through Evolution) is a
+        system for automatic programming i.e., inductive inference of
+        algorithms, which may be the best way to develop artificial and
+        general intelligence.
+
+
+        The ADATE system can automatically generate non-trivial and
+        novel algorithms. Algorithms are generated through large scale
+        combinatorial search that employs sophisticated program
+        transformations and heuristics. The ADATE system is particularly
+        good at synthesizing symbolic, functional programs and has
+        several unique qualities.
+
+
+
+     esep & xesep
+
+     �  Web site(esep): www.iit.edu/~linjinl/esep.html
+
+     �  Web site(xesep): www.iit.edu/~linjinl/xesep.html
+
+
+        This is a new scheduler, called Evolution Scheduler, based on
+        Genetic Algorithms and Evolutionary Programming. It lives with
+        original Linux priority scheduler.This means you don't have to
+        reboot to change the scheduling policy. You may simply use the
+        manager program esep to switch between them at any time, and
+        esep itself is an all-in-one for scheduling status, commands,
+        and administration. We didn't intend to remove the original
+        priority scheduler; instead, at least, esep provides you with
+        another choice to use a more intelligent scheduler, which
+        carries out natural competition in an easy and effective way.
+
+
+        Xesep is a graphical user interface to the esep (Evolution
+        Scheduling and Evolving Processes). It's intended to show users
+        how to start, play, and feel the Evolution Scheduling and
+        Evolving Processes, including sub-programs to display system
+        status, evolving process status, queue status, and evolution
+        scheduling status periodically in as small as one mini-second.
+
+
+
+     Corewars
+
+     �  Web site: corewars.sourceforge.net/
+
+     �  SourceForge site: sourceforge.net/project/?group_id=3054
+
+        Corewars is a game which simulates a virtual machine with a
+        number of programs. Each program tries to crash the others. The
+        program that lasts the longest time wins. A number of sample
+        programs are provided and new programs can be written by the
+        player. Screenshots are available at the Corewars homepage.
+
+
+
+     Corewar VM
+
+     �  Web site: www.jedi.claranet.fr/
+
+
+        This is a virtual machine written in Java (so it is a virtual
+        machine for another virtual machine !) for a Corewar game.
+
+
+
+     FSM-Evolver
+
+     �  Web site (???): pages.prodigy.net/czarneckid
+
+
+        A Java (jdk-v1.0.2+) code library that is used to evolve finite
+        state machines. The problem included in the package is the
+        Artificial Ant problem. You should be able to compile the .java
+        files and then run: java ArtificialAnt.
+
+
+
+     GPsys
+
+     �  Web site: www.cs.ucl.ac.uk/staff/A.Qureshi/gpsys.html
+
+
+        GPsys (pronounced gipsys) is a Java (requires Java 1.1 or later)
+        based Genetic Programming system developed by Adil Qureshi.  The
+        software includes documentation, source and executables.
+
+
+        Feature Summary:
+
+     �  Steady State engine
+
+     �  ADF support
+
+     �  Strongly Typed
+
+        1. supports generic functions and terminals
+
+        2. has many built-in primitives
+
+        3. includes indexed memory
+
+     �  Save/Load feature
+
+        1. can save/load current generation to/from a file
+
+        2. data stored in GZIP compression format to minimise disk
+           requirements
+
+        3. uses serialisable objects for efficiency
+
+     �  Fully Documented
+
+     �  Example Problems
+
+        1. Lawnmower (including GUI viewer)
+
+        2. Symbolic Regression
+
+     �  Totally Parameterised
+
+     �  Fully Object Oriented and Extensible
+
+     �  High Performance
+
+     �  Memory Efficient
+
+
+
+     JGProg
+
+     �  Web site: www.linuxstart.com/~groovyjava/JGProg/
+
+        Genetic Programming (JGProg) is an open-source Java
+        implementation of a strongly-typed Genetic Programming
+        experimentation platform. Two example "worlds" are provided, in
+        which a population evolves and solves the problem.
+
+
+
+  5.
+
+  Alife & Complex Systems
+
+
+
+  Alife takes yet another approach to exploring the mysteries of
+  intelligence.  It has many aspects similar to EC and Connectionism,
+  but takes these ideas and gives them a meta-level twist. Alife
+  emphasizes the development of intelligence through emergent behavior
+  of complex adaptive systems.  Alife stresses the social or group based
+  aspects of intelligence. It seeks to understand life and survival. By
+  studying the behaviors of groups of 'beings' Alife seeks to discover
+  the way intelligence or higher order activity emerges from seemingly
+  simple individuals. Cellular Automata and Conway's Game of Life are
+  probably the most commonly known applications of this field. Complex
+  Systems (abbreviated CS) are very similar to alife in the way the are
+  approached, just more general in definition (ie.  alife is a type of
+  complex system).  Usually complex system software takes the form of a
+  simulator.
+
+
+
+  5.1.
+
+  Alife & CS class/code libraries
+
+
+
+  These are libraries of code or classes for use in programming within
+  the artificial life field.  They are not meant as stand alone
+  applications, but rather as tools for building your own applications.
+
+
+
+     CASE
+
+     �  Web site: www.iu.hioslo.no/~cell/
+
+     �  FTP site: ftp.iu.hioslo.no/pub/
+
+        CASE (Cellular Automaton Simulation Environment) is a C++
+        toolkit for visualizing discrete models in two dimensions: so-
+        called cellular automata. The aim of this project is to create
+        an integrated framework for creating generalized cellular
+        automata using the best, standardized technology of the day.
+
+
+
+     John von Neumann Universal Constructor
+
+     �  Web site: alife.santafe.edu/alife/software/jvn.html
+
+     �  FTP site: alife.santafe.edu/pub/SOFTWARE/jvn/
+
+
+        The universal constructor of John von Neumann is an extension of
+        the logical concept of universal computing machine.  In the
+        cellular environment proposed by von Neumann both computing and
+        constructive universality can be achieved.  Von Neumann proved
+        that in his cellular lattice both a Turing machine and a machine
+        capable of producing any other cell assembly, when fed with a
+        suitable program, can be embedded. He called the latter machine
+        a ''universal constructor'' and showed that, when provided with
+        a program containing its own description, this is capable of
+        self-reproducing.
+
+
+
+     Swarm
+
+     �  Web site:  www.santafe.edu/projects/swarm
+
+     �  FTP site:  ftp.santafe.edu/pub/swarm
+
+
+        The swarm Alife simulation kit. Swarm is a simulation
+        environment which facilitates development and experimentation
+        with simulations involving a large number of agents behaving and
+        interacting within a dynamic environment.  It consists of a
+        collection of classes and libraries written in Objective-C and
+        allows great flexibility in creating simulations and analyzing
+        their results.  It comes with three demos and good
+        documentation.

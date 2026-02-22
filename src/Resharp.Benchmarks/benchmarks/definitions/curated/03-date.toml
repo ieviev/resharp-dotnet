@@ -1,0 +1,226 @@
+analysis = '''
+This is a monster regex for extracting dates from unstructured text from
+the [datefinder] project written in Python. The regex itself was taken from
+[printing the `DATES_PATTERN`][datefinder-regex] variable in the `datefinder`
+project. I then removed all names from the capture groups, unnecessary escapes
+and collapsed it to a single line (because not all regex engines support
+verbose mode).
+
+The regex is more akin to a tokenizer, and the `datefinder` library attempts to
+combine these tokens into timestamps.
+
+We measure an ASCII only version of it and a Unicode-aware version of it.
+Unicode is relevant here because of case insensitivity, and because the regex
+makes use of the character classes `\s` and `\d`, which are bigger when they're
+Unicode aware. We also measure the compilation time of each.
+
+The results here can be a little tricky to interpret. Namely, it looks like
+backtrackers tend to do worse than automata oriented regex engines, but
+`go/regexp` uses automata and is itself quite slow here. Notice, though, that
+`hyperscan`, `re2` and `rust/regex` do well here. While I'm less familiar with
+`hyperscan`, the explanation for `re2` and `rust/regex` is obvious once you
+look at a profile: it's the lazy DFA. Both have implementations of a regex
+engine that build a DFA during search time, with at most one new transition
+(and one new state) being create per byte of haystack. In practice, most
+transitions get reused, which means that it tends to act like a real DFA most
+of the time for most regexes on most haystacks.
+
+Compilation time of this monster regex is also all over the place. PCRE2 does
+the best, and Hyperscan winds up being quite slow. Once you enable Unicode
+mode, compilation time generally gets worse, and especially so for `re2` and
+`rust/regex`. In particular, both compile _byte oriented_ automata, which means
+the transitions are defined over bytes and not codepoints. That means large
+Unicode classes like `\d` tend to balloon in size, because they get converted
+into UTF-8 automata.
+
+[datefinder]: https://github.com/akoumjian/datefinder/tree/master
+[datefinder-regex]: https://github.com/akoumjian/datefinder/blob/5376ece0a522c44762b1ab656fc80737b427ed16/datefinder/constants.py#L112-L124
+'''
+
+
+[[bench]]
+model = "count-spans"
+name = "ascii"
+regex = { path = "wild/date.txt" }
+case-insensitive = true
+haystack = { path = "rust-src-tools-3b0d4813.txt", line-start = 190_000, line-end = 200_000 }
+count = [
+  # Unknown why the count span differs here, although this does match regress.
+  { engine = 'd/.*/std-regex', count = 111_841 },
+  # .NET counts spans of UTF-16 code units, which is the likely reason for
+  # the difference here.
+  { engine = 'dotnet.*', count = 111_825 },
+  # resharp returns posix matches
+  { engine = 'resharp', count = 111_832 },
+  # Hyperscan reports all possible matches, so its total span count is higher.
+  { engine = 'hyperscan', count = 547_662 },
+  # ICU doesn't provide a way to disable Unicode.
+  { engine = 'icu', count = 111_825 },
+  # I don't know why the count span differs here. Note that this matches
+  # v8's count when Unicode mode is enabled as well, which suggests that the
+  # number of matches doesn't change. (Which makes sense, because \w, \s and
+  # \d are all unaffected by Unicode mode in ECMAScript regex engines.) So my
+  # best guess without looking into it is that the count differs from regress
+  # (another ECMAScript engine) because this counts UTF-16 code units while the
+  # regress runner program counts UTF-8 code units. This is also consistent
+  # with .NET's count, which also uses UTF-16 code units.
+  { engine = 'javascript/v8', count = 111_825 },
+  # Unknown why the count span differs here.
+  { engine = 'regress', count = 111_841 },
+  # Why does Java report the same count as engines that work on UTF-8 despite
+  # Java using UTF-16 code units? My thinking here is that since Unicode mode
+  # is disabled here, Java only finds ASCII matches (as is consistent with the
+  # intent for disabling Unicode mode). And in that case, the number of ASCII
+  # bytes and the number of UTF-16 code units in any given match will always
+  # be equivalent.
+  #
+  # The difference is in how non-Unicode mode is handled. In .NET, it is
+  # impossible to prevent [\w\s\d] from being Unicode-aware (presumably unless
+  # you enable its ECMAScript mode). Similarly, in ECMAScript engines like
+  # javascript/v8 and regress, \s is always Unicode-aware where as \w and \d
+  # are never Unicode aware (regardless of whether Unicode mode is enabled
+  # or not).
+  { engine = '.*', count = 111_817 },
+]
+engines = [
+  'd/ldc/std-regex',
+  'dotnet/compiled',
+  'dotnet/nobacktrack',
+  'resharp',
+  'go/regexp',
+  'hyperscan',
+  'icu',
+  'java/hotspot',
+  'javascript/v8',
+  'pcre2',
+  'pcre2/jit',
+  'perl',
+  'python/re',
+  'python/regex',
+  're2',
+  'regress',
+  'rust/regex',
+  'rust/regex/lite',
+  'rust/regexold',
+]
+analysis = '''
+As with many other benchmarks, Hyperscan reports all matches, even ones that
+are overlapping. This particular regex is too big to analyze closely, but it
+seems plausible one could still use it (possibly with a slightly tweaked regex)
+for this task.
+'''
+
+[[bench]]
+model = "count-spans"
+name = "unicode"
+regex = { path = "wild/date.txt" }
+case-insensitive = true
+unicode = true
+haystack = { path = "rust-src-tools-3b0d4813.txt", line-start = 190_000, line-end = 200_000 }
+count = [
+  # These engines all count spans of UTF-16 code units.
+  { engine = 'dotnet/compiled|icu|java/hotspot|javascript/v8', count = 111_825 },
+  # resharp returns posix matches
+  { engine = 'resharp', count = 111_832 },
+  { engine = '.*', count = 111_841 },
+]
+engines = [
+  'd/ldc/std-regex',
+  'dotnet/compiled',
+  'resharp',
+  'icu',
+  'java/hotspot',
+  'javascript/v8',
+  'pcre2',
+  'pcre2/jit',
+  'python/re',
+  'python/regex',
+  'regress',
+  'rust/regex',
+  'rust/regexold',
+]
+analysis = '''
+ECMAScript engines such as `d/.*/std-regex`, `javascript/v8` and `regress`
+are included here despite its `\d` not being Unicode-aware (as required by
+ECMAScript). Notably, its `\s` _is_ Unicode aware. (`\w` is too, but it's not
+used in this regex.) In this particular haystack, `\d` being ASCII-only doesn't
+impact the match count.
+
+However, neither `re2` nor `go/regexp` are included here because neither `\d`
+nor `\s` are Unicode-aware, and the `\s` being ASCII-only does impact the match
+count.
+
+`hyperscan` is excluded here because the pattern results in a "too large"
+compilation error. As far as I know, Hyperscan doesn't expose any knobs for
+increasing this limit.
+
+`dotnet/compiled` gets a different count here, but it's not clear why.
+
+`perl` is left out of this benchmark because it times out.
+
+`rust/regex/lite` is excluded because it doesn't support Unicode-aware `\w`,
+`\d` or `\s`.
+'''
+
+[[bench]]
+model = "compile"
+name = "compile-ascii"
+regex = { path = "wild/date.txt" }
+case-insensitive = true
+haystack = "2010-03-14"
+count = [
+  { engine = 'hyperscan', count = 10 },
+  { engine = '.*', count = 5 },
+]
+engines = [
+  'go/regexp',
+  'resharp',
+  'hyperscan',
+  'icu',
+  'pcre2',
+  'pcre2/jit',
+  'python/re',
+  'python/regex',
+  're2',
+  'regress',
+  'rust/regex',
+  'rust/regex/lite',
+  'rust/regexold',
+]
+analysis = '''
+Notice that ECMAScript engines such as `d/.*/std-regex` and `regress` are
+included in this ASCII benchmark, because in `compile-unicode` we specifically
+test that the `\d` used in this regex is Unicode-aware. `regress` does not make
+`\d` Unicode-aware, so it gets thrown into the ASCII group. But do note that it
+does appear to have some Unicode awareness.
+'''
+
+[[bench]]
+model = "compile"
+name = "compile-unicode"
+regex = { path = "wild/date.txt" }
+case-insensitive = true
+unicode = true
+haystack = "۲۰۱۰-۰۳-۱۴"
+count = [
+  # ECMAScript engines don't support Unicode-aware \d. Although, D's does.
+  { engine = 'javascript/v8|regress', count = 2 },
+  { engine = '.*', count = 5 },
+]
+engines = [
+  'dotnet/compiled',
+  'resharp',
+  'icu',
+  'pcre2',
+  'pcre2/jit',
+  'python/re',
+  'python/regex',
+  'regress',
+  'rust/regex',
+  'rust/regexold',
+]
+analysis = '''
+We use "extended arabic-indic digits" to represent the same date, `2010-03-14`,
+that we use for verification in `compile-ascii`. These digits are part of `\d`
+when it is Unicode aware.
+'''

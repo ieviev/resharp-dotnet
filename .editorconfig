@@ -1,0 +1,4 @@
+[*.{fs,fsx}]
+fsharp_multiline_bracket_style = stroustrup
+max_line_length=95
+fsharp_multi_line_lambda_closing_newline = true

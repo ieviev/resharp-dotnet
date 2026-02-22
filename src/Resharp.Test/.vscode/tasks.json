@@ -1,0 +1,16 @@
+{
+    "tasks": [
+        {
+            "type": "msbuild",
+
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "label": "build",
+        }
+    ]
+}

@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <!--  always on even in debug -->
+    <Tailcalls>true</Tailcalls>
+    <OutputType>Library</OutputType>
+    <!-- show defensive struct copies -->
+    <WarningLevel>5</WarningLevel>
+    <OtherFlags>$(OtherFlags) --deterministic+ --checked- --extraoptimizationloops:1 </OtherFlags>
+    <NoWarn>$(NoWarn);FS0075</NoWarn>
+    <NoWarn>$(NoWarn);FS0192</NoWarn>
+    <!--  warn unused code  -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!--  allow embedded IL  -->
+    <NoWarn>$(NoWarn);42</NoWarn>
+    <!--  binding executed out of order   -->
+    <WarnOn>21</WarnOn>
+    <WarnOn>1182</WarnOn>
+    <!--    warn heap allocations    -->
+    <WarnOn>3180</WarnOn>
+    <WarnOn>52</WarnOn>
+    <!--    warn inlineiflambda failures    -->
+    <WarnOn>3517</WarnOn>
+    <WarnOn>3366</WarnOn>
+    <WarnOn>3387</WarnOn>
+    <DefineConstants>$(DefineConstants);OPTIMIZE</DefineConstants>
+    <DefineConstants>$(DefineConstants);SUBSUME</DefineConstants>
+    <DefineConstants>$(DefineConstants);SKIP</DefineConstants>
+    <DefineConstants>$(DefineConstants);SKIP_ACTIVE</DefineConstants>
+    <DefineConstants>$(DefineConstants);SKIP_PREFIX</DefineConstants>
+    <DefineConstants Condition=" '$(ExtraDefineConstants)' != '' ">$(DefineConstants);$(ExtraDefineConstants)</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release' ">
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>None</DebugType>
+  </PropertyGroup>
+  <ItemGroup>
+    <DefaultReferenceExclusion Include="System.Text.RegularExpressions" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Resharp.Test" />
+    <InternalsVisibleTo Include="Resharp.Benchmarks" />
+    <ProjectReference Include="..\Resharp.Runtime\Resharp.Runtime.csproj" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="fsil.fs" />
+    <Compile Include="Common.fs" />
+    <Compile Include="Types.fs" />
+    <Compile Include="Patterns.fs" />
+    <Compile Include="Info.fs" />
+    <Compile Include="RegexBuilder.fs" />
+    <Compile Include="Cache.fs" />
+    <Compile Include="RegexNodeConverter.fs" />
+    <Compile Include="Minterms.fs" />
+    <Compile Include="Algorithm.fs" />
+    <Compile Include="Accelerators.fs" />
+    <Compile Include="Optimizations.fs" />
+    <Compile Include="Regex.fs" />
+    <Compile Include="Regex.Public.fs" />
+  </ItemGroup>
+  <PropertyGroup>
+    <PackageOutputPath>./nupkg</PackageOutputPath>
+    <Authors>ieviev</Authors>
+    <Title>$(ProjectName)</Title>
+    <Version>1.0.0</Version>
+    <Description>High-performance regex engine supporting intersection and complement operations</Description>
+    <PackageTags>regex;regular-expressions;intersection;complement;dfa;pattern-matching</PackageTags>
+    <PackageProjectUrl>https://github.com/ieviev/resharp-dotnet</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ieviev/resharp-dotnet</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageIcon>resharp.png</PackageIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="" />
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+    <None Include="..\..\docs\resharp.png" Pack="true" PackagePath="" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)../Resharp.Runtime/bin/Release/net10.0/Resharp.Runtime.dll">
+      <Pack>true</Pack>
+      <PackageCopyToOutput>true</PackageCopyToOutput>
+      <PackagePath>lib/net10.0/</PackagePath>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)../Resharp.Runtime/bin/Release/net9.0/Resharp.Runtime.dll">
+      <Pack>true</Pack>
+      <PackageCopyToOutput>true</PackageCopyToOutput>
+      <PackagePath>lib/net9.0/</PackagePath>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)../Resharp.Runtime/bin/Release/net8.0/Resharp.Runtime.dll">
+      <Pack>true</Pack>
+      <PackageCopyToOutput>true</PackageCopyToOutput>
+      <PackagePath>lib/net8.0/</PackagePath>
+    </None>
+  </ItemGroup>
+</Project>

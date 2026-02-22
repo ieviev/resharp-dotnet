@@ -1,0 +1,258 @@
+description = '''
+nullable position tests (internal engine behavior)
+tests right-to-left nullable position collection
+'''
+
+# --- quantifiers ---
+
+[[test]]
+pattern = '(ab)+'
+input = '__abab__ab__'
+nullable_positions = [8, 4, 2]
+
+# --- positive lookahead ---
+
+[[test]]
+pattern = '(?=b)'
+input = 'b'
+nullable_positions = [0]
+
+[[test]]
+pattern = 'a(?=b)'
+input = '_ab_ab_'
+nullable_positions = [4, 1]
+
+[[test]]
+pattern = 'a(?=b_)'
+input = '_ab_ab_'
+nullable_positions = [4, 1]
+
+[[test]]
+pattern = '.*(?=b_)'
+input = '_ab_ab_'
+nullable_positions = [5, 4, 3, 2, 1, 0]
+
+[[test]]
+pattern = '(ab)+(?=_)'
+input = '_ab_ab_'
+nullable_positions = [4, 1]
+
+[[test]]
+pattern = 'bb(?=aa)'
+input = '__bbaa__'
+nullable_positions = [2]
+
+# --- positive lookbehind ---
+
+[[test]]
+pattern = '(?<=b)'
+input = 'b'
+nullable_positions = [1]
+
+[[test]]
+pattern = '(?<=bb)'
+input = 'bb'
+nullable_positions = [2]
+
+[[test]]
+pattern = '(?<=bbb)'
+input = 'bbb'
+nullable_positions = [3]
+
+[[test]]
+pattern = '(?<=bbbb)'
+input = 'bbbb'
+nullable_positions = [4]
+
+[[test]]
+pattern = '(?<=b)b'
+input = 'bb'
+nullable_positions = [1]
+
+[[test]]
+pattern = '(?<=bb)b'
+input = 'bbb'
+nullable_positions = [2]
+
+[[test]]
+pattern = '(?<=b)a'
+input = 'ba'
+nullable_positions = [1]
+
+[[test]]
+pattern = '(?<=b)a'
+input = 'bba'
+nullable_positions = [2]
+
+[[test]]
+pattern = '(?<=b)a'
+input = 'bbbba'
+nullable_positions = [4]
+
+[[test]]
+pattern = '(?<=bb)a'
+input = 'bbbba'
+nullable_positions = [4]
+
+[[test]]
+pattern = '(?<=bbb)a'
+input = 'bbbba'
+nullable_positions = [4]
+
+[[test]]
+pattern = '(?<=aaa).*'
+input = 'aaabbb'
+nullable_positions = [3]
+
+# --- boolean + lookbehind ---
+
+[[test]]
+pattern = '(?<=author).*&.*'
+input = 'author: abc and def'
+nullable_positions = [6]
+
+# --- complement ---
+
+[[test]]
+pattern = '~(.*nd.*)'
+input = '_ndB'
+nullable_positions = [4, 3, 2, 1, 0]
+
+[[test]]
+pattern = '~(.*and.*)'
+input = '__A and B'
+nullable_positions = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
+
+# --- lookahead + lookbehind combined ---
+
+[[test]]
+pattern = '.(?=.*c)'
+input = 'abc'
+nullable_positions = [1, 0]
+
+[[test]]
+pattern = '(?<=a.*).(?=.*c)'
+input = 'abc'
+nullable_positions = [1]
+
+[[test]]
+pattern = '(?<=a.*).(?=.*c)'
+input = 'a__c'
+nullable_positions = [2, 1]
+
+[[test]]
+pattern = '(?<=a.*)(x)(?=.*c)'
+input = 'a x c'
+nullable_positions = [2]
+
+[[test]]
+pattern = '(\bx)'
+input = 'a x c'
+nullable_positions = [2]
+
+[[test]]
+pattern = '(?<=a.*)(\bx)(?=.*c)'
+input = 'a x c'
+nullable_positions = [2]
+
+[[test]]
+pattern = 'x\b(?=.*c)'
+input = 'a x c'
+nullable_positions = [2]
+
+[[test]]
+pattern = '(?<=a.*)(\bx\b)(?=.*c)'
+input = 'a x c'
+nullable_positions = [2]
+
+[[test]]
+pattern = '(?<=a.*)(\bx\b)(?=.*c)'
+input = 'a xx c'
+nullable_positions = []
+
+[[test]]
+pattern = '(?<=\W)hello(?=\W)'
+input = ' hello '
+nullable_positions = [1]
+
+[[test]]
+pattern = '(?<=\W)hello(?=\W)'
+input = ' helloworld '
+nullable_positions = []
+
+# --- bounded repetition with lookaround ---
+
+[[test]]
+pattern = '(?<=c.*)(ab){1,3}'
+input = 'c_ababab'
+nullable_positions = [6, 4, 2]
+
+[[test]]
+pattern = '(ab){1,3}(?=.*c)'
+input = '__ababab_c'
+nullable_positions = [6, 4, 2]
+
+# --- negative lookaround ---
+
+[[test]]
+pattern = '(?!a)'
+input = 'b'
+nullable_positions = [1, 0]
+
+[[test]]
+pattern = '(?<!a)'
+input = 'b'
+nullable_positions = [1, 0]
+
+[[test]]
+pattern = '(?<!a)'
+input = 'a'
+nullable_positions = [0]
+
+# --- word boundaries ---
+
+[[test]]
+pattern = 'a\b'
+input = 'a '
+nullable_positions = [0]
+
+[[test]]
+pattern = '\b1\b'
+input = '1'
+nullable_positions = [0]
+
+[[test]]
+pattern = '\b11'
+input = ' 11'
+nullable_positions = [1]
+
+[[test]]
+pattern = '(?<=(\W|\A))11'
+input = '11'
+nullable_positions = [0]
+
+# --- multiple lookaheads ---
+
+[[test]]
+pattern = '1\b(?=.*2)'
+input = ' 1 2'
+nullable_positions = [1]
+
+[[test]]
+pattern = '1(?=.*3)(?=.*2)'
+input = ' 1 23'
+nullable_positions = [1]
+
+# --- anchors ---
+
+[[test]]
+pattern = '\A[0-2](\.[0-9]+)+\z'
+input = '2.0'
+nullable_positions = [0]
+
+# --- intersection + lookahead ---
+
+[[test]]
+pattern = '.*(?=.*-)&\S.*\S'
+input = '-aaaa-'
+nullable_positions = [3, 2, 1, 0]

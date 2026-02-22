@@ -1,0 +1,226 @@
+analysis = '''
+This benchmark shows the performance of symbolic character sets in resharp.
+This time the constraints are not single ascii characters, but sets 
+of characters, and words including unicode characters.
+
+The input text is a the same as used in curated `literal` and `literal-alternate`
+benchmarks, which is a sample of russian text.
+
+The first pattern is `\b\w*я\w*\b`, which matches any word that
+contains the vowel `я`. 
+
+in this benchmark, the regex engine must support unicode, and the regex engine
+must support unicode-aware \w and \d character classes. 
+
+Using unicode is where `resharp` shines the most, as it handles the large unicode
+character set very efficiently. The `many-set-constraints` benchmark, which
+matches a line with two sets of vowels, a digit and a word of length 5 shows
+that `dotnet/nonbacktracking` also does relatively well here, which can be attributed to 
+being based on symbolic derivatives like `resharp`.
+
+'''
+
+[[bench]]
+model = "count-spans"
+name = "word-vowels-1"
+regex = '''\b\w*я\w*\b'''
+haystack = { path = "resharp/ru-sampled.txt", line-end = 5000 }
+unicode = true
+count = [
+    # utf16 code units 
+    { engine = 'resharp|^dotnet.*|javascript/v8|java/hotspot|perl', count = 11915 },
+    # utf8 bytes
+    { engine = '.*', count = 23809 },
+]
+engines = [
+    'dotnet/compiled',
+    'dotnet/nobacktrack',
+    'pcre2/jit',
+    'resharp',
+    # 'hyperscan', # unsupported
+    # 'go/regexp',
+    'java/hotspot',
+    # 'javascript/v8',
+    'pcre2',
+    'perl',
+    'python/re',
+    'python/regex',
+    # 're2',
+    # 'regress',
+    'rust/regex',
+]
+
+[[bench]]
+model = "count-spans"
+name = "word-vowels-2"
+regex = '''\b\w*[яё]\w*\b'''
+haystack = { path = "resharp/ru-sampled.txt", line-end = 5000 }
+unicode = true
+count = [
+    # utf16 code units 
+    { engine = 'resharp|^dotnet.*|javascript/v8|java/hotspot|perl', count = 13105 },
+    # utf8 bytes
+    { engine = '.*', count = 26188 },
+]
+engines = [
+    'dotnet/compiled',
+    'dotnet/nobacktrack',
+    'pcre2/jit',
+    'resharp',
+    # 'go/regexp',
+    'java/hotspot',
+    # 'javascript/v8',
+    'pcre2',
+    'perl',
+    'python/re',
+    'python/regex',
+    # 're2',
+    # 'regress',
+    'rust/regex',
+]
+
+
+[[bench]]
+model = "count-spans"
+name = "word-vowels-4"
+regex = '''\b\w*[яёеЮ]\w*\b'''
+haystack = { path = "resharp/ru-sampled.txt", line-end = 5000 }
+unicode = true
+count = [
+    # utf16 code units 
+    { engine = 'resharp|^dotnet.*|javascript/v8|java/hotspot|perl', count = 52352 },
+    # utf8 bytes
+    { engine = '.*', count = 104661 },
+]
+engines = [
+    'dotnet/compiled',
+    'dotnet/nobacktrack',
+    'pcre2/jit',
+    'resharp',
+    # 'go/regexp',
+    'java/hotspot',
+    # 'javascript/v8',
+    'pcre2',
+    'perl',
+    'python/re',
+    'python/regex',
+    # 're2',
+    # 'regress',
+    'rust/regex',
+]
+
+[[bench]]
+model = "count-spans"
+name = "word-vowels-10"
+regex = '''\b\w*[яёеЮиаоуыз]\w*\b'''
+haystack = { path = "resharp/ru-sampled.txt", line-end = 5000 }
+unicode = true
+count = [
+    # utf16 code units 
+    { engine = 'resharp|^dotnet.*|javascript/v8|java/hotspot', count = 104585 },
+    # utf8 bytes
+    { engine = '.*', count = 209060 },
+]
+engines = [
+    'dotnet/compiled',
+    'dotnet/nobacktrack',
+    'pcre2/jit',
+    'resharp',
+    # 'go/regexp', # unsupported
+    'java/hotspot',
+    # 'javascript/v8', # unsupported
+    'pcre2',
+    # 'perl', # times out
+    'python/re',
+    'python/regex',
+    # 're2', # unsupported
+    # 'regress', # unsupported
+    'rust/regex',
+]
+
+[[bench]]
+model = "count-spans"
+name = "word-vowels-5-to-digits"
+regex = '''\b\w*[яёеЮи]\w* \d+\b'''
+haystack = { path = "resharp/ru-sampled.txt", line-end = 5000 }
+unicode = true
+count = [
+    # utf16 code units 
+    { engine = 'resharp|^dotnet.*|javascript/v8|java/hotspot|perl', count = 312 },
+    # utf8 bytes
+    { engine = '.*', count = 513 },
+]
+engines = [
+    'dotnet/compiled',
+    'dotnet/nobacktrack',
+    'pcre2/jit',
+    'resharp',
+    # 'go/regexp', # unsupported
+    'java/hotspot',
+    # 'javascript/v8', # unsupported
+    'pcre2',
+    'perl',
+    'python/re',
+    'python/regex',
+    # 're2', # unsupported
+    # 'regress', # unsupported
+    'rust/regex',
+]
+
+[[bench]]
+model = "count-spans"
+name = "digits-to-word-vowels-5"
+regex = '''\b\d+ \w*[яёеЮи]\w*\b'''
+haystack = { path = "resharp/ru-sampled.txt", line-end = 5000 }
+unicode = true
+count = [
+    # utf16 code units 
+    { engine = 'resharp|^dotnet.*|javascript/v8|java/hotspot|perl', count = 291 },
+    # utf8 bytes
+    { engine = '.*', count = 485 },
+]
+engines = [
+    'dotnet/compiled',
+    'dotnet/nobacktrack',
+    'pcre2/jit',
+    'resharp',
+    # 'go/regexp', # unsupported
+    'java/hotspot',
+    # 'javascript/v8', # unsupported
+    'pcre2',
+    'perl',
+    'python/re',
+    'python/regex',
+    # 're2', # unsupported
+    # 'regress', # unsupported
+    'rust/regex',
+]
+
+
+[[bench]]
+model = "count-spans"
+name = "many-set-constraints"
+regex = '.*\w{5}.*\d.*[аоуыз].*[яёеЮи].*|.*\d.*\w{5}.*[аоуыз].*[яёеЮи].*|.*\d.*[аоуыз].*\w{5}.*[яёеЮи].*|.*\d.*[аоуыз].*[яёеЮи].*\w{5}.*|.*\w{5}.*[аоуыз].*\d.*[яёеЮи].*|.*[аоуыз].*\w{5}.*\d.*[яёеЮи].*|.*[аоуыз].*\d.*\w{5}.*[яёеЮи].*|.*[аоуыз].*\d.*[яёеЮи].*\w{5}.*|.*\w{5}.*[аоуыз].*[яёеЮи].*\d.*|.*[аоуыз].*\w{5}.*[яёеЮи].*\d.*|.*[аоуыз].*[яёеЮи].*\w{5}.*\d.*|.*[аоуыз].*[яёеЮи].*\d.*\w{5}.*|.*\w{5}.*\d.*[яёеЮи].*[аоуыз].*|.*\d.*\w{5}.*[яёеЮи].*[аоуыз].*|.*\d.*[яёеЮи].*\w{5}.*[аоуыз].*|.*\d.*[яёеЮи].*[аоуыз].*\w{5}.*|.*\w{5}.*[яёеЮи].*\d.*[аоуыз].*|.*[яёеЮи].*\w{5}.*\d.*[аоуыз].*|.*[яёеЮи].*\d.*\w{5}.*[аоуыз].*|.*[яёеЮи].*\d.*[аоуыз].*\w{5}.*|.*\w{5}.*[яёеЮи].*[аоуыз].*\d.*|.*[яёеЮи].*\w{5}.*[аоуыз].*\d.*|.*[яёеЮи].*[аоуыз].*\w{5}.*\d.*|.*[яёеЮи].*[аоуыз].*\d.*\w{5}.*' # { path = "resharp/03-permute-unicode-4.txt" }
+haystack = { path = "resharp/ru-sampled.txt", line-end = 2500 } # reduced length because of timeouts
+unicode = true
+count = [
+    { engine = 'resharp|^dotnet.*|javascript/v8|java/hotspot|perl', count = 1799 },
+    { engine = '.*', count = 3117 },
+]
+engines = [
+    'dotnet/compiled',
+    'dotnet/nobacktrack',
+    'pcre2/jit',
+    'resharp',
+    # 'go/regexp', # unsupported
+    'java/hotspot',
+    # 'javascript/v8', # unsupported
+    'pcre2', 
+    'perl', # times out
+    'python/re', # times out
+    'python/regex',
+    # 're2', # unsupported
+    # 'regress', # unsupported
+    'rust/regex',
+]
+

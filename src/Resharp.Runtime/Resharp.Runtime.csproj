@@ -1,0 +1,62 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>preview</LangVersion>
+    <NoWarn>CS0436; CS8500</NoWarn>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <DefaultReferenceExclusion Include="System.Text.RegularExpressions"/>
+    <InternalsVisibleTo Include="Resharp"/>
+    <InternalsVisibleTo Include="Resharp.Benchmarks"/>
+    <InternalsVisibleTo Include="Resharp.Test"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--  csharp code  -->
+    <Compile Include="BDD.cs"/>
+    <Compile Include="BDDRangeConverter.cs"/>
+    <Compile Include="BitVector.cs"/>
+    <Compile Include="BitVectorSolver.cs"/>
+    <Compile Include="CharSetSolver.cs"/>
+    <Compile Include="ExtendedRegexParser.cs"/>
+    <Compile Include="ISolver.cs"/>
+    <Compile Include="MintermClassifier.cs"/>
+    <Compile Include="MintermGenerator.cs"/>
+    <Compile Include="RegexCaseBehavior.cs"/>
+    <Compile Include="RegexCaseEquivalences.cs"/>
+    <Compile Include="RegexCaseEquivalences.Data.cs"/>
+    <Compile Include="RegexCharClass.cs"/>
+    <Compile Include="RegexNode.cs"/>
+    <Compile Include="RegexNodeKind.cs"/>
+    <Compile Include="RegexOpcode.cs"/>
+    <Compile Include="RegexOptions.cs"/>
+    <Compile Include="RegexTree.cs"/>
+    <Compile Include="UInt64Solver.cs"/>
+    <Compile Include="UnicodeCategoryConditions.cs"/>
+    <Compile Include="UnicodeCategoryRanges.cs"/>
+    <Compile Include="Stubs.cs" />
+  </ItemGroup>
+
+  <!-- runtime common -->
+  <ItemGroup>
+    <!-- corelib -->
+    <Compile Include="../../lib/runtime-local/ValueListBuilder.cs"/>
+    <Compile Include="../../lib/runtime-local/ValueListBuilder.Pop.cs"/>
+    <Compile Include="../../lib/runtime-local/Obsoletions.cs"/>
+    <Compile Include="../../lib/runtime-local/HexConverter.cs"/>
+    <Compile Include="../../lib/runtime-local/ValueStringBuilder.cs"/>
+  </ItemGroup>
+  <!--  runtime default regex stuff -->
+  <ItemGroup>
+    <Compile Include="../../lib/runtime-local/HashtableExtensions.cs"/>
+    <Compile Include="../../lib/runtime-local/StructListBuilder.cs"/>
+    <Compile Include="../../lib/runtime-local/StackHelper.cs"/>
+    <Compile Include="../../lib/runtime-local/RegexParseError.cs"/>
+    <Compile Include="../../lib/runtime-local/RegexParseException.cs"/>
+  </ItemGroup>
+</Project>

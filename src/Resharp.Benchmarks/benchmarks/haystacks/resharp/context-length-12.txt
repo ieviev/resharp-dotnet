@@ -1,0 +1,26 @@
+— Valid
+email@foo.com
+email@foo.com
+email@foo.com
+email@foo.com
+email@foo.com
+email@foo.com
+email@foo.com
+email@foo.com
+email@foo.com
+email@foo.com
+email@foo.com
+email@foo.com
+— Invalid
+email@foo.com
+email@foo.com
+email@foo.com
+email@foo.com
+email@foo.com
+email@foo.com
+email@foo.com
+email@foo.com
+email@foo.com
+email@foo.com
+email@foo.com
+email@foo.com

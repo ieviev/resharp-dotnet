@@ -1,0 +1,2 @@
+*.py linguist-language=plain text
+*.cs linguist-language=plain text

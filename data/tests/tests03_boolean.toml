@@ -1,0 +1,220 @@
+description = '''
+complement (~) and intersection (&) tests
+'''
+
+# --- complement ---
+
+[[test]]
+pattern = '~(_*\d\d_*)'
+input = 'Aa11aBaAA'
+matches = [[0, 3], [3, 9], [9, 9]]
+
+[[test]]
+pattern = '~(_*\d\d_*)'
+input = 'Aa11aBabb115454vbsdvfv45AAZ'
+matches = [[0, 3], [3, 10], [10, 11], [11, 12], [12, 13], [13, 14], [14, 23], [23, 27], [27, 27]]
+
+[[test]]
+pattern = '~(.*\n\n.*)'
+input = "aaa\n\nbbb"
+matches = [[0, 4], [4, 8], [8, 8]]
+
+[[test]]
+pattern = '~(.*and.*)'
+input = '__A and B'
+matches = [[0, 6], [6, 9], [9, 9]]
+
+[[test]]
+pattern = '~(.*nd.*)'
+input = '_ndB'
+matches = [[0, 2], [2, 4], [4, 4]]
+
+[[test]]
+pattern = 'a~(_*e_*)'
+input = 'abcdefghijklmnop'
+matches = [[0, 4]]
+
+[[test]]
+pattern = 'a~(.*bc_*)'
+input = 'a    bc dasdad'
+matches = [[0, 6], [9, 14]]
+
+[[test]]
+pattern = 'asd~(_*nl_*)'
+input = 'cvbcbcvasdasd nl adasd asdasd'
+matches = [[7, 15], [19, 29]]
+
+[[test]]
+pattern = 'F.*&~(.*Finn)'
+input = "Finn', published in 1885."
+matches = [[0, 25]]
+
+[[test]]
+pattern = '.*Huck.*&~(.*F.*)'
+input = "The Adventures of Huckleberry Finn', published in 1885."
+matches = [[0, 30]]
+
+# complement with no consecutive double-digit runs
+
+[[test]]
+pattern = '~(_*(d_*){2})&.*down.*'
+input = 'asd asd down asdasd asd asd '
+matches = [[7, 15]]
+
+# --- intersection ---
+
+[[test]]
+pattern = 'c...&...s'
+input = 'raining cats and dogs'
+matches = [[8, 12]]
+
+[[test]]
+pattern = 'c.*&.*s'
+input = 'cats blah blah blah'
+matches = [[0, 4]]
+
+[[test]]
+pattern = 'and.*&.*dogs.*'
+input = 'raining cats and dogs'
+matches = [[13, 21]]
+
+[[test]]
+pattern = '.*a.*&.*b.*&.*c.*'
+input = 'abc'
+matches = [[0, 3]]
+
+[[test]]
+pattern = 'a.*&~(.*b.*)b'
+input = '---a------bbb'
+matches = [[3, 11]]
+
+# intersection with anchors
+
+[[test]]
+pattern = '[0-9]{2}[/.-][0-9]{2}[/.-]([0-9]{4}|[0-9]{2})&^.*$'
+input = '01.01.2023'
+matches = [[0, 10]]
+
+[[test]]
+pattern = '[0-9]{2}[/.-][0-9]{2}[/.-]([0-9]{4}|[0-9]{2})&.*$'
+input = "01.01.2023\n"
+matches = [[0, 10]]
+
+# --- complement + intersection ---
+
+[[test]]
+pattern = '~(.*\d\d.*)&^.*$'
+input = 'Aa11aBaAA'
+matches = []
+
+[[test]]
+pattern = '(?<=author).*&.*'
+input = 'author: abc and def'
+matches = [[6, 19]]
+
+[[test]]
+pattern = '(?<=__).*&~(.*and.*)'
+input = '__ abc and def'
+matches = [[2, 9], [9, 14], [14, 14]]
+
+[[test]]
+pattern = '(?<=__).*(?=.*def)&.*and.*'
+input = '__abc and def'
+matches = [[2, 10]]
+
+[[test]]
+pattern = '~(.*and.*)(?=.*def)'
+input = '__abc and def'
+matches = [[0, 8], [8, 10], [10, 10]]
+
+[[test]]
+pattern = '.*(?=.*E)&~(.*and.*)'
+input = '___and__E'
+matches = [[0, 5], [5, 8], [8, 8]]
+
+[[test]]
+pattern = '.*(?=.*def)&.*def'
+input = 'abcdefdef'
+matches = [[0, 6]]
+
+[[test]]
+pattern = '.*(?=.*def)&.*de'
+input = 'abcdefdef'
+matches = [[0, 5]]
+
+[[test]]
+pattern = '(.*a.*&.*c.*)(?=.*def)'
+input = 'abcdef'
+matches = [[0, 3]]
+
+[[test]]
+pattern = '~(.*\d\d.*)'
+input = 'Aa11aBaAA'
+matches = [[0, 3], [3, 9], [9, 9]]
+
+# intersection with no-match
+
+[[test]]
+pattern = '.*(?=.*def)&.*def'
+input = 'abcdef'
+matches = []
+
+[[test]]
+pattern = '.*which.*&.*could.*&.*that.*&~(.*the.*)'
+input = 'could only partly conceal the ravages which that long siege of storms had'
+matches = []
+
+# complement + intersection: paragraph splitting
+
+[[test]]
+pattern = '~(_*\n\n_*)'
+input = """
+The fists of all the generals came down this time, and again the
+King's eye sparkled with pleasure. The Chancellor sprang to his
+
+"Save your charity for another occasion, my lord," said Joan, as
+calmly as before. "Whenever anything is done to injure the
+interests and degrade the honor of France, all but the dead know
+how to name the two conspirators-in-chief--"
+"""
+matches = [[0, 129],[129,364],[364,364]]
+
+# complement of newline pairs
+
+[[test]]
+pattern = "(?:.+\n)+\n"
+input = "\naaa\n\nbbb\n\nccc\n\n"
+matches = [[1, 6],[6,11],[11,16]]
+
+# intersection with RE# wildcard
+
+[[test]]
+pattern = '(a_*&(~(a.*)|.*b>))'
+input = "a_____a____________________b\n"
+matches = [[0, 29]]
+
+# complement + intersection password-like patterns
+
+[[test]]
+pattern = '~(.*\d\d.*)&[a-zA-Z\d]{8,}'
+input = 'tej55zhA25wXu8bvQxFxt'
+matches = [[9, 21]]
+
+# intersection with lookahead and dash
+
+[[test]]
+pattern = '.*(?=.*-)&.*'
+input = 'a-'
+matches = [[0, 1], [1, 1]]
+
+[[test]]
+pattern = '.*(?=.*-)&\S.*\S'
+input = '-aaaa-'
+matches = [[0, 5]]
+
+# intersection subsumption
+
+[[test]]
+pattern = '.*a.*&.*b.*&.*c.*'
+input = '"$odd" style="background-color:#f1f1f1">{{ x.Country }}'
+matches = [[0, 55]]

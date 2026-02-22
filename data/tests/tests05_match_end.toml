@@ -1,0 +1,117 @@
+description = '''
+match end position tests
+verifies that a match ending at end_pos exists
+'''
+
+# --- lookahead ---
+
+[[test]]
+pattern = '(?=a)'
+input = 'a'
+end_positions = [0]
+
+[[test]]
+pattern = 'a(?=a)'
+input = 'aa'
+end_positions = [1]
+
+[[test]]
+pattern = 'bb(?=a)'
+input = '__bbaaa__'
+end_positions = [4]
+
+[[test]]
+pattern = 'bb(?=aa)'
+input = '__bbaa__'
+end_positions = [4]
+
+[[test]]
+pattern = 'bb(?=aaa)'
+input = '__bbaaa__'
+end_positions = [4]
+
+[[test]]
+pattern = 'bb(?=aaaa)'
+input = '__bbaaaa__'
+end_positions = [4]
+
+[[test]]
+pattern = 'bb(?=aaaaa)'
+input = '__bbaaaaa__'
+end_positions = [4]
+
+# --- lookbehind ---
+
+[[test]]
+pattern = '(?<=aaa).*'
+input = 'aaabbb'
+end_positions = [6]
+
+# --- intersection with lookahead ---
+
+[[test]]
+pattern = '.*(?=.*-)&.*'
+input = 'a-'
+end_positions = [1]
+
+[[test]]
+pattern = '.*(?=.*-)&.*'
+input = '-aaaa-'
+end_positions = [5]
+
+[[test]]
+pattern = '.*(?=.*-)&\S.*\S'
+input = '-aaaa-'
+end_positions = [5]
+
+[[test]]
+pattern = '.*(?=.*bbb)(?=.*ccc)'
+input = 'aaa bbb ccc'
+end_positions = [4]
+
+# --- complement ---
+
+[[test]]
+pattern = '~(.*and.*)'
+input = '__A and B'
+end_positions = [6, 9]
+
+# --- lookaround combined ---
+
+[[test]]
+pattern = '.(?=.*c)'
+input = 'bc'
+end_positions = [1]
+
+[[test]]
+pattern = '(?<=a.*).(?=.*c)'
+input = 'abc'
+end_positions = [2]
+
+[[test]]
+pattern = '(?<=a.*).(?=.*c)'
+input = 'a__c'
+end_positions = [2, 3]
+
+# --- word boundaries ---
+
+[[test]]
+pattern = '\b11'
+input = ' 11'
+end_positions = [3]
+
+[[test]]
+pattern = '\b1\b'
+input = '1'
+end_positions = [1]
+
+# --- lookbehind with boolean (from semantics tests) ---
+
+[[test]]
+pattern = '(?<=6|8\(|4|8|0\().*&~(.*\)\:.*)&\w.*&.*\w&.*(?=.*\)\:)&.*(?=\)\:|\)\:)'
+input = '''
+
+Jan 12 06:26:19: ACCEPT service http from 119.63.193.196 to firewall(pub-nic), prefix: "none" (in: eth0 119.63.193.196(5c:0a:5b:63:4a:82):4399 -> 140.105.63.164(50:06:04:92:53:44):80 TCP flags: ****S* len:60 ttl:32)
+Jan 12 06:26:20: ACCEPT service dns from 140.105.48.16 to firewall(pub-nic-dns), prefix: "none" (in: eth0 140.105.48.16(00:21:dd:bc:95:44):4263 -> 140.105.63.158(00:14:31:83:c6:8d):53 UDP len:76 ttl:62)
+Jan 12 06:27:09: DROP service 68->67(udp) from 216.34.211.83 to 216.34.253.94, prefix: "spoof iana-0/8" (in: eth0 213.92.153.78(00:1f:d6:19:0a:80):68 -> 69.43.177.110(00:30:fe:fd:d6:51):67 UDP len:576 ttl:64)'''
+end_positions = [137]

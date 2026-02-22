@@ -1,0 +1,79 @@
+analysis = '''
+These benchmarks are the `date` and `dictionary` benchmarks from the baseline,
+but with a couple important changes to make them apples-to-apples comparisons.
+
+The alternations in both benchmarks are sorted by descending length, so
+all engines will have to match the same results.
+
+Both benchmarks are run with the count-spans model and explore enough
+of the state space to consider it a more realistic workload.
+
+The `date` benchmark results does not really differ much from the baseline, but here it is ensured 
+that match counts are consistent across engines, since in the original `date` benchmark
+they were all over the place.
+
+`javascript/v8` and `regress` are interpreting \d as ASCII digits, 
+which may give them a slight advantage in this benchmark, but are still included for comparison.
+
+The dictionary benchmark is more interesting. The original dictionary benchmark matched only one word throughout the entire benchmark.
+Using the pattern with more matches illustrates a completely different picture of the engines' performance.
+'''
+
+[[bench]]
+model = "count-spans"
+name = "date"
+regex = { path = "resharp/date-fixed.txt" }
+case-insensitive = true
+unicode = true
+haystack = { path = "rust-src-tools-3b0d4813.txt", line-start = 190_000, line-end = 200_000 }
+count = [
+  # utf16 code units
+  { engine = 'dotnet/compiled|icu|java/hotspot|javascript/v8|resharp', count = 110784 },
+  # utf8 bytes
+  { engine = '.*', count = 110_800 },
+]
+engines = [
+#   'd/ldc/std-regex', # excluded because it's match count differs throughout the baseline
+  'dotnet/compiled',
+  'resharp',
+  'icu',
+  'java/hotspot',
+  'javascript/v8',
+  'pcre2',
+  'pcre2/jit',
+  'python/re',
+  'python/regex',
+  'regress',
+  'rust/regex',
+  'rust/regexold',
+]
+analysis = '''
+Some engines count unicode code points, others count bytes, the results are the same.
+'''
+
+
+[[bench]]
+model = "count-spans"
+name = "dictionary"
+regex = { path = "resharp/dictionary-fixed.txt", literal = true, per-line = "alternate" }
+haystack = { path = "resharp/length-15-sorted.txt" }
+count = 42182
+engines = [
+  'dotnet/compiled',
+  'dotnet/nobacktrack',
+  'resharp',
+  'go/regexp',
+#   'pcre2/jit', # rejects pattern
+#   'pcre2', # rejects pattern
+  'java/hotspot',
+  'javascript/v8', # fails to run
+  'perl',
+  'python/re', # timeout
+  'python/regex', # timeout
+  're2',
+  'regress', # fails to run
+  'rust/regex',
+]
+analysis = '''
+12-dictionary regex, input haystack is the pattern itself.
+'''
