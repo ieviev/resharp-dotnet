@@ -63,20 +63,20 @@ To illustrate, here is a little comparison of RE# with .NET's most used compiled
 
 On [curated benchmarks from rebar](https://github.com/BurntSushi/rebar) (AMD Ryzen 7 5800X, .NET 10.0):
 
-| Pattern | RE# | .NET Compiled | .NET SourceGenerated |
-|---------|----:|-----:|-----:|
-| date validation | 1,737 us | 273,822 us | 318,070 us |
-| dictionary search | 105 us | 45,832 us | 26,410 us |
+| Pattern | RE# | .NET Compiled | .NET SourceGenerated | Speedup |
+|---------|----:|-----:|-----:|--------:|
+| date validation | 1,737 us | 273,822 us | 318,070 us | 158x |
+| dictionary search | 105 us | 45,832 us | 26,410 us | 252x |
 
 And on some extensions we added ourselves:
 
-| Pattern | RE# | .NET Compiled | .NET SourceGenerated |
-|---------|----:|-----:|-----:|
-| dictionary, case-insensitive | 576 us | 29,368 us | 21,146 us |
-| unicode dictionary | 336 us | 62,053 us | 38,613 us |
-| unicode dictionary, case-insensitive | 321 us | 484,135 us | 537,814 us |
-| dictionary + context window | 621 us | 48,893 us | 55,383 us |
-| dictionary + context window, unicode | 692 us | 24,105,091 us | 34,706,982 us |
+| Pattern | RE# | .NET Compiled | .NET SourceGenerated | Speedup |
+|---------|----:|-----:|-----:|--------:|
+| dictionary, case-insensitive | 576 us | 29,368 us | 21,146 us | 37x |
+| unicode dictionary | 336 us | 62,053 us | 38,613 us | 115x |
+| unicode dictionary, case-insensitive | 321 us | 484,135 us | 537,814 us | 1,508x |
+| dictionary + context window | 621 us | 48,893 us | 55,383 us | 79x |
+| dictionary + context window, unicode | 692 us | 24,105,091 us | 34,706,982 us | 34,833x |
 
 For critical paths, you can use `ValueMatches` for memory-pooled matching and `ResharpOptions.HighThroughputDefaults` for more aggressive optimization.
 
