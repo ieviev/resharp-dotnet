@@ -18,6 +18,8 @@ let re = Resharp.Regex(@"\w+", ResharpOptions(IgnoreCase = true))
 
 > **Building the engine is the expensive part.** Reuse the `Regex` instance across calls.
 
+> **Thread safety:** A `Regex` instance is **not** thread-safe. The lazy DFA mutates internal state during matching. If you need to use the same pattern from multiple threads, create a separate `Regex` instance per thread — or fully compile the DFA to make it safe (see `IsFullDFA`).
+
 ### Methods
 
 #### `IsMatch(input) -> bool`
@@ -106,6 +108,8 @@ re.LongestEnd("aaab")  // 3
 #### `IsFullDFA -> bool`
 
 Whether the pattern was fully compiled to a DFA at construction time. Larger patterns use lazy DFA construction instead. A full DFA is thread safe, a lazy one is not. Raise `ResharpOptions.DfaThreshold` to fully compile larger patterns.
+
+Note that RE# uses infinite automata, so certain patterns can not be fully compiled to a DFA regardless of size.
 
 ---
 
