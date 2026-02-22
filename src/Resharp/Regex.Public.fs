@@ -11,7 +11,7 @@ open Resharp.Common
 
 /// <summary>
 /// High-performance regex engine supporting intersection (<c>&amp;</c>) and complement (<c>~</c>) operations.
-/// Uses symbolic derivatives and DFA-based matching.
+/// Uses symbolic derivatives and automata based matching.
 /// </summary>
 /// <param name="pattern">The regex pattern. Supports most standard syntax plus <c>&amp;</c> (intersection) and <c>~</c> (complement).</param>
 /// <param name="options">Optional configuration. See <see cref="ResharpOptions"/> for defaults.</param>
@@ -126,6 +126,26 @@ type Regex
         | :? RegexMatcher<uint64> as m -> m.Replace(input, replacement)
         | :? RegexMatcher<BitVector> as m -> m.Replace(input, replacement)
         | _ -> failwith "unreachable"
+
+    /// <summary>
+    /// Converts a standard .NET regex pattern to RE# syntax by escaping the three
+    /// RE#-specific operators (<c>&amp;</c>, <c>~</c>, <c>_</c>) with a backslash.
+    /// </summary>
+    /// <param name="pattern">A standard .NET regex pattern.</param>
+    /// <returns>An equivalent RE# pattern.</returns>
+    static member FromRegex(pattern: string) : string =
+        pattern.Replace(@"&", @"\&").Replace("~", @"\~").Replace("_", @"\_")
+
+    /// <summary>
+    /// Escapes a string so it matches literally in an RE# pattern.
+    /// Escapes all standard regex metacharacters plus the RE#-specific operators
+    /// (<c>&amp;</c>, <c>~</c>, <c>_</c>).
+    /// </summary>
+    /// <param name="input">The literal string to escape.</param>
+    /// <returns>A pattern that matches the input string literally.</returns>
+    static member Escape(input: string) : string =
+        System.Text.RegularExpressions.Regex.Escape(input)
+            .Replace(@"&", @"\&").Replace("~", @"\~").Replace("_", @"\_")
 
     // internal regex matcher for debugging
     member internal this.Matcher: GenericRegexMatcher<char> = matcher
