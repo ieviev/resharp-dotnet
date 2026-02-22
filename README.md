@@ -78,6 +78,13 @@ And on some extensions we added ourselves:
 | dictionary + context window | 621 us | 48,893 us | 55,383 us | 79x |
 | dictionary + context window, unicode | 692 us | 24,105,091 us | 34,706,982 us | 34,833x |
 
+<details>
+<summary>Where is RegexOptions.NonBacktracking?</summary>
+
+Conveniently left out for shock effect `:^)`. `NonBacktracking` is actually much closer to RE#, but still behind. See the [paper](https://dl.acm.org/doi/10.1145/3704837) for a fairer comparison.
+
+</details>
+
 For critical paths, you can use `ValueMatches` for memory-pooled matching and `ResharpOptions.HighThroughputDefaults` for more aggressive optimization.
 
 ```fsharp
