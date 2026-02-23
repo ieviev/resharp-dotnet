@@ -120,6 +120,7 @@ Note that RE# uses infinite automata, so certain patterns can not be fully compi
 ## `ResharpOptions`
 
 Configuration passed to the `Regex` constructor.
+Most of these you can ignore and just use the presets below.
 
 | Property                     | Default   | Description                                                    |
 |------------------------------|-----------|----------------------------------------------------------------|
@@ -146,7 +147,7 @@ var re = new Resharp.Regex(pattern, ResharpOptions.HighThroughputDefaults);
 
 #### `ResharpOptions.SingleUseDefaults`
 
-Skips expensive optimizations. Use when the pattern will be used once and discarded.
+Skips expensive optimizations. Use when the pattern will be used once and discarded like in a search box.
 
 ```csharp
 var re = new Resharp.Regex(pattern, ResharpOptions.SingleUseDefaults);
@@ -175,4 +176,3 @@ Returned by `ValueMatches()`. Readonly struct. Does not allocate a string.
 | `Index`  | `int` | Start position |
 | `Length`  | `int` | Match length   |
 
-Call `GetText(input)` to extract the matched string from the original input span.
