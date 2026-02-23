@@ -67,13 +67,16 @@ RE# does not support any of the following constructs:
 
 ### Combining operators
 
-Intersection and complement compose naturally:
+RE# operators can be combined in powerful ways to express complex patterns. Here are some examples:
 
-```
-F.*&~(.*Finn)                starts with 'F' but does not end with "Finn"
-.*Huck.*&~(.*F.*)            contains "Huck" but not 'F'
-~(_*\d\d_*)&[a-zA-Z\d]{8,}  8+ alphanumeric chars, no consecutive digits
-```
+- `_*` = any string
+- `a_*` = any string that starts with 'a'
+- `_*a` = any string that ends with 'a'
+- `_*a_*` = any string that contains 'a'
+- `~(_*a_*)` = any string that does NOT contain 'a'
+- `(_*a_*)&~(_*b_*)` = any string that contains 'a' AND does not contain 'b'
+- `(?<=b)_*&_*(?=a)` = any string that is preceded by 'b' AND followed by 'a'
+- .. you combine all of these with `&` to get more complex patterns
 
 ## Standard syntax
 
@@ -143,7 +146,6 @@ This restriction is what allows RE# to encode lookaround information directly in
 
 ## Matching behavior
 
-- All matching is **non-backtracking**
-- `IsMatch` checks if the pattern matches anywhere in the input (standard in .NET)
-- For full-string matching, anchor with `\A(pattern)\z`
-- Matches returned are **non-overlapping** and **leftmost-longest**
+- `IsMatch` is identical to standard .NET
+- For full-string matching, anchor with `\A(pattern)\z`, `^` and `$` are always the beginning or end of a **line** (or if the input is a single line, they are equivalent to `\A` and `\z`)
+- Matches returned are **leftmost-longest** (.NET is leftmost-greedy, which is subtly different)
