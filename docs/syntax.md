@@ -116,22 +116,14 @@ RE# operators can be combined in powerful ways to express complex patterns. Here
 | `\z`    | end of string          |
 | `\b`    | word boundary          |
 
-### Groups
-
-| Pattern     | Description              |
-|-------------|--------------------------|
-| `(...)`     | group (non-capturing)    |
-| `(?:...)`   | explicit non-capturing   |
-| `a\|b`      | alternation              |
-
 ### Lookarounds
 
 | Pattern      | Description           |
 |--------------|-----------------------|
-| `(?=...)`    | positive lookahead    |
-| `(?!...)`    | negative lookahead    |
-| `(?<=...)`   | positive lookbehind   |
-| `(?<!...)`   | negative lookbehind   |
+| `(?=...)`    | positive lookahead (follows)   |
+| `(?!...)`    | negative lookahead (does not follow)    |
+| `(?<=...)`   | positive lookbehind (precedes)   |
+| `(?<!...)`   | negative lookbehind (does not precede)   |
 
 Lookarounds combine with intersection and complement:
 
