@@ -57,7 +57,7 @@ F.*&~(.*Finn)                starts with 'F', does not end with "Finn"
 
 RE# uses several optimizations: start-set inference, literal prefix scanning, and optional full DFA precompilation. RE# shares many optimizations with .NET's (and `RegexOptions.NonBacktracking` even shares some RE# techniques and strengths that many do not know of!) but RE# is designed from the ground up and returns a different kind of matches (leftmost-longest).
 
-RE# particularly excels with large patterns and will often outperform .NET's regex engine (and all others) for complex patterns, especially those with a large set of literals or complex intersection and complement operations
+RE# particularly excels with large patterns and will often outperform .NET's regex engine (and all others) for complex patterns, especially those with a large set of alternatives, loops or using context-awareness - [RE# supports lookarounds](./docs/syntax.md#lookarounds), which is unique among automata engines.
 
 To illustrate, here is a little comparison of RE# with .NET's most used compiled and source-generated regex engines on these patterns, you can also find wider comparisons [in the paper](https://dl.acm.org/doi/10.1145/3704837):
 
