@@ -43,13 +43,18 @@ Matches everything the inner pattern does not match.
 
 ```
 ~(_*\d\d_*)     does not contain two consecutive digits
-~(.*\n\n.*)     does not contain a double newline
+~(_*\n\n_*)     does not contain a double newline
 ```
+<details>
+<summary>why `_*` and not `.*`?</summary>
+`.*` does not match newlines, so it does not mean "any string" (rather "any one line").
+we specifically included `_` in the syntax so it's more intuitive to use with complement.
+</details>
 
 ### Combining operators
 
 ```
-F.*&~(.*Finn)                starts with 'F', does not end with "Finn"
+F.*&~(_*Finn)                starts with 'F', does not end with "Finn"
 ~(_*\d\d_*)&[a-zA-Z\d]{8,}  8+ alphanumeric, no consecutive digits
 ```
 
