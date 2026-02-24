@@ -11,7 +11,8 @@ open Resharp.Common
 
 /// <summary>
 /// High-performance regex engine supporting intersection (<c>&amp;</c>) and complement (<c>~</c>) operations.
-/// Uses symbolic derivatives and automata based matching.
+/// Uses symbolic derivatives and automata-based matching.
+/// This type is thread-safe: a single instance can be used concurrently from multiple threads.
 /// </summary>
 /// <param name="pattern">The regex pattern. Supports most standard syntax plus <c>&amp;</c> (intersection) and <c>~</c> (complement).</param>
 /// <param name="options">Optional configuration. See <see cref="ResharpOptions"/> for defaults.</param>
@@ -153,6 +154,7 @@ type Regex
 
     /// <summary>
     /// Whether the pattern was compiled to a full DFA at construction time.
+    /// Both full and lazy DFAs are thread-safe. A full DFA avoids lock overhead during matching.
     /// Raise <see cref="ResharpOptions.DfaThreshold"/> to fully compile larger DFAs.
     /// </summary>
     member this.IsFullDFA: bool =

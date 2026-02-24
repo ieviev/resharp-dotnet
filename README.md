@@ -94,7 +94,7 @@ For critical paths, you can use `ValueMatches` for memory-pooled matching and `R
 
 ```fsharp
 let re = Resharp.Regex("pattern", ResharpOptions.HighThroughputDefaults) 
-// note: Regex instances are not thread-safe
+// Regex instances are thread-safe
 use slices = re.ValueMatches(chars) // <- also dispose this after
 for s in slices do
     printfn $"match at {s.Index}..{s.Index + s.Length}"

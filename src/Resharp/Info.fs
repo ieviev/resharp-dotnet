@@ -24,11 +24,11 @@ module Node =
         | Or(nodes) ->
             let lengths = nodes |> map (getCached cache)
             let allSome = lengths |> forall is_some
-            if allSome then lengths |> Seq.minBy value else ValueNone
+            if allSome then lengths |> Array.minBy value else ValueNone
         | And(nodes) ->
             let lengths = nodes |> map (getCached cache)
             let allSome = lengths |> forall is_some
-            if allSome then lengths |> Seq.maxBy value else ValueNone
+            if allSome then lengths |> Array.maxBy value else ValueNone
         | Singleton _ -> ValueSome 1
         | Loop(node = body; low = low) ->
             match resolve body with
@@ -52,11 +52,11 @@ module Node =
         | Or(nodes) ->
             let lengths = nodes |> map (getCached cache)
             let allSome = lengths |> forall is_some
-            if allSome then lengths |> Seq.maxBy value else ValueNone
+            if allSome then lengths |> Array.maxBy value else ValueNone
         | And(nodes) ->
             let lengths = nodes |> map (getCached cache)
             let allSome = lengths |> forall is_some
-            if allSome then lengths |> Seq.minBy value else ValueNone
+            if allSome then lengths |> Array.minBy value else ValueNone
         | Singleton _ -> ValueSome 1
         | Loop(node = body; up = up) ->
             match resolve body with
