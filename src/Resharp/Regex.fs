@@ -4,6 +4,7 @@ open System
 open System.Buffers
 open System.Collections.Generic
 open System.Runtime.CompilerServices
+open System.Threading
 
 open Microsoft.FSharp.Core
 open Resharp.Types
@@ -51,6 +52,8 @@ type internal RegexOptimizations<'t, 'tchar
 
     member val RightToLeftInitial: InitialAccelerator<'t, 'tchar> = _R_L_Initial
     member val LengthLookup: LengthLookup<'t> = _LengthLookup
+    /// if the pattern is simple enough that 
+    /// we can use a specialized matching algorithm for it
     member val MatchOverride: MatchOverride<'tchar> voption = _MatchOverride
 
     member val RightToLeftWeightedSets: Lazy<struct (int * MintermSearchValues<'t>) array> =
@@ -98,6 +101,8 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
         Array.init
             ((I.shl (_cache.NumOfMinterms() * 2) _mintermsLog) + 1)
             (fun _ -> LanguagePrimitives.GenericZero)
+
+    let _rwlock = new ReaderWriterLockSlim()
 
     let _createStartset(state: MatchState<'t>, initial: bool) =
         // expensive for a single match
@@ -182,6 +187,11 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
         match _stateCache.TryGetValue(node) with
         | true, v -> v // a dfa state already exists for this regex
         | _ ->
+            _rwlock.EnterWriteLock()
+            try
+            match _stateCache.TryGetValue(node) with
+            | true, v -> v
+            | _ ->
             let state = MatchState(node)
             _stateCache.Add(node, state)
             let stateOrig = _stateCache.Count
@@ -299,6 +309,8 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
                     SkipKind.SkipActive
 
             state
+            finally
+                _rwlock.ExitWriteLock()
 
     let R_canonical = uncanonicalizedNode
     let reverseNode = RegexNode.rev _b R_canonical
@@ -458,7 +470,7 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
         // whether to insert the match itself
         let hasReplacement0 = replacementPattern.IndexOf("$0") > -1
         let replacementString = replacementPattern.ToString()
-        use results = this.ValueMatches(input)
+        use results = this.llmatch_all input
 
         for result in ValueList.toSpan (results) do
             let preceding = input.Slice(offset, result.Index - offset)
@@ -486,7 +498,7 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
     member this.Replace(input: ReadOnlySpan<char>, replacementPattern: Func<string, string>) =
         let sb = System.Text.StringBuilder()
         let mutable offset = 0
-        use results = this.ValueMatches(input)
+        use results = this.llmatch_all input
 
         for result in ValueList.toSpan (results) do
             let preceding = input.Slice(offset, result.Index - offset)
@@ -510,26 +522,22 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
         use allResults = this.llmatch_all input
         let arr = Array.zeroCreate allResults.size
         let resultSpan = ValueList.toSpan allResults
-
-        for i = 0 to allResults.size - 1 do
+        let mutable i = 0
+        while i < allResults.size do
             let curr = resultSpan[i]
             let vslice = input.Slice(curr.Index, curr.Length)
-
             let newResult = {
                 Value = vslice.ToString()
                 Index = curr.Index
                 Length = curr.Length
             }
-
             arr[i] <- newResult
-
+            i <- i + 1
         arr
 
-    [<MethodImpl(MethodImplOptions.AggressiveInlining)>]
     override this.Count(input: ReadOnlySpan<char>) =
         use matches = this.llmatch_all input
-        let count = matches.size
-        count
+        matches.size
 
     /// initialize regex in DFA
     [<MethodImpl(MethodImplOptions.AggressiveInlining)>]
@@ -1302,14 +1310,12 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
 
                 let startPosition =
                     this.HandleInputEnd(_flagsArray[initState], &initState, input, &acc)
-                // --
                 this.llmatch_collect (input, &acc, initState, startPosition)
                 this.llmatch_ends (&matches, &acc, input)
                 matches
 
 
     /// return just the positions of matches without allocating the result
-    [<MethodImpl(MethodImplOptions.AggressiveInlining)>]
     override this.ValueMatches(input: ReadOnlySpan<char>) : ValueList<ValueMatch> =
         this.llmatch_all input
 

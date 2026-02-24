@@ -22,6 +22,7 @@
         <Compile Include="_12_NegLookaroundTests.fs" />
         <Compile Include="_13_OptimizationTests.fs" />
         <Compile Include="_16_ComplementTests.fs" />
+        <Compile Include="_17_ThreadSafetyTests.fs" />
     </ItemGroup>
 
     <ItemGroup>
