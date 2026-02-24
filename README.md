@@ -17,10 +17,10 @@ dotnet add package Resharp
 ## Usage
 
 ```csharp
-// instances are thread-safe, compile once and reuse
+// contains "cat", "dog", AND is 8-15 characters long
 var re = new Resharp.Regex(@".*cat.*&.*dog.*&.{8,15}");
 
-// contains "cat", "dog", AND is 8-15 characters long
+// instances are thread-safe, compile once and reuse
 re.Matches("the cat and the dog");
 ```
 
