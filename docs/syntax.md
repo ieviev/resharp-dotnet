@@ -54,11 +54,10 @@ Matches everything the inner pattern does **not** match. Must be written with pa
 As a bit of trivia, the .NET regex is a **turing complete** language, through the use of back references and balancing groups. RE# is an automata engine has a much more limited feature set.
 
 RE# does not support any of the following constructs:
-- Group captures: `(...)` is non-capturing, and `(?:...)` is just an explicit non-capturing group. 
-  - you technically have one capturing group
-  - ex. `ab(cd)ef` is can be used as `(?<=ab)cd(?=ef)`
-  - also string replace supports `$0`, but not `$1`, `$2`, etc. since there are no capture groups
-  - for more groups the easiest thing to do is use another engine to extract them post-match
+- Group captures: `(...)` is non-capturing, and `(?:...)` is just an explicit non-capturing group.
+  - a single `(...)` group defines match boundaries: `ab(cd)ef` is equivalent to `(?<=ab)cd(?=ef)`
+  - `Replace` supports `$0` but not `$1`, `$2`, etc. since there are no capture groups
+  - for multiple groups the easiest approach is to use another engine to extract them post-match
 - Lazy quantifiers: `*?`, `+?`, `??`, `{n,m}?`
 - Backreferences: `\1`, `\2`, etc.
 - Balancing groups: `(?<open>...)`, `(?<-open>...)`

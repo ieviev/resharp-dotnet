@@ -17,9 +17,11 @@ dotnet add package Resharp
 ## Usage
 
 ```csharp
+// instances are thread-safe, compile once and reuse
+var re = new Resharp.Regex(@".*cat.*&.*dog.*&.{8,15}");
+
 // contains "cat", "dog", AND is 8-15 characters long
-Resharp.Regex(@".*cat.*&.*dog.*&.{8,15}")
-    .Matches("the cat and the dog");
+re.Matches("the cat and the dog");
 ```
 
 ## Syntax extensions
@@ -94,12 +96,11 @@ Conveniently left out for shock effect `:^)`. `NonBacktracking` is actually much
 
 For critical paths, you can use `ValueMatches` for memory-pooled matching and `ResharpOptions.HighThroughputDefaults` for more aggressive optimization.
 
-```fsharp
-let re = Resharp.Regex("pattern", ResharpOptions.HighThroughputDefaults) 
-// Regex instances are thread-safe
-use slices = re.ValueMatches(chars) // <- also dispose this after
-for s in slices do
-    printfn $"match at {s.Index}..{s.Index + s.Length}"
+```csharp
+var re = new Resharp.Regex("pattern", ResharpOptions.HighThroughputDefaults);
+using var slices = re.ValueMatches(chars);
+foreach (var s in slices)
+    Console.WriteLine($"match at {s.Index}..{s.Index + s.Length}");
 ```
 
 ## Documentation

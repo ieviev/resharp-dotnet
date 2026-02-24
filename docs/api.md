@@ -18,11 +18,11 @@ let re = Resharp.Regex(@"\w+", ResharpOptions(IgnoreCase = true))
 
 > **Building the engine is the expensive part.** Reuse the `Regex` instance across calls.
 
-> **Thread safety:** A `Regex` instance is thread-safe. you can share it across threads without locking. The matching methods have a lock internally to protect the construction, once a full state graph is built, matching is lock-free.
+> **Thread safety:** A `Regex` instance is thread-safe. You can share it across threads without locking. The matching methods have a lock internally to protect the construction, once a full state graph is built, matching is lock-free.
 
 ### Syntax and supported features
 
-Some features of the default .NET regex syntax are not supported. RE# is an automata engine and does not support many features of the .NET regex engine. Lookahead and lookbehind are supported but with some limitations (see [syntax reference](docs/syntax.md)).
+Some features of the default .NET regex syntax are not supported. RE# is an automata engine and does not support many features of the .NET regex engine. Lookahead and lookbehind are supported but with some limitations (see [syntax reference](syntax.md)).
 
 ### Methods
 
@@ -175,4 +175,39 @@ Returned by `ValueMatches()`. Readonly struct. Does not allocate a string.
 |----------|-------|----------------|
 | `Index`  | `int` | Start position |
 | `Length`  | `int` | Match length   |
+
+#### `GetText(input) -> string`
+
+Extracts the matched text from the input span. Only allocates when called.
+
+```csharp
+using var slices = re.ValueMatches(input);
+foreach (var s in slices)
+{
+    var text = input.AsSpan(s.Index, s.Length);
+    Console.WriteLine(text);
+}
+```
+
+---
+
+## Static methods
+
+### `Regex.FromRegex(pattern) -> string`
+
+Converts a standard .NET regex pattern to RE# syntax by escaping the three RE#-specific operators (`&`, `~`, `_`) with a backslash. Use this when you have an existing .NET pattern that uses these characters literally.
+
+```csharp
+var resharpPattern = Resharp.Regex.FromRegex(@"cats_and_dogs");
+// "cats\_and\_dogs"
+```
+
+### `Regex.Escape(input) -> string`
+
+Escapes a string so it matches literally in an RE# pattern. Escapes all standard regex metacharacters plus the RE#-specific operators (`&`, `~`, `_`).
+
+```csharp
+var literal = Resharp.Regex.Escape("price is $5 & up");
+// "price\ is\ \$5\ \&\ up"
+```
 
