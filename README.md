@@ -34,7 +34,7 @@ Matches any character including newlines (`[\s\S]`).
 
 ### `&` -- intersection
 
-Both sides must match. Intersection has higher precedence than alternation.
+Both sides must match. The match is the intersection of the two languages.
 
 ```
 _*cat_*&_*dog_*       contains both "cat" and "dog"
@@ -51,8 +51,8 @@ Matches everything the inner pattern does not match.
 ```
 <details>
 <summary>why `_*` and not `.*`?</summary>
-`.*` does not match newlines, so it does not mean "any string" (rather "any one line").
 we specifically included `_` in the syntax so it's more intuitive to use with complement.
+`.*` does not match newlines, so it does not mean "any string" (rather "any one line").
 </details>
 
 ### Combining operators
@@ -74,7 +74,7 @@ On [curated benchmarks from rebar](https://github.com/BurntSushi/rebar) (AMD Ryz
 
 | Pattern | RE# | .NET Compiled | .NET SourceGenerated | Speedup |
 |---------|----:|-----:|-----:|--------:|
-| date validation | 1,737 us | 273,822 us | 318,070 us | 158x |
+| date extraction | 1,737 us | 273,822 us | 318,070 us | 158x |
 | dictionary search | 105 us | 45,832 us | 26,410 us | 252x |
 
 And on some extensions we added ourselves:

@@ -33,7 +33,7 @@ Multiple intersections can be chained:
 _*cat_*&_*dog_*&_{5,30}  contains "cat" and "dog", 5-30 chars long
 ```
 
-Intersection has **higher precedence** than alternation: `a|b&c` is parsed as `a|(b&c)`.
+Intersection has higher precedence than alternation: `a|b&c` is parsed as `a|(b&c)`.
 
 ### `~(...)` - complement
 
@@ -42,27 +42,28 @@ Matches everything the inner pattern does **not** match. Must be written with pa
 ```
 ~(_*\d\d_*)     does not contain two consecutive digits
 ~(_*\n\n_*)     does not contain a double newline (single paragraph)
-~(_*and_*)      does not contain "and"
+~(_*xyz_*)      does not contain "xyz"
 ```
 
 - with complement, prefer `_` over `.*` 
-- complement is the main reason why we added `_` because `~(.*xyz.*)` means intuitively `does not contain xyz on the same line`, so it will just match the full input string if it does not contain "xyz", 
+- complement is the main reason why we added `_` because `~(.*xyz.*)` means intuitively `does not contain xyz on the same line`, so it will just match the full input string.
 - `~(_*xyz_*)` means `does not contain xyz`, no ifs, ands, or buts
 
 ### Unsupported features
 
-As a bit of trivia, the .NET regex is a **turing complete** language, through the use of back references and balancing groups. RE# is an automata engine has a much more limited feature set.
+As a bit of trivia, the .NET regex is not a **regular language**, but a **turing complete** language, through the use of back references and balancing groups. RE# is an automata engine has a much more limited feature set.
 
 RE# does not support any of the following constructs:
 - Group captures: `(...)` is non-capturing, and `(?:...)` is just an explicit non-capturing group.
-  - a single `(...)` group defines match boundaries: `ab(cd)ef` is equivalent to `(?<=ab)cd(?=ef)`
+  - a single `(...)` group (`ab(cd)ef`) can be expressed through `(?<=ab)cd(?=ef)`
   - `Replace` supports `$0` but not `$1`, `$2`, etc. since there are no capture groups
   - for multiple groups the easiest approach is to use another engine to extract them post-match
 - Lazy quantifiers: `*?`, `+?`, `??`, `{n,m}?`
 - Backreferences: `\1`, `\2`, etc.
 - Balancing groups: `(?<open>...)`, `(?<-open>...)`
-- Conditional patterns: `(?(condition)yes|no)`
+- Conditional patterns: `(?(condition)yes|no)`, although you **can** express implication `(if-then)`, xor, xnor etc with intersection and complement. the conditional pattern in .NET is built on top of lookarounds and backtracking, so it is not supported in RE#.
 - Nested lookarounds: `(?=(?<=a)b)` or `(?<=(?=a)b)c`
+- Unions of lookarounds: `(?<=abc)de|(?<=def)gh`, this is an algorithmic limitation
 
 ### Combining operators
 
