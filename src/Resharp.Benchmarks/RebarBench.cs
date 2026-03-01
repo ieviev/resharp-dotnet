@@ -52,8 +52,10 @@ public class RebarBench
 
         compiled = new System.Text.RegularExpressions.Regex(bench.Pattern, dotnetOpts);
 
+#if SOURCE_GEN
         if (!SourceGenRegexes.Lookup.TryGetValue(Name, out sourceGenerated!))
             throw new InvalidOperationException($"no source-generated regex for '{Name}', run: dotnet run -- --generate");
+#endif
 
         var resharpOpts = ResharpOptions.HighThroughputDefaults;
         resharpOpts.IgnoreCase = bench.CaseInsensitive;
@@ -63,8 +65,10 @@ public class RebarBench
     [Benchmark]
     public int Compiled() => compiled.Count(haystack);
 
+#if SOURCE_GEN
     [Benchmark]
     public int SourceGenerated() => sourceGenerated.Count(haystack);
+#endif
 
     [Benchmark(Baseline = true)]
     public int Resharp() => resharp.Count(haystack);

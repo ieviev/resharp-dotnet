@@ -36,7 +36,7 @@ module Inline =
     let inline bor (a: ^t) (b: ^t2) : ^t3 = (# "or" a b : ^t3 #)
     let inline shl (a: ^t) (b: ^t2) : ^t3 = (# "shl" a b : ^t3 #)
     let inline clt_un (a: ^t) (b: ^t2) : bool = (# "clt.un" a b : bool #)
-    let inline ldelemu1 (a: ^t) (b: ^t2) : byte = (# "ldelem.u1" a b : byte #)
+    let inline ldelemu1 (a: ^t) (b: ^t2) : ^t3 = (# "ldelem.u1" a b : ^t3 #)
 
     let inline isNull (l_nk: ^t) (currentStateId: ^t2) =
         clt_un (ldelemu1 l_nk currentStateId) NullKind.NotNull
@@ -48,9 +48,12 @@ module Inline =
         (currentStateId: int)
         (l_pos: int)
         : unit =
-        match (# "ldelem.u1" l_nk currentStateId : NullKind #) with
+        match ldelemu1 l_nk currentStateId with
         | NullKind.CurrentNull
-        | NullKind.PrevNull as nk -> ValueList.add(&acc, add l_pos nk)
+        | NullKind.PrevNull as nk -> ValueList.add (&acc, add l_pos nk)
+        | NullKind.Nulls01 ->
+            ValueList.add (&acc, add l_pos 1)
+            ValueList.add (&acc, l_pos)
         | _ ->
             let span = _stateArray[currentStateId].PendingNullablePositions
 
@@ -58,7 +61,7 @@ module Inline =
                 let struct (s, e) = span[i]
 
                 for i = int e downto int s do
-                    ValueList.add(&acc, i + l_pos)
+                    ValueList.add (&acc, i + l_pos)
 
     let inline nextStateId
         (l_dfaDelta: TState[])
@@ -68,13 +71,58 @@ module Inline =
         (input: ReadOnlySpan<char>)
         (l_pos: int)
         =
-        let shift = currentStateId <<< int l_mtlog
         let mt = mt[int input[l_pos]]
+        let shift = currentStateId <<< int l_mtlog
         l_dfaDelta[shift ||| int mt]
 
     let inline mintermId (p_mt: TMinterm[]) (p_input: ReadOnlySpan<char>) (l_pos: int) =
         p_mt[int p_input[l_pos]]
 
+    
+    let inline endNoSkip
+        ([<InlineIfLambda>] handle_end_fn)
+        ([<InlineIfLambda>] set_null_fallback)
+        ([<InlineIfLambda>] rev_deriv_fn)
+
+        (l_dfaDelta: byref<TState[]>)
+        (l_nullKindArray: byref<NullKind[]>)
+        (l_mtlookup: TMinterm[])
+        (l_mtlog: byte)
+        (input: ReadOnlySpan<char>)
+        (startStateId: int)
+        (startPos: int)
+        =
+        let mutable l_currentStateId = startStateId
+        let mutable l_pos = startPos
+        let mutable l_currentMax = -2
+
+        if l_pos = input.Length then
+            l_currentMax <- handle_end_fn l_currentMax l_pos l_currentStateId
+            l_currentStateId <- 1 // dfa_dead
+
+        while l_currentStateId <> 1 do
+            if clt_un (ldelemu1 l_nullKindArray l_currentStateId) NullKind.NotNull then
+                match ldelemu1 l_nullKindArray l_currentStateId with
+                | NullKind.Nulls01
+                | NullKind.CurrentNull -> l_currentMax <- l_pos
+                | NullKind.PrevNull as nk -> l_currentMax <- sub l_pos nk
+                | _ -> l_currentMax <- set_null_fallback l_currentMax l_pos l_currentStateId
+
+            let mutable nextStateId =
+                nextStateId l_dfaDelta l_currentStateId l_mtlog l_mtlookup input l_pos
+
+            if nextStateId = 0 then
+                nextStateId <- rev_deriv_fn l_currentStateId input[l_pos]
+
+            l_currentStateId <- nextStateId
+
+            l_pos <- l_pos + 1
+
+            if l_pos = input.Length then
+                l_currentMax <- handle_end_fn l_currentMax l_pos l_currentStateId
+                l_currentStateId <- 1
+
+        l_currentMax
 
 /// initial prefix optimizations
 [<RequireQualifiedAccess>]
@@ -100,7 +148,7 @@ type InitialAccelerator<'t, 'tchar
 
 /// the default option to find the match end is to match again in reverse
 /// often this is overkill and can be replaced with something much simpler
-[<NoComparison>]
+[<NoComparison; Struct>]
 type LengthLookup<'t> =
     /// skip match end lookup entirely
     | FixedLength of length: int
@@ -865,6 +913,7 @@ let inferOverrideRegex
     (reverseNode: RegexNodeId)
     : MatchOverride<char> voption =
     let flags = c.Builder.Info(node).NodeFlags
+
     if
         flags.DependsOnAnchor
         || flags.ContainsLookaround

@@ -52,7 +52,7 @@ type internal RegexOptimizations<'t, 'tchar
 
     member val RightToLeftInitial: InitialAccelerator<'t, 'tchar> = _R_L_Initial
     member val LengthLookup: LengthLookup<'t> = _LengthLookup
-    /// if the pattern is simple enough that 
+    /// if the pattern is simple enough that
     /// we can use a specialized matching algorithm for it
     member val MatchOverride: MatchOverride<'tchar> voption = _MatchOverride
 
@@ -188,127 +188,129 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
         | true, v -> v // a dfa state already exists for this regex
         | _ ->
             _rwlock.EnterWriteLock()
+
             try
-            match _stateCache.TryGetValue(node) with
-            | true, v -> v
-            | _ ->
-            let state = MatchState(node)
-            _stateCache.Add(node, state)
-            let stateOrig = _stateCache.Count
-            state.Id <- stateOrig
-            let nodeFlags = _b.Info(node).NodeFlags
+                match _stateCache.TryGetValue(node) with
+                | true, v -> v
+                | _ ->
 
-            if _stateArray.Length = stateOrig then
-                if _stateArray.Length > options.MaxDfaCapacity then
-                    failwith
-                        "Maximum allowed state space reached! increase ResharpOptions.MaxDfaCapacity if this is intended"
+                let state = MatchState(node)
+                _stateCache.Add(node, state)
+                let stateOrig = _stateCache.Count
+                state.Id <- stateOrig
+                let nodeFlags = _b.Info(node).NodeFlags
 
-                let newsize = _stateArray.Length * 2
-                // default
-                Array.Resize(&_stateArray, newsize)
-                Array.Resize(&_flagsArray, newsize)
-                Array.Resize(&_svArray, newsize)
-                Array.Resize(&_nullKindArray, newsize)
-                Array.Resize(&_skipKindArray, newsize)
-                Array.Resize(&_dfaDelta, I.shl newsize _mintermsLog)
+                if _stateArray.Length = stateOrig then
+                    if _stateArray.Length > options.MaxDfaCapacity then
+                        failwith
+                            "Maximum allowed state space reached! increase ResharpOptions.MaxDfaCapacity if this is intended"
 
-            _stateArray[state.Id] <- state
+                    let newsize = _stateArray.Length * 2
+                    // default
+                    Array.Resize(&_stateArray, newsize)
+                    Array.Resize(&_flagsArray, newsize)
+                    Array.Resize(&_svArray, newsize)
+                    Array.Resize(&_nullKindArray, newsize)
+                    Array.Resize(&_skipKindArray, newsize)
+                    Array.Resize(&_dfaDelta, I.shl newsize _mintermsLog)
 
-            if nodeFlags.IsAlwaysNullable then
-                state.Flags <- state.Flags ||| StateFlags.IsAlwaysNullableFlag
+                _stateArray[state.Id] <- state
 
-            if nodeFlags.CanBeNullable && nodeFlags.DependsOnAnchor then
-                state.Flags <- state.Flags ||| StateFlags.IsAnchorNullableFlag
+                if nodeFlags.IsAlwaysNullable then
+                    state.Flags <- state.Flags ||| StateFlags.IsAlwaysNullableFlag
 
-            if isInitial then
-                state.Flags <- state.Flags ||| StateFlags.InitialFlag
+                if nodeFlags.CanBeNullable && nodeFlags.DependsOnAnchor then
+                    state.Flags <- state.Flags ||| StateFlags.IsAnchorNullableFlag
 
-            if _b.Info(node).CanBeNullable then
-                if RegexNode.isNullable (_b, LocationKind.End, node) then
-                    state.Flags <- state.Flags ||| StateFlags.IsEndNullableFlag
+                if isInitial then
+                    state.Flags <- state.Flags ||| StateFlags.InitialFlag
 
-                if RegexNode.isNullable (_b, LocationKind.Begin, node) then
-                    state.Flags <- state.Flags ||| StateFlags.IsBeginNullableFlag
+                if _b.Info(node).CanBeNullable then
+                    if RegexNode.isNullable (_b, LocationKind.End, node) then
+                        state.Flags <- state.Flags ||| StateFlags.IsEndNullableFlag
 
-            // generate startset
-            if _b.OrCount < options.StartsetInferenceLimit then
-                _createStartset (state, isInitial)
+                    if RegexNode.isNullable (_b, LocationKind.Begin, node) then
+                        state.Flags <- state.Flags ||| StateFlags.IsBeginNullableFlag
 
-            let nodeInfo = _b.Info(node)
+                // generate startset
+                if _b.OrCount < options.StartsetInferenceLimit then
+                    _createStartset (state, isInitial)
 
-            if nodeInfo.ContainsLookaround && nodeInfo.CanBeNullable && not isInitial then
-                if not nodeInfo.PendingNullables.IsEmpty then
-                    state.Flags <- state.Flags ||| StateFlags.IsPendingNullableFlag
+                let nodeInfo = _b.Info(node)
 
-                    let isCurrNullable =
-                        if nodeFlags.CanBeNullable then
-                            match _b.Node(node) with
-                            | Or(nodes = nodes) ->
-                                nodes
-                                |> exists (fun v ->
-                                    let info = _b.Info(v)
-                                    info.PendingNullables.IsEmpty && info.CanBeNullable
-                                )
-                            | Loop(low = 0) -> true
-                            | _ -> false
-                        else
-                            false
+                if nodeInfo.ContainsLookaround && nodeInfo.CanBeNullable && not isInitial then
+                    if not nodeInfo.PendingNullables.IsEmpty then
+                        state.Flags <- state.Flags ||| StateFlags.IsPendingNullableFlag
 
-                    let pendingNulls = [|
-                        let mutable contains0 = false
+                        let isCurrNullable =
+                            if nodeFlags.CanBeNullable then
+                                match _b.Node(node) with
+                                | Or(nodes = nodes) ->
+                                    nodes
+                                    |> exists (fun v ->
+                                        let info = _b.Info(v)
+                                        info.PendingNullables.IsEmpty && info.CanBeNullable
+                                    )
+                                | Loop(low = 0) -> true
+                                | _ -> false
+                            else
+                                false
 
-                        match nodeInfo.PendingNullables.inner with
-                        | [||] -> ()
-                        | [| (s, e) |] ->
-                            if s = LanguagePrimitives.GenericZero then
-                                contains0 <- true
+                        let pendingNulls = [|
+                            let mutable contains0 = false
 
-                            yield struct (s, e)
-                        | hs ->
-                            yield! hs
+                            match nodeInfo.PendingNullables.inner with
+                            | [||] -> ()
+                            | [| (s, e) |] ->
+                                if s = LanguagePrimitives.GenericZero then
+                                    contains0 <- true
 
-                            if
-                                hs
-                                |> Seq.exists (fun struct (s, _) ->
-                                    s = LanguagePrimitives.GenericZero
-                                )
-                            then
-                                contains0 <- true
+                                yield struct (s, e)
+                            | hs ->
+                                yield! hs
 
-                        if isCurrNullable && not (contains0) then
-                            yield
-                                struct (LanguagePrimitives.GenericZero,
-                                        LanguagePrimitives.GenericZero)
-                    |]
+                                if
+                                    hs
+                                    |> Seq.exists (fun struct (s, _) ->
+                                        s = LanguagePrimitives.GenericZero
+                                    )
+                                then
+                                    contains0 <- true
 
-                    Array.sortInPlace pendingNulls
-                    state.PendingNullablePositions <- pendingNulls
-                    let struct (s, _) = pendingNulls[0]
+                            if isCurrNullable && not (contains0) then
+                                yield
+                                    struct (LanguagePrimitives.GenericZero,
+                                            LanguagePrimitives.GenericZero)
+                        |]
 
-                    state.MinPendingNullable <- int s
+                        Array.sortInPlace pendingNulls
+                        state.PendingNullablePositions <- pendingNulls
+                        let struct (s, _) = pendingNulls[0]
 
-            _flagsArray[stateOrig] <- state.Flags
-            _svArray[stateOrig] <- state.MintermSearchValues
+                        state.MinPendingNullable <- int s
 
-            _nullKindArray[stateOrig] <-
-                if not (StateFlags.isAlwaysNullable state.Flags) then
-                    NullKind.NotNull
-                elif StateFlags.isAlwaysNullableNonPending state.Flags then
-                    NullKind.CurrentNull
-                elif state.PendingNullablePositions = [| struct (1us, 1us) |] then
-                    NullKind.PrevNull
-                else
-                    NullKind.PendingNull
+                _flagsArray[stateOrig] <- state.Flags
+                _svArray[stateOrig] <- state.MintermSearchValues
 
-            _skipKindArray[stateOrig] <-
-                if StateFlags.canNotSkip state.Flags then
-                    SkipKind.NotSkip
-                elif StateFlags.isInitial state.Flags then
-                    SkipKind.SkipInitial
-                else
-                    SkipKind.SkipActive
+                _nullKindArray[stateOrig] <-
+                    if not (StateFlags.isAlwaysNullable state.Flags) then
+                        NullKind.NotNull
+                    elif StateFlags.isAlwaysNullableNonPending state.Flags then
+                        NullKind.CurrentNull
+                    elif state.PendingNullablePositions = [| struct (1us, 1us) |] then
+                        NullKind.PrevNull
+                    else
+                        NullKind.PendingNull
 
-            state
+                _skipKindArray[stateOrig] <-
+                    if StateFlags.canNotSkip state.Flags then
+                        SkipKind.NotSkip
+                    elif StateFlags.isInitial state.Flags then
+                        SkipKind.SkipInitial
+                    else
+                        SkipKind.SkipActive
+
+                state
             finally
                 _rwlock.ExitWriteLock()
 
@@ -523,21 +525,24 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
         let arr = Array.zeroCreate allResults.size
         let resultSpan = ValueList.toSpan allResults
         let mutable i = 0
+
         while i < allResults.size do
             let curr = resultSpan[i]
             let vslice = input.Slice(curr.Index, curr.Length)
+
             let newResult = {
                 Value = vslice.ToString()
                 Index = curr.Index
                 Length = curr.Length
             }
+
             arr[i] <- newResult
             i <- i + 1
+
         arr
 
-    override this.Count(input: ReadOnlySpan<char>) =
-        use matches = this.llmatch_all input
-        matches.size
+    override this.Count(input: ReadOnlySpan<char>) : int = this.llmatch_count input
+
 
     /// initialize regex in DFA
     [<MethodImpl(MethodImplOptions.AggressiveInlining)>]
@@ -591,8 +596,12 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
               false))
 
     member this.HandleInputEnd
-        (flags: StateFlags, stateId: byref<int>, input: ReadOnlySpan<char>, acc: byref<ValueList<int>>)
-        : int =
+        (
+            flags: StateFlags,
+            stateId: byref<int>,
+            input: ReadOnlySpan<char>,
+            acc: byref<ValueList<int>>
+        ) : int =
         let isNullableInEnd =
             (StateFlags.isAlwaysNullable flags
              || RegexNode.isNullable (_b, LocationKind.End, _stateArray[stateId].Node))
@@ -611,7 +620,7 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
                 if StateFlags.isPendingNullable flags then
                     this.AddPendingRev(stateId, &acc, pos)
                 else
-                    ValueList.add(&acc, pos)
+                    ValueList.add (&acc, pos)
 
 
             if pos > 0 then
@@ -633,21 +642,20 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
                      ))
 
                 if isReallyNull then
-                    match (# "ldelem.u1" _nullKindArray stateId : NullKind #) with
+                    match I.ldelemu1 _nullKindArray stateId with
                     | NullKind.CurrentNull
-                    | NullKind.PrevNull as nk -> ValueList.add(&acc, int nk)
+                    | NullKind.PrevNull as nk -> ValueList.add (&acc, int nk)
                     | _ ->
                         let span = _stateArray[stateId].PendingNullablePositions
 
                         if isNull span || span.Length = 0 then
-                            ValueList.add(&acc, 0)
+                            ValueList.add (&acc, 0)
                         else
                             for i = span.Length - 1 downto 0 do
                                 let struct (s, e) = span[i]
 
                                 for i = int e downto int s do
-                                    ValueList.add(&acc, i + pos)
-
+                                    ValueList.add (&acc, i + pos)
 
             pos
 
@@ -677,23 +685,23 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
                     acc.pool[acc.size - 1] = 0
             ))
         then
-            match (# "ldelem.u1" _nullKindArray stateId : NullKind #) with
+            match I.ldelemu1 _nullKindArray stateId with
             | NullKind.CurrentNull
-            | NullKind.PrevNull as nk -> ValueList.addChecked(&acc, int nk)
+            | NullKind.PrevNull as nk -> ValueList.addChecked (&acc, int nk)
             | _ ->
                 let span = _stateArray[stateId].PendingNullablePositions
 
                 if isNull span || span.Length = 0 then
-                    ValueList.add(&acc, 0)
+                    ValueList.add (&acc, 0)
                 else
                     let struct (fs, _) = span[0]
 
-                    if acc.size = 0 || not (ValueList.endsWith(acc, int fs)) then
+                    if acc.size = 0 || not (ValueList.endsWith (acc, int fs)) then
                         for i = span.Length - 1 downto 0 do
                             let struct (s, e) = span[i]
 
                             for i = int e downto int s do
-                                ValueList.add(&acc, i)
+                                ValueList.add (&acc, i)
 
 
     member this.IsNullable(loc: LocationKind, node: RegexNodeId) : bool =
@@ -713,13 +721,11 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
         let mutable l_pos = 0
 
         if l_pos = input.Length then
-            this.HandleInputEndFwd(&currentMax, l_pos, currentStateId)
+            currentMax <- this.HandleInputEndFwd(currentMax, l_pos, currentStateId)
             currentStateId <- States.DFA_DEAD
 
         while currentStateId <> States.DFA_DEAD do
-            if
-                (# "clt.un" (# "ldelem.u1" _nullKindArray currentStateId : NullKind #) NullKind.NotNull : bool #)
-            then
+            if I.clt_un (I.ldelemu1 _nullKindArray currentStateId) NullKind.NotNull then
                 currentStateId <- States.DFA_DEAD
                 currentMax <- l_pos
             else
@@ -733,7 +739,7 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
 
                 currentStateId <- nextStateId
 
-                l_pos <- (# "add" l_pos 1 : int #)
+                l_pos <- l_pos + 1
 
                 if l_pos = input.Length then
                     if StateFlags.canBeNullable _flagsArray[currentStateId] then
@@ -753,7 +759,7 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
         let mutable l_pos = startPos
 
         if l_pos = endPos then
-            this.HandleInputEndFwd(&currentMax, l_pos, currentStateId)
+            currentMax <- this.HandleInputEndFwd(currentMax, l_pos, currentStateId)
             currentStateId <- States.DFA_DEAD
 
         while currentStateId <> States.DFA_DEAD do
@@ -766,7 +772,7 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
                     )
                    with
                    | -1 ->
-                       this.HandleInputEndFwd(&currentMax, endPos, currentStateId)
+                       currentMax <- this.HandleInputEndFwd(currentMax, endPos, currentStateId)
                        currentStateId <- States.DFA_DEAD
                        true
                    | si ->
@@ -774,17 +780,18 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
                        si <> 0
             then
                 if l_pos = endPos then
-                    this.HandleInputEndFwd(&currentMax, l_pos, currentStateId)
+                    currentMax <- this.HandleInputEndFwd(currentMax, l_pos, currentStateId)
                     currentStateId <- States.DFA_DEAD
             else
 
-                if
-                    (# "clt.un" (# "ldelem.u1" _nullKindArray currentStateId : NullKind #) NullKind.NotNull : bool #)
-                then
-                    match (# "ldelem.u1" _nullKindArray currentStateId : NullKind #) with
+                if I.clt_un (I.ldelemu1 _nullKindArray currentStateId) NullKind.NotNull then
+                    match I.ldelemu1 _nullKindArray currentStateId with
                     | NullKind.CurrentNull
                     | NullKind.PrevNull as nk -> currentMax <- I.sub l_pos nk
-                    | _ -> this.set_null_fwd_fallback (&currentMax, l_pos, currentStateId)
+                    | NullKind.Nulls01 -> currentMax <- l_pos
+                    | _ ->
+                        currentMax <-
+                            this.set_null_fwd_fallback (currentMax, l_pos, currentStateId)
 
                 let mutable nextStateId =
                     I.nextStateId _dfaDelta currentStateId mt_log _mtlookup input l_pos
@@ -795,11 +802,58 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
 
                 currentStateId <- nextStateId
 
-                l_pos <- (# "add" l_pos 1 : int #)
+                l_pos <- l_pos + 1
 
                 if l_pos = endPos then
-                    this.HandleInputEndFwd(&currentMax, l_pos, currentStateId)
+                    currentMax <- this.HandleInputEndFwd(currentMax, l_pos, currentStateId)
                     currentStateId <- States.DFA_DEAD
+
+        currentMax
+
+    member inline this.end_noskip
+        (
+            l_dfaDelta: byref<TState[]>,
+            l_nullKindArray: byref<NullKind[]>,
+            l_mt_lookup: byte[],
+            mt_log: byte,
+            startPos: int,
+            input: ReadOnlySpan<char>,
+            currentStateId: int
+        ) : int32 =
+        let mutable currentStateId = currentStateId
+        let mutable currentMax = -2
+        let mutable l_pos = startPos
+
+        if l_pos = input.Length then
+            currentMax <- this.HandleInputEndFwd(currentMax, l_pos, currentStateId)
+            currentStateId <- States.DFA_DEAD
+
+        while currentStateId <> States.DFA_DEAD do
+            if I.clt_un (I.ldelemu1 l_nullKindArray currentStateId) NullKind.NotNull then
+                match I.ldelemu1 l_nullKindArray currentStateId with
+                | NullKind.CurrentNull
+                | NullKind.PrevNull as nk -> currentMax <- I.sub l_pos nk
+                | NullKind.Nulls01 -> currentMax <- l_pos
+                | _ ->
+                    currentMax <-
+                        this.set_null_fwd_fallback (currentMax, l_pos, currentStateId)
+
+            let mutable nextStateId =
+                I.nextStateId l_dfaDelta currentStateId mt_log l_mt_lookup input l_pos
+
+            if nextStateId = 0 then
+                if this.deriv_ptr (currentStateId, &nextStateId, input, l_pos) then
+                    l_dfaDelta <- _dfaDelta
+                    l_nullKindArray <- _nullKindArray
+
+
+            currentStateId <- nextStateId
+
+            l_pos <- l_pos + 1
+
+            if l_pos = input.Length then
+                currentMax <- this.HandleInputEndFwd(currentMax, l_pos, currentStateId)
+                currentStateId <- States.DFA_DEAD
 
         currentMax
 
@@ -925,8 +979,12 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
 
 
     member this.skip_active_rev
-        (input: ReadOnlySpan<char>, pos: byref<int>, currentStateId: int, acc: byref<ValueList<int>>)
-        : bool =
+        (
+            input: ReadOnlySpan<char>,
+            pos: byref<int>,
+            currentStateId: int,
+            acc: byref<ValueList<int>>
+        ) : bool =
         if MintermSearchValues.contains (_svArray[currentStateId], input[pos - 1]) then
             false
         else
@@ -946,51 +1004,50 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
 
                 if I.clt_un (I.ldelemu1 _nullKindArray currentStateId) NullKind.NotNull then
                     for i = rend - 1 downto rstart do
-                        ValueList.add(&acc, i)
+                        ValueList.add (&acc, i)
 
                 true
             else
                 false
 
 
-    [<MethodImpl(MethodImplOptions.AggressiveInlining)>]
+    [<MethodImpl(MethodImplOptions.NoInlining)>]
     member this.HandleInputEndFwd
-        (currentMax: byref<int>, currPosition: int, currentStateId: int)
-        =
+        (currentMax: int, currPosition: int, currentStateId: int)
+        : int =
         if StateFlags.canBeNullable _flagsArray[currentStateId] then
             let flags = _flagsArray[currentStateId]
 
             if StateFlags.isAnchorNonPending flags then
-                currentMax <- currPosition
+                currPosition
             else
-                match (# "ldelem.u1" _nullKindArray currentStateId : NullKind #) with
+                match I.ldelemu1 _nullKindArray currentStateId with
                 | NullKind.CurrentNull
-                | NullKind.PrevNull as nk -> currentMax <- I.sub currPosition nk
+                | NullKind.PrevNull as nk -> I.sub currPosition nk
+                | NullKind.Nulls01 -> currPosition
                 | _ ->
-                    currentMax <-
-                        max
-                            currentMax
-                            (currPosition - _stateArray[currentStateId].MinPendingNullable)
+
+                    max
+                        currentMax
+                        (currPosition - _stateArray[currentStateId].MinPendingNullable)
+        else
+            currentMax
 
 
     member this.set_null_fwd_fallback
-        (currentMax: byref<int>, currPosition: int, currentStateId: TState)
+        (currentMax: int, currPosition: int, currentStateId: TState)
         =
         let flags = _flagsArray[currentStateId]
 
         if StateFlags.isPendingNullable flags then
-            currentMax <-
-                max currentMax (currPosition - _stateArray[currentStateId].MinPendingNullable)
+            max currentMax (currPosition - _stateArray[currentStateId].MinPendingNullable)
         else
-            currentMax <- currPosition
+            currPosition
 
 
     // this is just to get the branch out of the hot loop
-
-    member this.rev_deriv
-        (currentStateId: TState, input: ReadOnlySpan<char>, realPos: int)
-        : TState =
-        let mintermId = _mtlookup[int input[realPos]]
+    member this.rev_deriv(currentStateId: TState, chr: char) : TState =
+        let mintermId = _mtlookup[int chr]
         let nextState = createTransition LocationKind.Center currentStateId mintermId
         nextState
 
@@ -1002,7 +1059,6 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
             inputptr: ReadOnlySpan<char>,
             realPos: int
         ) : bool =
-        // let ch = (# "ldind.u2" (# "add" inputptr (realPos * 2) : int #) : int #)
         let ch = int inputptr[realPos]
         let mintermId = _mtlookup[ch]
         let oldref = _nullKindArray
@@ -1011,10 +1067,13 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
 
 
     [<MethodImpl(MethodImplOptions.NoInlining)>]
-
     member this.collect_skip
-        (acc: byref<ValueList<int>>, input: ReadOnlySpan<char>, startPos: int, startStateId: int)
-        : int =
+        (
+            acc: byref<ValueList<int>>,
+            input: ReadOnlySpan<char>,
+            startPos: int,
+            startStateId: int
+        ) : int =
         let mutable currentStateId = startStateId
         let mutable l_pos = startPos
         let l_mtlog = _mintermsLog
@@ -1022,7 +1081,7 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
         while l_pos <> 0 do
             let successfulSkip =
                 (I.clt_un (I.ldelemu1 _skipKindArray currentStateId) SkipKind.NotSkip)
-                && match (# "ldelem.u1" _skipKindArray currentStateId : SkipKind #) with
+                && match I.ldelemu1 _skipKindArray currentStateId with
                    | SkipKind.SkipInitial ->
                        this.TrySkipInitialRevChar(input, &l_pos, &currentStateId)
                    | _ -> this.skip_active_rev (input, &l_pos, currentStateId, &acc)
@@ -1038,12 +1097,48 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
                     I.nextStateId _dfaDelta currentStateId l_mtlog _mtlookup input l_pos
 
                 if nextStateId = 0 then
-                    nextStateId <- this.rev_deriv (currentStateId, input, l_pos)
+                    nextStateId <- this.rev_deriv (currentStateId, input[l_pos])
 
                 currentStateId <- nextStateId
 
                 if I.isNull _nullKindArray currentStateId then
                     I.setNullFull _stateArray &acc _nullKindArray currentStateId l_pos
+
+
+        currentStateId
+
+    [<MethodImpl(MethodImplOptions.NoInlining)>]
+    member this.collect_noskip
+        (
+            acc: byref<ValueList<int>>,
+            input: ReadOnlySpan<char>,
+            startPos: int,
+            startStateId: int
+        ) : int =
+        let mutable currentStateId = startStateId
+        let mutable l_pos = startPos
+        let mutable l_dfaDelta = _dfaDelta
+        let mutable l_stateArray = _stateArray
+        let mutable l_nullKindArray = _nullKindArray
+        let l_mtlookup = _mtlookup
+        let l_mtlog = _mintermsLog
+
+        while l_pos <> 0 do
+            l_pos <- l_pos - 1
+
+            let mutable nextStateId =
+                I.nextStateId l_dfaDelta currentStateId l_mtlog l_mtlookup input l_pos
+
+            if nextStateId = 0 then
+                nextStateId <- this.rev_deriv (currentStateId, input[l_pos])
+                l_dfaDelta <- _dfaDelta
+                l_stateArray <- _stateArray
+                l_nullKindArray <- _nullKindArray
+
+            currentStateId <- nextStateId
+
+            if I.isNull l_nullKindArray currentStateId then
+                I.setNullFull l_stateArray &acc l_nullKindArray currentStateId l_pos
 
 
         currentStateId
@@ -1056,7 +1151,7 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
             let struct (s, e) = span[i]
 
             for i = int e downto int s do
-                ValueList.add(&acc, i + realPos)
+                ValueList.add (&acc, i + realPos)
 
 
     member this.AddPendingFwd(currentStateId: int, realPos: int, currentMax: byref<int>) =
@@ -1080,7 +1175,7 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
         | -2 -> -1
         | n -> n
 
-    
+
     member internal this.llmatch_all_override
         (
             acc: byref<ValueList<ValueMatch>>,
@@ -1151,19 +1246,22 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
     /// see: `LengthLookup`
     [<MethodImpl(MethodImplOptions.NoInlining)>]
     member this.llmatch_ends_skip
-        (matches: byref<ValueList<ValueMatch>>, acc: byref<ValueList<int>>, input: ReadOnlySpan<char>)
-        =
+        (
+            matches: byref<ValueList<ValueMatch>>,
+            acc: byref<ValueList<int>>,
+            input: ReadOnlySpan<char>
+        ) =
         let mutable nextValidStart = 0
         let mutable startSpans = ValueList.toSpan acc
         let mutable pos = 0
         let mt_log = _mintermsLog
 
-        let offset, startState =
+        let struct (offset, startState) =
             match utf16Optimizations.LengthLookup with
             | LengthLookup.FixedLengthPrefixMatchEnd(fl, stateId) ->
                 pos <- pos + fl
-                fl, stateId
-            | _ -> 0, DFA_R_NOPR
+                struct (fl, stateId)
+            | _ -> struct (0, DFA_R_NOPR)
 
         let mutable i = startSpans.Length
 
@@ -1179,6 +1277,61 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
                 matches.Add(ValueMatch(currStart, matchEnd - currStart))
                 assert (matchEnd <> -2)
                 nextValidStart <- matchEnd
+
+    /// see: `LengthLookup`
+    [<MethodImpl(MethodImplOptions.NoInlining)>]
+    member this.llmatch_ends_noskip
+        (
+            matches: byref<ValueList<ValueMatch>>,
+            acc: byref<ValueList<int>>,
+            input: ReadOnlySpan<char>
+        ) =
+        let mutable startSpans = ValueList.toSpan acc
+        let mutable pos = 0
+        let mutable l_dfaDelta = _dfaDelta
+        let mutable l_nullKindArray = _nullKindArray
+        let mt_log = _mintermsLog
+
+        let struct (offset, startState) =
+            match utf16Optimizations.LengthLookup with
+            | LengthLookup.FixedLengthPrefixMatchEnd(fl, stateId) -> (fl, stateId)
+            | _ -> (0, DFA_R_NOPR)
+
+        let mutable i = startSpans.Length
+
+        while i <> 0 do
+            i <- i - 1
+            let currStart = startSpans[i]
+
+            if currStart >= pos then
+                pos <- currStart + offset
+                let mutable state = startState
+
+                let matchEnd =
+                    I.endNoSkip
+                        (fun currentMax l_pos currentStateId ->
+                            this.HandleInputEndFwd(currentMax, l_pos, currentStateId)
+                        )
+                        (fun currentMax l_pos currentStateId ->
+                            this.set_null_fwd_fallback (currentMax, l_pos, currentStateId)
+                        )
+                        (fun state char ->
+                            let nextState = this.rev_deriv (state, char)
+                            l_dfaDelta <- _dfaDelta
+                            l_nullKindArray <- _nullKindArray
+                            nextState
+                        )
+                        &l_dfaDelta
+                        &l_nullKindArray
+                        _mtlookup
+                        mt_log
+                        input
+                        state
+                        pos
+
+                matches.Add(ValueMatch(currStart, matchEnd - currStart))
+                assert (matchEnd <> -2)
+                pos <- matchEnd
 
 
     /// see: `LengthLookup`
@@ -1266,20 +1419,38 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
 
     [<MethodImpl(MethodImplOptions.NoInlining)>]
     member this.llmatch_collect
-        (input: ReadOnlySpan<char>, acc: byref<ValueList<int>>, initState: int, startPosition: int)
-        =
-        let endStateId = this.collect_skip (&acc, input, startPosition, initState)
+        (
+            input: ReadOnlySpan<char>,
+            acc: byref<ValueList<int>>,
+            initState: int,
+            startPosition: int
+        ) =
+        let endStateId =
+            match skippables with
+            | 0 -> this.collect_noskip (&acc, input, startPosition, initState)
+            | _ -> this.collect_skip (&acc, input, startPosition, initState)
+
         this.HandleInputStart(endStateId, &acc)
 
     [<MethodImpl(MethodImplOptions.NoInlining)>]
     member this.llmatch_ends
-        (matches: byref<ValueList<ValueMatch>>, acc: byref<ValueList<int>>, input: ReadOnlySpan<char>)
-        =
+        (
+            matches: byref<ValueList<ValueMatch>>,
+            acc: byref<ValueList<int>>,
+            input: ReadOnlySpan<char>
+        ) =
         match utf16Optimizations.LengthLookup with
-        | LengthLookup.SetLookup(prefixLength, mtId, skipKind, nullKind, mintermSearchValues) when
+        | LengthLookup.SetLookup(prefixLength, mtId, skipKind, nullKind, _) when
             skipKind = SkipKind.NotSkip && nullKind <> NullKind.PendingNull
             ->
-            this.llmatch_ends_setlookup_mt (&matches, &acc, input, prefixLength, mtId, nullKind)
+            this.llmatch_ends_setlookup_mt (
+                &matches,
+                &acc,
+                input,
+                prefixLength,
+                mtId,
+                nullKind
+            )
         | LengthLookup.RemainingSets(prefixLength, mtId, remaining) ->
             this.llmatch_ends_remaining_set (
                 &matches,
@@ -1290,7 +1461,10 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
                 remaining
             )
         | LengthLookup.FixedLength(n) -> this.llmatch_ends_fixlen (&matches, &acc, n)
-        | _ -> this.llmatch_ends_skip (&matches, &acc, input)
+        | _ ->
+            match skippables with
+            | 0 -> this.llmatch_ends_noskip (&matches, &acc, input)
+            | _ -> this.llmatch_ends_skip (&matches, &acc, input)
 
 
     [<MethodImpl(MethodImplOptions.NoInlining)>]
@@ -1310,10 +1484,16 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
 
                 let startPosition =
                     this.HandleInputEnd(_flagsArray[initState], &initState, input, &acc)
+
                 this.llmatch_collect (input, &acc, initState, startPosition)
                 this.llmatch_ends (&matches, &acc, input)
                 matches
 
+
+    [<MethodImpl(MethodImplOptions.NoInlining)>]
+    member this.llmatch_count(input: ReadOnlySpan<char>) : int =
+        use results = this.llmatch_all input
+        results.size
 
     /// return just the positions of matches without allocating the result
     override this.ValueMatches(input: ReadOnlySpan<char>) : ValueList<ValueMatch> =
@@ -1422,7 +1602,7 @@ module internal Helpers =
 
         | _ ->
             // ideally subsume the minterms to 64 or below
-            // but in case that is not possible, fall back to a bitvector implementation 
+            // but in case that is not possible, fall back to a bitvector implementation
             let solver = BitVectorSolver(bddMinterms)
             let tsetbuilder = RegexBuilder(converter, solver, charsetSolver, options)
 
@@ -1443,10 +1623,11 @@ module internal Helpers =
             let m = RegexMatcher(rawNode, cache, options)
 
             // only possible if you have more than 255 unique characters in the pattern.
-            // there's no real problem to support this, but it's just 
-            // exceedingly rare, so it'd feel wrong to 
+            // there's no real problem to support this, but it's just
+            // exceedingly rare, so it'd feel wrong to
             // pay the cost of supporting it in the common case
             if m.Cache.NumOfMinterms() > 255 then
-                failwith "over 255 unique characters in the pattern not supported! simplify the pattern"
+                failwith
+                    "over 255 unique characters in the pattern not supported! simplify the pattern"
 
             m

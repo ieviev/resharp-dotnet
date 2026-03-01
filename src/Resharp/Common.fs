@@ -35,8 +35,8 @@ type ResharpOptions() =
     member val IgnoreCase = false with get, set
     /// default:2000
     member val StartsetInferenceLimit = 2000 with get, set
-    /// default:10, full dfa compilation state space threshold
-    member val DfaThreshold = 10 with get, set
+    /// default:100, full dfa compilation state space threshold
+    member val DfaThreshold = 100 with get, set
 
     /// attempt more expensive optimizations for high-throughput
     static member HighThroughputDefaults =

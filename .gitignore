@@ -479,3 +479,5 @@ $RECYCLE.BIN/
 src/Resharp.Test/trace
 src/Resharp.Test/trace.speedscope.json
 /BenchmarkDotNet.Artifacts
+*.experiment.cs
+*.speedscope.json

@@ -8,9 +8,21 @@ if (args is ["--generate"])
     return;
 }
 
+if (args is ["--profile", var profileName])
+{
+    var bench = new RedditBench();
+    var method = typeof(RedditBench).GetMethod(profileName)
+        ?? throw new Exception($"no method '{profileName}' on RedditBench");
+    for (int i = 0; i < 10; i++) method.Invoke(bench, null);
+    for (int i = 0; i < 5000; i++) method.Invoke(bench, null);
+    return;
+}
+
 if (args is ["--readme"])
 {
+#if SOURCE_GEN
     RebarData.NameSet = SourceGenRegexes.Lookup.Keys.ToHashSet();
+#endif
     BenchmarkRunner.Run<RebarBench>();
 }
 else if (args.Length == 0)

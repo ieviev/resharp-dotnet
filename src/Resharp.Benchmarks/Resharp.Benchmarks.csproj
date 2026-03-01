@@ -5,7 +5,13 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <DefineConstants>$(DefineConstants);SOURCE_GEN</DefineConstants>
   </PropertyGroup>
+
+  <!-- benchmarkdotnet does not honor this -->
+  <!-- <ItemGroup Condition="'$(BuildSourceGen)' != 'true'">
+    <Compile Remove="SourceGenRegexes.g.cs" />
+  </ItemGroup> -->
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" />
