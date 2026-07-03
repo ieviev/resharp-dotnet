@@ -108,6 +108,7 @@ let rec determineWordBorderNodeKind
 
         match setInner, node.M with
         | WordChar, 0 -> WordOption
+        | NonWordChar, 0 -> NonWordOption
         | setInner, _ -> setInner
 
     | RegexNodeKind.Notone -> Unknown //unhandled()

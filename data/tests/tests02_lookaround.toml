@@ -5,6 +5,16 @@ lookahead and lookbehind tests
 # --- positive lookahead ---
 
 [[test]]
+pattern = '.(?=[A-Z])'
+input = 'ABC'
+matches = [[0, 1], [1, 2]]
+
+[[test]]
+pattern = '.(?=[A-Z])'
+input = 'ABCDEF'
+matches = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5]]
+
+[[test]]
 pattern = '(?=a)'
 input = 'a'
 matches = [[0, 0]]

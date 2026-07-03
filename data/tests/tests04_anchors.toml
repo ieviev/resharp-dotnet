@@ -74,6 +74,11 @@ pattern = 'a\b'
 input = 'a '
 matches = [[0, 1]]
 
+[[test]]
+pattern = '\s*\bts\b'
+input = 'tests'
+matches = []
+
 # word boundary with unicode
 
 [[test]]

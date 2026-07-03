@@ -547,6 +547,30 @@ let applyPrefixSets
 
     current
 
+let applyPrefixSetsChecked
+    getNonInitialDerivative
+    (cache: RegexCache<_>)
+    (node: RegexNodeId)
+    (sets: ResizeArray<'t>)
+    : RegexNodeId voption =
+    let mts = cache.Minterms()
+    let mutable current = node
+    let mutable sound = true
+    let mutable i = 0
+
+    while sound && i < sets.Count do
+        let matching = mts |> Seq.filter (fun v -> cache.Solver.elemOfSet v sets[i])
+        let results = matching |> Seq.map (fun v -> getNonInitialDerivative (v, current)) |> Seq.toArray
+
+        if results.Length = 0 || not (results |> Array.forall ((=) results[0])) then
+            sound <- false
+        else
+            current <- results[0]
+
+        i <- i + 1
+
+    if sound then ValueSome current else ValueNone
+
 let rec applyPrefixSetsWhileNotNullable
     getNonInitialDerivative
     (cache: RegexCache<_>)
@@ -659,53 +683,73 @@ let findInitialOptimizations
                 |> Seq.toArray
                 |> Memory
 
-            if singleCharPrefixes.Length > 0 then
-                let applied =
-                    Optimizations.applyPrefixSets
-                        getNonInitialDerivative
-                        c
-                        trueStarredNode
-                        (prefix.GetRange(0, singleCharPrefixes.Length))
-
-                InitialAccelerator.StringPrefix(singleCharPrefixes, nodeToId applied)
-            else
-
-                let caseiprefix = caseInsensitivePrefixes prefix c reversed
-
-                if caseiprefix.Length > 0 then
-                    let applied =
-                        Optimizations.applyPrefixSets
+            let stringPrefixResult =
+                if singleCharPrefixes.Length = 0 then
+                    ValueNone
+                else
+                    match
+                        Optimizations.applyPrefixSetsChecked
                             getNonInitialDerivative
                             c
                             trueStarredNode
-                            (prefix.GetRange(0, caseiprefix.Length))
+                            (prefix.GetRange(0, singleCharPrefixes.Length))
+                    with
+                    | ValueSome applied ->
+                        ValueSome(InitialAccelerator.StringPrefix(singleCharPrefixes, nodeToId applied))
+                    | ValueNone -> ValueNone
 
-                    let isAscii = caseiprefix |> Memory.forall (fun v -> Char.IsAscii(v))
+            match stringPrefixResult with
+            | ValueSome result -> result
+            | ValueNone ->
 
-                    InitialAccelerator.StringPrefixCaseIgnore(
-                        caseiprefix,
-                        isAscii,
-                        nodeToId applied
-                    )
-                else
+                let caseiprefix = caseInsensitivePrefixes prefix c reversed
 
-                    let applied =
-                        Optimizations.applyPrefixSets
+                let caseIgnoreResult =
+                    if caseiprefix.Length = 0 then
+                        ValueNone
+                    else
+                        match
+                            Optimizations.applyPrefixSetsChecked
+                                getNonInitialDerivative
+                                c
+                                trueStarredNode
+                                (prefix.GetRange(0, caseiprefix.Length))
+                        with
+                        | ValueSome applied ->
+                            let isAscii = caseiprefix |> Memory.forall (fun v -> Char.IsAscii(v))
+
+                            ValueSome(
+                                InitialAccelerator.StringPrefixCaseIgnore(
+                                    caseiprefix,
+                                    isAscii,
+                                    nodeToId applied
+                                )
+                            )
+                        | ValueNone -> ValueNone
+
+                match caseIgnoreResult with
+                | ValueSome result -> result
+                | ValueNone ->
+
+                    match
+                        Optimizations.applyPrefixSetsChecked
                             getNonInitialDerivative
                             c
                             trueStarredNode
                             prefix
+                    with
+                    | ValueNone -> InitialAccelerator.NoAccelerator
+                    | ValueSome applied ->
+                        let searchPrefix = prefix |> map c.MintermSearchValues |> Seq.toArray
 
-                    let searchPrefix = prefix |> map c.MintermSearchValues |> Seq.toArray
-
-                    // can not create a fast prefix if all are too common
-                    if searchPrefix |> forall (isTooCommon c) then
-                        InitialAccelerator.NoAccelerator
-                    else
-                        InitialAccelerator.SearchValuesPrefix(
-                            Memory(searchPrefix),
-                            nodeToId applied
-                        )
+                        // can not create a fast prefix if all are too common
+                        if searchPrefix |> forall (isTooCommon c) then
+                            InitialAccelerator.NoAccelerator
+                        else
+                            InitialAccelerator.SearchValuesPrefix(
+                                Memory(searchPrefix),
+                                nodeToId applied
+                            )
 
         else
             let found =
@@ -713,16 +757,18 @@ let findInitialOptimizations
                     let p1 = c.MintermSearchValues(prefix[0])
 
                     if not (isTooCommon c p1) then
-                        let applied =
-                            Optimizations.applyPrefixSets
+                        match
+                            Optimizations.applyPrefixSetsChecked
                                 getNonInitialDerivative
                                 c
                                 trueStarredNode
                                 prefix
-
-                        ValueSome(
-                            InitialAccelerator.SingleSearchValuesPrefix(p1, nodeToId applied)
-                        )
+                        with
+                        | ValueSome applied ->
+                            ValueSome(
+                                InitialAccelerator.SingleSearchValuesPrefix(p1, nodeToId applied)
+                            )
+                        | ValueNone -> ValueNone
                     else
                         ValueNone
                 else
