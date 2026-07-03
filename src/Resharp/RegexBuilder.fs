@@ -2886,7 +2886,9 @@ type internal RegexBuilder<'t
                     let throwExn(node: RegexNodeId) : RegexNodeId =
                         raise (
                             UnsupportedPatternException(
-                                "this pattern contains unsupported anchors/lookarounds"
+                                "this pattern contains unsupported anchors/lookarounds: lookarounds are only "
+                                + "supported at the start or end of the pattern, e.g. (?<=R1)R2(?=R3). "
+                                + "See docs/syntax.md#lookarounds"
                             )
                         )
 

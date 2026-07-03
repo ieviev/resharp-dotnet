@@ -64,6 +64,7 @@ RE# does not support any of the following constructs:
 - Conditional patterns: `(?(condition)yes|no)`, although you **can** express implication `(if-then)`, xor, xnor etc with intersection and complement. the conditional pattern in .NET is built on top of lookarounds and backtracking, so it is not supported in RE#.
 - Nested lookarounds: `(?=(?<=a)b)` or `(?<=(?=a)b)c`
 - Unions of lookarounds: `(?<=abc)de|(?<=def)gh`, this is an algorithmic limitation
+- Lookarounds in the middle of a pattern: `a(?=bb)b` is not supported (see [Lookarounds](#lookarounds) below)
 
 ### Combining operators
 
@@ -132,9 +133,13 @@ Lookarounds combine with intersection and complement:
 (?<=ab).*&~(_*and_*)    after "ab", not containing "and"
 ```
 
-**Restriction: no nested lookarounds.** RE# normalizes all lookarounds into the form `(?<=R1)R2(?=R3)`, where R1, R2, and R3 are regular expressions that themselves **cannot contain lookarounds**. This means patterns like `(?<=(?=a)b)c` or `(?=a(?<=b))` are not supported.
+**Restriction: lookarounds only at the start/end of the pattern.** RE# only accepts the normalized form `(?<=R1)R2(?=R3)` (lookbehind fixed at the start, lookahead fixed at the end, `R1`/`R2`/`R3` themselves lookaround-free), and intersections of such patterns, e.g. `(?<=A)B(?=C)&(?<=D)E(?=F)`.
 
-This restriction is what allows RE# to encode lookaround information directly into DFA states and maintain **O(n) linear-time** matching. Engines that support arbitrary lookarounds typically incur O(m × n) matching cost or resort to backtracking.
+So `a(?=bb)b` is not supported (the lookahead sits in the middle, followed by `b`). Fold the trailing part into the lookahead instead: `a(?=bbb)` or `ab(?=b)`.
+
+This restriction is what lets RE# encode lookaround information directly into DFA states for **O(n) linear-time** matching, instead of the O(m × n) or backtracking cost other engines pay for arbitrary lookarounds.
+
+The [Rust implementation of RE#](https://github.com/ieviev/resharp) is experimental and supports a much wider fragment of lookarounds, including `a(?=bb)b` directly. That support has not been ported here.
 
 ## Matching behavior
 
