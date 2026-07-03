@@ -188,7 +188,7 @@ let ``implication 1 `` () =
     let pattern =
         @"(?<=\n\n|\A)(~(_*\n\n_*)&(~(_*mistake_*)|(_*strawberries_*)))(?=\n\n)"
 
-    assertAllLLmatchTexts pattern shortPg [ ""; ""; "\"mistake of saying strawberries.\"" ]
+    assertAllLLmatchTexts pattern shortPg [ ""; "\"mistake of saying strawberries.\"" ]
 
 
 [<Fact>]

@@ -336,6 +336,21 @@ input = ' c'
 matches = [[1, 2]]
 
 [[test]]
+pattern = '(?<!,)x'
+input = ',xx'
+matches = [[2, 3]]
+
+[[test]]
+pattern = '(?<!\\)(\\*)(?=\z)'
+input = 'ab'
+matches = [[2, 2]]
+
+[[test]]
+pattern = '(?<!,) '
+input = ',   '
+matches = [[2, 3], [3, 4]]
+
+[[test]]
 pattern = '(?<=\d)a'
 input = '1a__a__a'
 matches = [[1, 2]]

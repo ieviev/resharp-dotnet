@@ -242,46 +242,11 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
                     if not nodeInfo.PendingNullables.IsEmpty then
                         state.Flags <- state.Flags ||| StateFlags.IsPendingNullableFlag
 
-                        let isCurrNullable =
-                            if nodeFlags.CanBeNullable then
-                                match _b.Node(node) with
-                                | Or(nodes = nodes) ->
-                                    let mutable found = false
-                                    for v in nodes do
-                                        if not found then
-                                            let info = _b.Info(v)
-                                            found <- info.PendingNullables.IsEmpty && info.CanBeNullable
-                                    found
-                                | Loop nodes when nodes[1] = 0 -> true
-                                | _ -> false
-                            else
-                                false
-
                         let pendingNulls = [|
-                            let mutable contains0 = false
-
                             match nodeInfo.PendingNullables.inner with
                             | [||] -> ()
-                            | [| (s, e) |] ->
-                                if s = LanguagePrimitives.GenericZero then
-                                    contains0 <- true
-
-                                yield struct (s, e)
-                            | hs ->
-                                yield! hs
-
-                                if
-                                    hs
-                                    |> Seq.exists (fun struct (s, _) ->
-                                        s = LanguagePrimitives.GenericZero
-                                    )
-                                then
-                                    contains0 <- true
-
-                            if isCurrNullable && not (contains0) then
-                                yield
-                                    struct (LanguagePrimitives.GenericZero,
-                                            LanguagePrimitives.GenericZero)
+                            | [| (s, e) |] -> yield struct (s, e)
+                            | hs -> yield! hs
                         |]
 
                         Array.sortInPlace pendingNulls
@@ -688,7 +653,27 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
         then
             match I.ldelemu1 _nullKindArray stateId with
             | NullKind.CurrentNull
-            | NullKind.PrevNull as nk -> ValueList.addChecked (&acc, int nk)
+            | NullKind.PrevNull as nk ->
+                ValueList.addChecked (&acc, int nk)
+
+                let hasFreshBeginNullableBranch =
+                    match _b.Node(node) with
+                    | Or(nodes = nodes) ->
+                        let mutable found = false
+
+                        for v in nodes do
+                            if not found then
+                                let info = _b.Info(v)
+
+                                found <-
+                                    info.PendingNullables.IsEmpty
+                                    && RegexNode.isNullable (_b, LocationKind.Begin, v)
+
+                        found
+                    | _ -> false
+
+                if int nk <> 0 && hasFreshBeginNullableBranch then
+                    ValueList.add (&acc, 0)
             | _ ->
                 let span = _stateArray[stateId].PendingNullablePositions
 
