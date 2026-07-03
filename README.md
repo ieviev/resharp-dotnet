@@ -6,7 +6,7 @@ A high-performance, automata based regex engine with first-class support for **i
 
 RE# compiles patterns into deterministic automata. All matching is non-backtracking with guaranteed linear-time execution. RE# extends `System.Text.RegularExpressions` syntax with intersection (`&`), complement (`~`), and a universal wildcard (`_`), enabling patterns that are impossible or impractical to express with standard regex.
 
-[web playground](https://ieviev.github.io/resharp-webapp/) | [paper](https://dl.acm.org/doi/10.1145/3704837) | [blog post](https://iev.ee/blog/resharp-how-we-built-the-fastest-regex-in-fsharp/)
+[web playground](https://ieviev.github.io/resharp-webapp/) | [paper](https://dl.acm.org/doi/10.1145/3704837) | [blog post](https://iev.ee/blog/resharp-how-we-built-the-fastest-regex-in-fsharp/) | [Rust implementation](https://github.com/ieviev/resharp)
 
 ## Install
 
