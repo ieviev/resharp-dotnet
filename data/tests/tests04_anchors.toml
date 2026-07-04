@@ -226,6 +226,21 @@ pattern = "[\"'][^\"']{0,30}[?!\\.][\"']"
 input = ' "hello!" '
 matches = [[1, 9]]
 
+[[test]]
+pattern = '\u{BB}'
+input = "a\u00bbb"
+matches = [[1, 2]]
+
+[[test]]
+pattern = 'a\u{42}b'
+input = "aBb"
+matches = [[0, 3]]
+
+[[test]]
+pattern = '[\u{4E00}-\u{9FA5}]+'
+input = "x\u4e2dy"
+matches = [[1, 2]]
+
 # --- quantifiers ---
 
 [[test]]

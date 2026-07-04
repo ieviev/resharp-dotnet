@@ -422,3 +422,33 @@ matches = [[0, 1]]
 pattern = '(pm(?=b|\z)|p\.m\.|p(?=b|\z))'
 input = 'pb m'
 matches = [[0, 1]]
+
+[[test]]
+pattern = '(?=(?:a*b){2}[\s\S]*\z)'
+input = 'aababz'
+matches = [[0, 0], [1, 1], [2, 2]]
+
+[[test]]
+pattern = '(?=(?:a*b){2}[\s\S]*\z)'
+input = 'aababzz'
+matches = [[0, 0], [1, 1], [2, 2]]
+
+[[test]]
+pattern = '(?=(?:a*b){2}[\s\S]*\z)'
+input = 'xxxaababzz'
+matches = [[3, 3], [4, 4], [5, 5]]
+
+[[test]]
+pattern = '(?<=.).'
+input = 'aaaa'
+matches = [[1, 2], [2, 3], [3, 4]]
+
+[[test]]
+pattern = '(?<=.).'
+input = 'aaaaaaaaaa'
+matches = [[1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 9], [9, 10]]
+
+[[test]]
+pattern = '(?<=.).'
+input = 'aaaaaaaaaab'
+matches = [[1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 9], [9, 10], [10, 11]]

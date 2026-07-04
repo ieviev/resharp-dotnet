@@ -990,7 +990,7 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
 
                 if I.clt_un (I.ldelemu1 _nullKindArray currentStateId) NullKind.NotNull then
                     for i = rend - 1 downto rstart do
-                        ValueList.add (&acc, i)
+                        I.setNullFull _stateArray &acc _nullKindArray currentStateId i
 
                 true
             else

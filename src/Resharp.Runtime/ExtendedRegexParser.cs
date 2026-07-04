@@ -1372,6 +1372,31 @@ internal ref struct ExtendedRegexParser
         return (char)i;
     }
 
+    private char ScanHexOrBraced(int defaultDigits)
+    {
+        if (CharsRight() == 0 || RightChar() != '{') return ScanHex(defaultDigits);
+
+        MoveRight();
+        var i = 0;
+        var digits = 0;
+        int d;
+        while (CharsRight() > 0 && (d = HexDigit(RightChar())) >= 0)
+        {
+            MoveRight();
+            digits += 1;
+            i = i * 0x10 + d;
+            if (i > 0xFFFF)
+                throw MakeException(RegexParseError.InsufficientOrInvalidHexDigits,
+                    "InsufficientOrInvalidHexDigits: astral code points above U+FFFF (\\u{" +
+                    "...}) are not supported");
+        }
+
+        if (digits == 0 || CharsRight() == 0 || RightCharMoveRight() != '}')
+            throw MakeException(RegexParseError.InsufficientOrInvalidHexDigits, "InsufficientOrInvalidHexDigits");
+
+        return (char)i;
+    }
+
     /*
      * Returns n <= 0xF for a hex digit.
      */
@@ -1445,7 +1470,7 @@ internal ref struct ExtendedRegexParser
             case 'x':
                 return ScanHex(2);
             case 'u':
-                return ScanHex(4);
+                return ScanHexOrBraced(4);
             case 'a':
                 return '\u0007';
             case 'b':

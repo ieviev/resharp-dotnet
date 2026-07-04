@@ -624,6 +624,9 @@ let caseInsensitivePrefixes prefix (c: RegexCache<_>) (reversed: bool) =
 
 
 let isTooCommon (c: RegexCache<'t>) (sv: MintermSearchValues<'t>) =
+    if c.Solver.IsFull(sv.Minterm) then
+        true
+    else
     match sv.Mode, SearchValuesKind.ofSearchValues (sv.SearchValues) with
     | MintermSearchMode.SearchValues, SearchValuesKind.Small -> false
     | MintermSearchMode.SearchValues, SearchValuesKind.Range ->
@@ -647,7 +650,15 @@ let isTooCommon (c: RegexCache<'t>) (sv: MintermSearchValues<'t>) =
             | [| (48u, 57u) |] -> false // [0-9] usually worth optimizing
             | _ -> false
     | MintermSearchMode.InvertedSearchValues, SearchValuesKind.Small -> sv.Commonality < 100
-    | _ -> true
+    | _, SearchValuesKind.Empty -> false
+    | _ ->
+        let chars = c.MintermChars(sv.Minterm)
+        let baseIdentities = HashSet<char>()
+
+        for ch in chars.Span do
+            baseIdentities.Add(Char.ToUpperInvariant ch) |> ignore
+
+        baseIdentities.Count > 3
 
 let findInitialOptimizations
     (options: ResharpOptions)
@@ -881,6 +892,9 @@ let rec getFixedPrefixLength (c: RegexCache<'t>) (node: RegexNodeId) =
     r
 
 
+let private isExactMinterm (c: RegexCache<'t>) (mt: 't) =
+    c.Minterms() |> Array.exists (fun m -> EqualityComparer<'t>.Default.Equals(m, mt))
+
 let inferLengthLookup
     (opts: ResharpOptions)
     (c: RegexCache<'t>)
@@ -946,7 +960,7 @@ let inferLengthLookup
                                 |> Seq.toArray
 
                             match prefix_derivs_2 with
-                            | [| _, der2 |] when der2 = RegexNodeId.BOT ->
+                            | [| _, der2 |] when der2 = RegexNodeId.BOT && isExactMinterm c mt ->
                                 let nullKind, skipKind, sv = (getInfo der)
                                 let mtId = c.MintermToId(mt)
 
@@ -990,7 +1004,7 @@ let inferLengthLookup
                             |> Seq.toArray
 
                         match prefix_derivs_2 with
-                        | [| _, der2 |] when der2 = RegexNodeId.BOT ->
+                        | [| _, der2 |] when der2 = RegexNodeId.BOT && isExactMinterm c mt ->
                             let nullKind, skipKind, sv = (getInfo der)
                             let mtId = c.MintermToId(mt)
                             LengthLookup.SetLookup(prefixLen, mtId, skipKind, nullKind, sv)

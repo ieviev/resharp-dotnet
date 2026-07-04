@@ -120,3 +120,18 @@ matches = []
 pattern = '(?<!鿛)(apres)\b'
 input = '鿛apres'
 matches = []
+
+[[test]]
+pattern = 'a\s+\S'
+input = 'a a'
+matches = [[0, 3]]
+
+[[test]]
+pattern = 'a\s+\S'
+input = 'a  a'
+matches = [[0, 4]]
+
+[[test]]
+pattern = '([^\w])\s+(\S)'
+input = '. a'
+matches = [[0, 3]]

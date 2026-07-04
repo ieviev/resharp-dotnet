@@ -258,29 +258,7 @@ module RegexNode =
                 // Lookback
                 | LookBehind nodes ->
                     let r = nodes[0]
-                    match b.Node(r) with
-                    | Concat cnodes ->
-                        let head = cnodes[0]
-                        let tail = cnodes[1]
-                        b.mkLookaround (
-                            derivative (
-                                b,
-                                loc,
-                                loc_pred,
-                                if head = RegexNodeId.TOP_STAR then tail else r
-                            ),
-                            true,
-                            0,
-                            b.emptyRefSet
-                        )
-
-                    | _ ->
-                        b.mkLookaround (
-                            derivative (b, loc, loc_pred, r),
-                            true,
-                            0,
-                            b.emptyRefSet
-                        )
+                    b.mkLookaround (derivative (b, loc, loc_pred, r), true, 0, b.emptyRefSet)
 
                 | Begin
                 | End -> RegexNodeId.BOT
