@@ -5,14 +5,17 @@ open Resharp
 open Xunit
 open Common
 
-let private makeRegex pattern vectorized =
+let private makeRegex pattern vectorized scalarPrefixLength =
     let options = ResharpOptions.HighThroughputDefaults
     options.UseSearchValuesSetLookup <- vectorized
+    options.SetLookupScalarPrefixLength <- scalarPrefixLength
     Regex(pattern, options)
 
 let private assertEquivalent (pattern: string) (input: string) =
-    let scalar = makeRegex pattern false
-    let vectorized = makeRegex pattern true
+    let scalar = makeRegex pattern false 0
+    let vectorized = makeRegex pattern true 0
+    let hybrid4 = makeRegex pattern true 4
+    let hybrid8 = makeRegex pattern true 8
     let chars = input.ToCharArray()
     let span = ReadOnlySpan<char>(chars)
 
@@ -22,13 +25,19 @@ let private assertEquivalent (pattern: string) (input: string) =
 
     use expected = scalar.ValueMatches(span)
     use actual = vectorized.ValueMatches(span)
+    use actual4 = hybrid4.ValueMatches(span)
+    use actual8 = hybrid8.ValueMatches(span)
 
-    Assert.Equal(expected.Count, actual.Count)
-    for i = 0 to expected.Count - 1 do
-        Assert.Equal(expected.pool[i].Index, actual.pool[i].Index)
-        Assert.Equal(expected.pool[i].Length, actual.pool[i].Length)
+    for candidate in [| actual; actual4; actual8 |] do
+        Assert.Equal(expected.Count, candidate.Count)
+        for i = 0 to expected.Count - 1 do
+            Assert.Equal(expected.pool[i].Index, candidate.pool[i].Index)
+            Assert.Equal(expected.pool[i].Length, candidate.pool[i].Length)
 
-    Assert.Equal(scalar.Count(span), vectorized.Count(span))
+    let expectedCount = scalar.Count(span)
+    Assert.Equal(expectedCount, vectorized.Count(span))
+    Assert.Equal(expectedCount, hybrid4.Count(span))
+    Assert.Equal(expectedCount, hybrid8.Count(span))
 
 [<Fact>]
 let ``SetLookup SearchValues preserves ASCII match ends`` () =
@@ -44,7 +53,7 @@ let ``SetLookup SearchValues preserves Unicode match ends`` () =
 
 [<Fact>]
 let ``SetLookup SearchValues supports inverted mode`` () =
-    let regex = makeRegex "bb*[^b]" true
+    let regex = makeRegex "bb*[^b]" true 0
     Assert.True(regex.UsesSetLookup)
     Assert.Equal(2, regex.SetLookupSearchMode)
     Assert.True(regex.ValidateSetLookupSearchValues())
