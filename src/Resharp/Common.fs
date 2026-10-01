@@ -39,9 +39,14 @@ type ResharpOptions() =
     /// default:100, Full dfa compilation state space threshold
     member val DfaThreshold = 100 with get, set
 
-    /// Internal benchmark switch. Use SearchValues for LengthLookup.SetLookup
+    /// Internal benchmark switch. Use SearchValues for direct LengthLookup.SetLookup
     /// instead of scanning the UTF-16 minterm lookup table one character at a time.
     member val internal UseSearchValuesSetLookup = true with get, set
+
+    /// Internal benchmark setting. When SearchValues SetLookup is enabled, scan this
+    /// many characters with the scalar minterm lookup before searching the remainder
+    /// with SearchValues. Zero selects pure SearchValues.
+    member val internal SetLookupScalarPrefixLength = 0 with get, set
 
     /// Attempt more expensive optimizations for high-throughput
     static member HighThroughputDefaults =
