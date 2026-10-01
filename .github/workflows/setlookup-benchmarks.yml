@@ -1,0 +1,98 @@
+name: SearchValues SetLookup benchmark
+
+on:
+  push:
+    branches:
+      - perf/searchvalues-setlookup
+    paths:
+      - "src/Resharp/**"
+      - "src/Resharp.Runtime/**"
+      - "src/Resharp.Test/**"
+      - "src/Resharp.Benchmarks/**"
+      - "docs/searchvalues-setlookup.md"
+      - ".github/workflows/setlookup-benchmarks.yml"
+      - "Directory.Build.props"
+      - "Directory.Packages.props"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: setlookup-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up .NET 10.0.102
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.102"
+
+      - name: Pin benchmark SDK
+        shell: bash
+        run: |
+          cat > global.json <<'EOF'
+          {
+            "sdk": {
+              "version": "10.0.102",
+              "rollForward": "disable"
+            }
+          }
+          EOF
+          test "$(dotnet --version)" = "10.0.102"
+
+      - name: Restore
+        run: dotnet restore resharp.slnx
+
+      - name: Test
+        run: dotnet test src/Resharp.Test/Resharp.Test.fsproj -c Release -f net10.0 --no-restore
+
+      - name: Build benchmarks
+        run: dotnet build src/Resharp.Benchmarks/Resharp.Benchmarks.csproj -c Release -f net10.0 --no-restore
+
+      - name: Benchmark scalar vs SearchValues SetLookup
+        working-directory: src/Resharp.Benchmarks
+        shell: bash
+        run: |
+          mkdir -p BenchmarkDotNet.Artifacts
+          set -o pipefail
+          dotnet run -c Release -f net10.0 --no-build -- --setlookup \
+            2>&1 | tee BenchmarkDotNet.Artifacts/ci-console.log
+
+      - name: Validate benchmark results
+        shell: bash
+        run: |
+          root=src/Resharp.Benchmarks/BenchmarkDotNet.Artifacts/results
+          synthetic="${root}/Resharp.Benchmarks.SetLookupSyntheticBench-report.csv"
+          log=src/Resharp.Benchmarks/BenchmarkDotNet.Artifacts/ci-console.log
+
+          test -s "${synthetic}"
+          grep -Fq "Scalar" "${synthetic}"
+          grep -Fq "SearchValues" "${synthetic}"
+
+          if grep -Fq "There are not any results runs" "${log}" \
+            || grep -Fq "No Workload Results were obtained" "${log}" \
+            || grep -Fq "Benchmarks with issues:" "${log}"; then
+            echo "::error::BenchmarkDotNet completed without valid workload results."
+            exit 1
+          fi
+
+      - name: Upload benchmark artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: setlookup-${{ github.run_id }}-${{ github.sha }}
+          path: src/Resharp.Benchmarks/BenchmarkDotNet.Artifacts/
+          if-no-files-found: error
+          retention-days: 90
