@@ -25,7 +25,7 @@ concurrency:
 jobs:
   benchmark:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 180
 
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"
@@ -82,8 +82,12 @@ jobs:
           test -s "${realistic}"
           grep -Fq "Scalar" "${synthetic}"
           grep -Fq "SearchValues" "${synthetic}"
+          grep -Fq "Hybrid4" "${synthetic}"
+          grep -Fq "Hybrid8" "${synthetic}"
           grep -Fq "Scalar" "${realistic}"
           grep -Fq "SearchValues" "${realistic}"
+          grep -Fq "Hybrid4" "${realistic}"
+          grep -Fq "Hybrid8" "${realistic}"
 
           if grep -Fq "There are not any results runs" "${log}" \
             || grep -Fq "No Workload Results were obtained" "${log}" \
