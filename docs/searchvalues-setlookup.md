@@ -51,16 +51,28 @@ while pos < input.Length && minterm(input[pos]) != mtId:
     pos++
 ```
 
-Candidate:
+Pure SearchValues:
 
 ```text
 offset = SearchValues.nextIndexLeftToRight(input[pos..])
 pos = offset < 0 ? input.Length : pos + offset
 ```
 
-All later match-end arithmetic and non-overlap handling are unchanged.
+Hybrid:
 
-The strategy switch occurs once in the `LengthLookup` dispatch, not inside the scan.
+```text
+scan first N code units with _mtlookup
+if target not found:
+    SearchValues(input[pos..])
+```
+
+The hybrid preserves the cheap scalar path for nearby delimiters while retaining the
+bulk-search benefit for longer distances.
+
+The strategy switch occurs once in the `LengthLookup` dispatch. Direct
+`SearchValues` minterms can use the hybrid. Inverted `IndexOfAnyExcept` minterms
+remain on the scalar path because the follow-up benchmark did not show a sufficiently
+stable or scalable benefit.
 
 ## Complexity
 
@@ -88,11 +100,21 @@ a[^b]*b
 The first run established the broad crossover: SearchValues loses at a 4-character
 scan, wins at 16, and becomes dramatically faster at 64+.
 
-The follow-up therefore narrows the sweep to 4, 8, 12, 16, 24, and 32 characters.
-It runs both representations supported by `MintermSearchValues`:
+The follow-up narrowed the sweep to 4, 8, 12, 16, 24, and 32 characters and tested
+both direct and inverted representations.
 
-- direct `IndexOfAny`: `a[^b]*b`;
-- inverted `IndexOfAnyExcept`: `bb*[^b]`.
+That run established:
+
+- direct `IndexOfAny` scales strongly with distance and wins clearly from 8+;
+- inverted `IndexOfAnyExcept` is much less consistent and is not retained as a
+  candidate strategy.
+
+The next benchmark keeps only direct `IndexOfAny` and compares four strategies:
+
+- scalar;
+- pure SearchValues;
+- Hybrid4: four scalar probes, then SearchValues;
+- Hybrid8: eight scalar probes, then SearchValues.
 
 The total haystack remains approximately 1 MiB.
 
@@ -136,14 +158,20 @@ For every case, setup verifies:
 
 ## Evaluation
 
-Primary metric:
+Primary comparisons:
 
 ```text
 SearchValues / Scalar
+Hybrid4 / Scalar
+Hybrid8 / Scalar
 ```
 
-The candidate should show increasing benefit as scan distance grows and should not
-produce a meaningful regression at short distances.
+The selected strategy should preserve the large long-distance gains while avoiding
+the short-distance regression seen for unconditional SearchValues on some hardware.
+
+Because the crossover differed between the Intel AVX-512/AVX10 and AMD AVX2 runners,
+the hybrid is evaluated as an input-distance strategy rather than by hard-coding a
+machine-specific SearchValues cutoff.
 
 A result is not considered representative unless the corresponding workload is
 confirmed to use `LengthLookup.SetLookup`.
