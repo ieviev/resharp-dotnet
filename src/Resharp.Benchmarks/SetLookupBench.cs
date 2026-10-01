@@ -11,11 +11,10 @@ namespace Resharp.Benchmarks;
 public class SetLookupSyntheticBench
 {
     private Resharp.Regex scalar = null!;
-    private Resharp.Regex vectorized = null!;
+    private Resharp.Regex searchValues = null!;
+    private Resharp.Regex hybrid4 = null!;
+    private Resharp.Regex hybrid8 = null!;
     private string haystack = "";
-
-    [Params("Direct", "Inverted")]
-    public string Mode { get; set; } = "";
 
     [Params(4, 8, 12, 16, 24, 32)]
     public int Gap { get; set; }
@@ -23,41 +22,30 @@ public class SetLookupSyntheticBench
     [GlobalSetup]
     public void Setup()
     {
+        const string pattern = "a[^b]*b";
         const int targetChars = 1 << 20;
 
-        string pattern;
-        string segment;
-        int expectedMode;
-
-        if (Mode == "Direct")
-        {
-            pattern = "a[^b]*b";
-            segment = "a" + new string('x', Gap) + "b ";
-            expectedMode = 1;
-        }
-        else
-        {
-            pattern = "bb*[^b]";
-            segment = "b" + new string('b', Gap) + "x ";
-            expectedMode = 2;
-        }
-
+        var segment = "a" + new string('x', Gap) + "b ";
         int repeats = Math.Max(1, targetChars / segment.Length);
         haystack = string.Concat(Enumerable.Repeat(segment, repeats));
 
-        scalar = new Resharp.Regex(pattern, CreateOptions(vectorized: false));
-        vectorized = new Resharp.Regex(pattern, CreateOptions(vectorized: true));
+        scalar = new Resharp.Regex(pattern, CreateOptions(searchValues: false, scalarPrefixLength: 0));
+        searchValues = new Resharp.Regex(pattern, CreateOptions(searchValues: true, scalarPrefixLength: 0));
+        hybrid4 = new Resharp.Regex(pattern, CreateOptions(searchValues: true, scalarPrefixLength: 4));
+        hybrid8 = new Resharp.Regex(pattern, CreateOptions(searchValues: true, scalarPrefixLength: 8));
 
-        ValidateSetup(expectedMode);
+        ValidateRegex(scalar);
+        ValidateRegex(searchValues);
+        ValidateRegex(hybrid4);
+        ValidateRegex(hybrid8);
 
         int expected = scalar.Count(haystack);
-        int actual = vectorized.Count(haystack);
-        if (expected != actual)
-            throw new InvalidOperationException(
-                $"count mismatch: scalar={expected}, vectorized={actual}");
+        ValidateCount("SearchValues", expected, searchValues.Count(haystack));
+        ValidateCount("Hybrid4", expected, hybrid4.Count(haystack));
+        ValidateCount("Hybrid8", expected, hybrid8.Count(haystack));
 
         Console.WriteLine(
-            $"setlookup-synthetic mode={Mode} gap={Gap} chars={haystack.Length} matches={actual}");
+            $"setlookup-synthetic gap={Gap} chars={haystack.Length} matches={expected}");
     }
 
     [Benchmark(Baseline = true)]
@@ -66,24 +54,40 @@ public class SetLookupSyntheticBench
 
     [Benchmark]
     [BenchmarkCategory("SetLookupSynthetic")]
-    public int SearchValues() => vectorized.Count(haystack);
+    public int SearchValues() => searchValues.Count(haystack);
 
-    private void ValidateSetup(int expectedMode)
+    [Benchmark]
+    [BenchmarkCategory("SetLookupSynthetic")]
+    public int Hybrid4() => hybrid4.Count(haystack);
+
+    [Benchmark]
+    [BenchmarkCategory("SetLookupSynthetic")]
+    public int Hybrid8() => hybrid8.Count(haystack);
+
+    private static void ValidateRegex(Resharp.Regex regex)
     {
-        if (!scalar.UsesSetLookup || !vectorized.UsesSetLookup)
+        if (!regex.UsesSetLookup)
             throw new InvalidOperationException("synthetic workload must use LengthLookup.SetLookup");
-        if (vectorized.SetLookupSearchMode != expectedMode)
+        if (regex.SetLookupSearchMode != 1)
             throw new InvalidOperationException(
-                $"unexpected SetLookup SearchValues mode: {vectorized.SetLookupSearchMode}, expected {expectedMode}");
-        if (!vectorized.ValidateSetLookupSearchValues())
+                $"expected direct SearchValues mode, got {regex.SetLookupSearchMode}");
+        if (!regex.ValidateSetLookupSearchValues())
             throw new InvalidOperationException(
                 "SetLookup SearchValues does not exactly match its minterm");
     }
 
-    private static ResharpOptions CreateOptions(bool vectorized)
+    private static void ValidateCount(string strategy, int expected, int actual)
+    {
+        if (expected != actual)
+            throw new InvalidOperationException(
+                $"count mismatch for {strategy}: scalar={expected}, candidate={actual}");
+    }
+
+    private static ResharpOptions CreateOptions(bool searchValues, int scalarPrefixLength)
     {
         var options = ResharpOptions.HighThroughputDefaults;
-        options.UseSearchValuesSetLookup = vectorized;
+        options.UseSearchValuesSetLookup = searchValues;
+        options.SetLookupScalarPrefixLength = scalarPrefixLength;
         return options;
     }
 }
@@ -95,7 +99,9 @@ public class SetLookupSyntheticBench
 public class SetLookupRealisticBench
 {
     private Resharp.Regex scalar = null!;
-    private Resharp.Regex vectorized = null!;
+    private Resharp.Regex searchValues = null!;
+    private Resharp.Regex hybrid4 = null!;
+    private Resharp.Regex hybrid8 = null!;
     private string haystack = "";
 
     [Params("user-8", "token-16", "quoted-32", "message-64", "path-256")]
@@ -109,26 +115,23 @@ public class SetLookupRealisticBench
         int repeats = Math.Max(1, targetChars / record.Length);
         haystack = string.Concat(Enumerable.Repeat(record, repeats));
 
-        scalar = new Resharp.Regex(pattern, CreateOptions(vectorized: false));
-        vectorized = new Resharp.Regex(pattern, CreateOptions(vectorized: true));
+        scalar = new Resharp.Regex(pattern, CreateOptions(searchValues: false, scalarPrefixLength: 0));
+        searchValues = new Resharp.Regex(pattern, CreateOptions(searchValues: true, scalarPrefixLength: 0));
+        hybrid4 = new Resharp.Regex(pattern, CreateOptions(searchValues: true, scalarPrefixLength: 4));
+        hybrid8 = new Resharp.Regex(pattern, CreateOptions(searchValues: true, scalarPrefixLength: 8));
 
-        if (!scalar.UsesSetLookup || !vectorized.UsesSetLookup)
-            throw new InvalidOperationException($"realistic case '{Case}' must use LengthLookup.SetLookup");
-        if (vectorized.SetLookupSearchMode != 1)
-            throw new InvalidOperationException(
-                $"realistic case '{Case}' expected direct SearchValues mode, got {vectorized.SetLookupSearchMode}");
-        if (!vectorized.ValidateSetLookupSearchValues())
-            throw new InvalidOperationException(
-                $"SearchValues/minterm mismatch for realistic case '{Case}'");
+        ValidateRegex(scalar);
+        ValidateRegex(searchValues);
+        ValidateRegex(hybrid4);
+        ValidateRegex(hybrid8);
 
         int expected = scalar.Count(haystack);
-        int actual = vectorized.Count(haystack);
-        if (expected != actual)
-            throw new InvalidOperationException(
-                $"count mismatch for '{Case}': scalar={expected}, vectorized={actual}");
+        ValidateCount("SearchValues", expected, searchValues.Count(haystack));
+        ValidateCount("Hybrid4", expected, hybrid4.Count(haystack));
+        ValidateCount("Hybrid8", expected, hybrid8.Count(haystack));
 
         Console.WriteLine(
-            $"setlookup-realistic case={Case} chars={haystack.Length} matches={actual}");
+            $"setlookup-realistic case={Case} chars={haystack.Length} matches={expected}");
     }
 
     [Benchmark(Baseline = true)]
@@ -137,7 +140,34 @@ public class SetLookupRealisticBench
 
     [Benchmark]
     [BenchmarkCategory("SetLookupRealistic")]
-    public int SearchValues() => vectorized.Count(haystack);
+    public int SearchValues() => searchValues.Count(haystack);
+
+    [Benchmark]
+    [BenchmarkCategory("SetLookupRealistic")]
+    public int Hybrid4() => hybrid4.Count(haystack);
+
+    [Benchmark]
+    [BenchmarkCategory("SetLookupRealistic")]
+    public int Hybrid8() => hybrid8.Count(haystack);
+
+    private static void ValidateRegex(Resharp.Regex regex)
+    {
+        if (!regex.UsesSetLookup)
+            throw new InvalidOperationException("realistic workload must use LengthLookup.SetLookup");
+        if (regex.SetLookupSearchMode != 1)
+            throw new InvalidOperationException(
+                $"expected direct SearchValues mode, got {regex.SetLookupSearchMode}");
+        if (!regex.ValidateSetLookupSearchValues())
+            throw new InvalidOperationException(
+                "SetLookup SearchValues does not exactly match its minterm");
+    }
+
+    private static void ValidateCount(string strategy, int expected, int actual)
+    {
+        if (expected != actual)
+            throw new InvalidOperationException(
+                $"count mismatch for {strategy}: scalar={expected}, candidate={actual}");
+    }
 
     private static (string Pattern, string Record) BuildCase(string name) => name switch
     {
@@ -159,10 +189,11 @@ public class SetLookupRealisticBench
         _ => throw new ArgumentOutOfRangeException(nameof(name), name, null)
     };
 
-    private static ResharpOptions CreateOptions(bool vectorized)
+    private static ResharpOptions CreateOptions(bool searchValues, int scalarPrefixLength)
     {
         var options = ResharpOptions.HighThroughputDefaults;
-        options.UseSearchValuesSetLookup = vectorized;
+        options.UseSearchValuesSetLookup = searchValues;
+        options.SetLookupScalarPrefixLength = scalarPrefixLength;
         return options;
     }
 }
