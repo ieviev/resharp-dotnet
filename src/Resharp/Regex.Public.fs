@@ -173,6 +173,12 @@ type Regex
         | :? RegexMatcher<BitVector> as m -> m.UsesSetLookup
         | _ -> failwith "unreachable"
 
+    member internal this.SetLookupSearchMode: int =
+        match matcher with
+        | :? RegexMatcher<uint64> as m -> m.SetLookupSearchMode
+        | :? RegexMatcher<BitVector> as m -> m.SetLookupSearchMode
+        | _ -> failwith "unreachable"
+
     member internal this.ValidateSetLookupSearchValues() : bool =
         match matcher with
         | :? RegexMatcher<uint64> as m -> m.ValidateSetLookupSearchValues()
