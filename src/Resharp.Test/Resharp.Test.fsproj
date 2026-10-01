@@ -24,6 +24,7 @@
         <Compile Include="_16_ComplementTests.fs" />
         <Compile Include="_17_ThreadSafetyTests.fs" />
         <Compile Include="_18_PublicApiTests.fs" />
+        <Compile Include="_19_SetLookupTests.fs" />
     </ItemGroup>
 
     <ItemGroup>
