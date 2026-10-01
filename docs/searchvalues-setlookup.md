@@ -92,7 +92,7 @@ The follow-up therefore narrows the sweep to 4, 8, 12, 16, 24, and 32 characters
 It runs both representations supported by `MintermSearchValues`:
 
 - direct `IndexOfAny`: `a[^b]*b`;
-- inverted `IndexOfAnyExcept`: `ab*[^b]`.
+- inverted `IndexOfAnyExcept`: `bb*[^b]`.
 
 The total haystack remains approximately 1 MiB.
 
