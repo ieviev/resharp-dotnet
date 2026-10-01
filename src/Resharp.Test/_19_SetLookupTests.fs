@@ -41,3 +41,11 @@ let ``SetLookup SearchValues preserves literal prefix match ends`` () =
 [<Fact>]
 let ``SetLookup SearchValues preserves Unicode match ends`` () =
     assertEquivalent "α[^β]*β" "αxyzβ αδεζηθβ αβ"
+
+[<Fact>]
+let ``SetLookup SearchValues supports inverted mode`` () =
+    let regex = makeRegex "ab*[^b]" true
+    Assert.True(regex.UsesSetLookup)
+    Assert.Equal(2, regex.SetLookupSearchMode)
+    Assert.True(regex.ValidateSetLookupSearchValues())
+    assertEquivalent "ab*[^b]" "abbbx abx ax abbbbbby"
