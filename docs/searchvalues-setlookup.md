@@ -85,8 +85,16 @@ Pattern:
 a[^b]*b
 ```
 
-The gap before `b` is varied across 4, 16, 64, 256, and 1024 characters while the
-total haystack remains approximately 1 MiB.
+The first run established the broad crossover: SearchValues loses at a 4-character
+scan, wins at 16, and becomes dramatically faster at 64+.
+
+The follow-up therefore narrows the sweep to 4, 8, 12, 16, 24, and 32 characters.
+It runs both representations supported by `MintermSearchValues`:
+
+- direct `IndexOfAny`: `a[^b]*b`;
+- inverted `IndexOfAnyExcept`: `ab*[^b]`.
+
+The total haystack remains approximately 1 MiB.
 
 Configuration:
 
@@ -96,21 +104,33 @@ Configuration:
 
 This directly measures how the crossover changes with search distance.
 
-### Rebar
+### Representative delimiter workloads
 
-The benchmark discovers all count-model Rebar workloads that actually compile to
-`LengthLookup.SetLookup`; non-eligible cases are excluded rather than diluting the
-result.
+The existing Rebar count corpus contains no workload that selects
+`LengthLookup.SetLookup`, so it cannot provide representative evidence for this
+optimization.
+
+The follow-up adds delimiter-oriented cases shaped like common text and log parsing:
+
+- an 8-character `user=` field terminated by space;
+- a 16-character `token=` field terminated by semicolon;
+- a 32-character quoted value;
+- a 64-character `msg=` field terminated by semicolon;
+- a 256-character `path=` field terminated by newline.
+
+Each haystack is approximately 1 MiB and each case must select exact-minterm
+`SetLookup`.
 
 Configuration:
 
-- 3 launches;
-- 8 warmup iterations;
-- 12 measured iterations.
+- 5 launches;
+- 12 warmup iterations;
+- 20 measured iterations.
 
 For every case, setup verifies:
 
 - both variants select `SetLookup`;
+- the expected direct/inverted SearchValues mode;
 - exhaustive SearchValues/minterm equivalence;
 - identical match counts.
 
