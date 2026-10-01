@@ -1421,6 +1421,50 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
                 l_pos <- (I.sub l_pos nk) + 1
                 matches.Add(ValueMatch(currStart, l_pos - currStart))
 
+    /// Search a short scalar prefix before using SearchValues for the remainder.
+    /// This avoids SearchValues setup cost when the target minterm is very close.
+    member this.llmatch_ends_setlookup_hybrid
+        (
+            matches: byref<ValueList<ValueMatch>>,
+            acc: byref<ValueList<int>>,
+            input: ReadOnlySpan<char>,
+            prefixlen: int,
+            mtId: TMinterm,
+            sv: MintermSearchValues<'t>,
+            scalarPrefixLength: int,
+            nk: NullKind
+        ) : unit =
+        assert (nk <> NullKind.PendingNull)
+        assert (scalarPrefixLength > 0)
+        let startSpans = ValueList.toSpan acc
+        let mutable i = acc.size
+        let mutable l_pos = 0
+
+        while i <> 0 do
+            i <- i - 1
+
+            if startSpans[i] >= l_pos then
+                let currStart = startSpans[i]
+                l_pos <- currStart + prefixlen
+
+                let scalarEnd = min input.Length (l_pos + scalarPrefixLength)
+
+                while (l_pos < scalarEnd && I.mintermId _mtlookup input l_pos <> mtId) do
+                    l_pos <- l_pos + 1
+
+                if l_pos = scalarEnd && l_pos < input.Length then
+                    match
+                        MintermSearchValues.nextIndexLeftToRight (
+                            sv,
+                            input.Slice(l_pos)
+                        )
+                    with
+                    | -1 -> l_pos <- input.Length
+                    | n -> l_pos <- l_pos + n
+
+                l_pos <- (I.sub l_pos nk) + 1
+                matches.Add(ValueMatch(currStart, l_pos - currStart))
+
     /// see: `LengthLookup`
     member this.llmatch_ends_fixlen
         (matches: byref<ValueList<ValueMatch>>, acc: byref<ValueList<int>>, len: int)
@@ -1464,15 +1508,31 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
         | LengthLookup.SetLookup(prefixLength, mtId, skipKind, nullKind, sv) when
             skipKind = SkipKind.NotSkip && nullKind <> NullKind.PendingNull
             ->
-            if options.UseSearchValuesSetLookup then
-                this.llmatch_ends_setlookup_sv (
-                    &matches,
-                    &acc,
-                    input,
-                    prefixLength,
-                    sv,
-                    nullKind
-                )
+            if
+                options.UseSearchValuesSetLookup
+                && sv.Mode = MintermSearchMode.SearchValues
+            then
+                match options.SetLookupScalarPrefixLength with
+                | n when n > 0 ->
+                    this.llmatch_ends_setlookup_hybrid (
+                        &matches,
+                        &acc,
+                        input,
+                        prefixLength,
+                        mtId,
+                        sv,
+                        n,
+                        nullKind
+                    )
+                | _ ->
+                    this.llmatch_ends_setlookup_sv (
+                        &matches,
+                        &acc,
+                        input,
+                        prefixLength,
+                        sv,
+                        nullKind
+                    )
             else
                 this.llmatch_ends_setlookup_mt (
                     &matches,
