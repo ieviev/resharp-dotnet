@@ -22,6 +22,11 @@ if (args is ["--readme"])
 #endif
     BenchmarkRunner.Run<RebarBench>();
 }
+else if (args is ["--setlookup"])
+{
+    BenchmarkRunner.Run<SetLookupSyntheticBench>();
+    BenchmarkRunner.Run<SetLookupRebarBench>();
+}
 else if (args.Length == 0)
 {
     RebarData.NameFilter = ShowMenu();
