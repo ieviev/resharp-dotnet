@@ -1540,6 +1540,11 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
         | LengthLookup.SetLookup _ -> true
         | _ -> false
 
+    member internal _.SetLookupSearchMode =
+        match utf16Optimizations.LengthLookup with
+        | LengthLookup.SetLookup(_, _, _, _, sv) -> int sv.Mode
+        | _ -> 0
+
     member internal _.ValidateSetLookupSearchValues() =
         match utf16Optimizations.LengthLookup with
         | LengthLookup.SetLookup(_, mtId, _, _, sv) ->
