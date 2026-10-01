@@ -1386,6 +1386,41 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
                 l_pos <- (I.sub l_pos nk) + 1
                 matches.Add(ValueMatch(currStart, l_pos - currStart))
 
+    /// Vectorized equivalent of llmatch_ends_setlookup_mt. The SearchValues
+    /// stored in LengthLookup.SetLookup represents exactly mtId.
+    member this.llmatch_ends_setlookup_sv
+        (
+            matches: byref<ValueList<ValueMatch>>,
+            acc: byref<ValueList<int>>,
+            input: ReadOnlySpan<char>,
+            prefixlen: int,
+            sv: MintermSearchValues<'t>,
+            nk: NullKind
+        ) : unit =
+        assert (nk <> NullKind.PendingNull)
+        let startSpans = ValueList.toSpan acc
+        let mutable i = acc.size
+        let mutable l_pos = 0
+
+        while i <> 0 do
+            i <- i - 1
+
+            if startSpans[i] >= l_pos then
+                let currStart = startSpans[i]
+                l_pos <- currStart + prefixlen
+
+                match
+                    MintermSearchValues.nextIndexLeftToRight (
+                        sv,
+                        input.Slice(l_pos)
+                    )
+                with
+                | -1 -> l_pos <- input.Length
+                | n -> l_pos <- l_pos + n
+
+                l_pos <- (I.sub l_pos nk) + 1
+                matches.Add(ValueMatch(currStart, l_pos - currStart))
+
     /// see: `LengthLookup`
     member this.llmatch_ends_fixlen
         (matches: byref<ValueList<ValueMatch>>, acc: byref<ValueList<int>>, len: int)
@@ -1426,17 +1461,27 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
             input: ReadOnlySpan<char>
         ) =
         match utf16Optimizations.LengthLookup with
-        | LengthLookup.SetLookup(prefixLength, mtId, skipKind, nullKind, _) when
+        | LengthLookup.SetLookup(prefixLength, mtId, skipKind, nullKind, sv) when
             skipKind = SkipKind.NotSkip && nullKind <> NullKind.PendingNull
             ->
-            this.llmatch_ends_setlookup_mt (
-                &matches,
-                &acc,
-                input,
-                prefixLength,
-                mtId,
-                nullKind
-            )
+            if sv.Mode = MintermSearchMode.SearchValues then
+                this.llmatch_ends_setlookup_sv (
+                    &matches,
+                    &acc,
+                    input,
+                    prefixLength,
+                    sv,
+                    nullKind
+                )
+            else
+                this.llmatch_ends_setlookup_mt (
+                    &matches,
+                    &acc,
+                    input,
+                    prefixLength,
+                    mtId,
+                    nullKind
+                )
         | LengthLookup.RemainingSets(prefixLength, mtId, remaining) ->
             this.llmatch_ends_remaining_set (
                 &matches,
@@ -1489,6 +1534,32 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
     member internal _.TrueStarredPattern = trueStarredNode
     member internal _.ReverseTrueStarredPattern = reverseTrueStarredNode
     member internal _.RawPattern = R_canonical
+
+    member internal _.UsesSetLookup =
+        match utf16Optimizations.LengthLookup with
+        | LengthLookup.SetLookup _ -> true
+        | _ -> false
+
+    member internal _.SetLookupSearchMode =
+        match utf16Optimizations.LengthLookup with
+        | LengthLookup.SetLookup(_, _, _, _, sv) -> int sv.Mode
+        | _ -> 0
+
+    member internal _.ValidateSetLookupSearchValues() =
+        match utf16Optimizations.LengthLookup with
+        | LengthLookup.SetLookup(_, mtId, _, _, sv) ->
+            let mutable valid = true
+            let mutable i = 0
+
+            while valid && i <= int Char.MaxValue do
+                let chr = char i
+                let expected = _mtlookup[i] = mtId
+                let actual = MintermSearchValues.contains (sv, chr)
+                valid <- expected = actual
+                i <- i + 1
+
+            valid
+        | _ -> false
 
     member _.PrettyPrintNode(node) =
         let bddNode =

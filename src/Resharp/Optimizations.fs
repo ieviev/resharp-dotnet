@@ -961,8 +961,9 @@ let inferLengthLookup
 
                             match prefix_derivs_2 with
                             | [| _, der2 |] when der2 = RegexNodeId.BOT && isExactMinterm c mt ->
-                                let nullKind, skipKind, sv = (getInfo der)
+                                let nullKind, skipKind, _ = (getInfo der)
                                 let mtId = c.MintermToId(mt)
+                                let sv = c.MintermSearchValues(mt)
 
                                 LengthLookup.SetLookup(
                                     prefixLen,
@@ -1005,8 +1006,9 @@ let inferLengthLookup
 
                         match prefix_derivs_2 with
                         | [| _, der2 |] when der2 = RegexNodeId.BOT && isExactMinterm c mt ->
-                            let nullKind, skipKind, sv = (getInfo der)
+                            let nullKind, skipKind, _ = (getInfo der)
                             let mtId = c.MintermToId(mt)
+                            let sv = c.MintermSearchValues(mt)
                             LengthLookup.SetLookup(prefixLen, mtId, skipKind, nullKind, sv)
                         | _ -> LengthLookup.FixedLengthPrefixMatchEnd(prefixLen, stateId)
                     | _ -> LengthLookup.FixedLengthPrefixMatchEnd(prefixLen, stateId)

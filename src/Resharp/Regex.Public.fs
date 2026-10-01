@@ -166,3 +166,21 @@ type Regex
         | :? RegexMatcher<uint64> as m -> m.IsFullDFA
         | :? RegexMatcher<BitVector> as m -> m.IsFullDFA
         | _ -> failwith "unreachable"
+
+    member internal this.UsesSetLookup: bool =
+        match matcher with
+        | :? RegexMatcher<uint64> as m -> m.UsesSetLookup
+        | :? RegexMatcher<BitVector> as m -> m.UsesSetLookup
+        | _ -> failwith "unreachable"
+
+    member internal this.SetLookupSearchMode: int =
+        match matcher with
+        | :? RegexMatcher<uint64> as m -> m.SetLookupSearchMode
+        | :? RegexMatcher<BitVector> as m -> m.SetLookupSearchMode
+        | _ -> failwith "unreachable"
+
+    member internal this.ValidateSetLookupSearchValues() : bool =
+        match matcher with
+        | :? RegexMatcher<uint64> as m -> m.ValidateSetLookupSearchValues()
+        | :? RegexMatcher<BitVector> as m -> m.ValidateSetLookupSearchValues()
+        | _ -> failwith "unreachable"
