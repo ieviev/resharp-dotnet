@@ -37,8 +37,8 @@ public class SetLookupSyntheticBench
         }
         else
         {
-            pattern = "ab*[^b]";
-            segment = "a" + new string('b', Gap) + "x ";
+            pattern = "bb*[^b]";
+            segment = "b" + new string('b', Gap) + "x ";
             expectedMode = 2;
         }
 
