@@ -25,7 +25,7 @@ if (args is ["--readme"])
 else if (args is ["--setlookup"])
 {
     BenchmarkRunner.Run<SetLookupSyntheticBench>();
-    BenchmarkRunner.Run<SetLookupRebarBench>();
+    BenchmarkRunner.Run<SetLookupRealisticBench>();
 }
 else if (args.Length == 0)
 {
