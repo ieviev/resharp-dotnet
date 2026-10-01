@@ -75,11 +75,15 @@ jobs:
         run: |
           root=src/Resharp.Benchmarks/BenchmarkDotNet.Artifacts/results
           synthetic="${root}/Resharp.Benchmarks.SetLookupSyntheticBench-report.csv"
+          realistic="${root}/Resharp.Benchmarks.SetLookupRealisticBench-report.csv"
           log=src/Resharp.Benchmarks/BenchmarkDotNet.Artifacts/ci-console.log
 
           test -s "${synthetic}"
+          test -s "${realistic}"
           grep -Fq "Scalar" "${synthetic}"
           grep -Fq "SearchValues" "${synthetic}"
+          grep -Fq "Scalar" "${realistic}"
+          grep -Fq "SearchValues" "${realistic}"
 
           if grep -Fq "There are not any results runs" "${log}" \
             || grep -Fq "No Workload Results were obtained" "${log}" \
