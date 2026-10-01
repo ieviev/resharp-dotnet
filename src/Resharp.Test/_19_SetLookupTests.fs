@@ -44,8 +44,8 @@ let ``SetLookup SearchValues preserves Unicode match ends`` () =
 
 [<Fact>]
 let ``SetLookup SearchValues supports inverted mode`` () =
-    let regex = makeRegex "ab*[^b]" true
+    let regex = makeRegex "bb*[^b]" true
     Assert.True(regex.UsesSetLookup)
     Assert.Equal(2, regex.SetLookupSearchMode)
     Assert.True(regex.ValidateSetLookupSearchValues())
-    assertEquivalent "ab*[^b]" "abbbx abx ax abbbbbby"
+    assertEquivalent "bb*[^b]" "bbbbx bbx bx bbbbbby"
