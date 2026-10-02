@@ -43,10 +43,11 @@ type ResharpOptions() =
     /// instead of scanning the UTF-16 minterm lookup table one character at a time.
     member val internal UseSearchValuesSetLookup = true with get, set
 
-    /// Internal benchmark setting. When SearchValues SetLookup is enabled, scan this
-    /// many characters with the scalar minterm lookup before searching the remainder
-    /// with SearchValues. Zero selects pure SearchValues.
-    member val internal SetLookupScalarPrefixLength = 0 with get, set
+    /// Internal benchmark setting. When positive, begin SetLookup with the scalar
+    /// minterm scan and switch subsequent searches in the same operation to SearchValues
+    /// after observing a scan of at least this many UTF-16 code units.
+    /// Zero selects pure SearchValues.
+    member val internal SetLookupAdaptiveThreshold = 0 with get, set
 
     /// Attempt more expensive optimizations for high-throughput
     static member HighThroughputDefaults =
