@@ -1421,54 +1421,6 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
                 l_pos <- (I.sub l_pos nk) + 1
                 matches.Add(ValueMatch(currStart, l_pos - currStart))
 
-    /// Start with the scalar minterm scan and switch later SetLookup searches in
-    /// this operation to SearchValues once the observed scan distance reaches threshold.
-    member this.llmatch_ends_setlookup_adaptive
-        (
-            matches: byref<ValueList<ValueMatch>>,
-            acc: byref<ValueList<int>>,
-            input: ReadOnlySpan<char>,
-            prefixlen: int,
-            mtId: TMinterm,
-            sv: MintermSearchValues<'t>,
-            threshold: int,
-            nk: NullKind
-        ) : unit =
-        assert (nk <> NullKind.PendingNull)
-        assert (threshold > 0)
-        let startSpans = ValueList.toSpan acc
-        let mutable i = acc.size
-        let mutable l_pos = 0
-        let mutable useSearchValues = false
-
-        while i <> 0 do
-            i <- i - 1
-
-            if startSpans[i] >= l_pos then
-                let currStart = startSpans[i]
-                l_pos <- currStart + prefixlen
-
-                if useSearchValues then
-                    match
-                        MintermSearchValues.nextIndexLeftToRight (
-                            sv,
-                            input.Slice(l_pos)
-                        )
-                    with
-                    | -1 -> l_pos <- input.Length
-                    | n -> l_pos <- l_pos + n
-                else
-                    let scanStart = l_pos
-
-                    while (l_pos < input.Length && I.mintermId _mtlookup input l_pos <> mtId) do
-                        l_pos <- l_pos + 1
-
-                    if l_pos - scanStart >= threshold then
-                        useSearchValues <- true
-
-                l_pos <- (I.sub l_pos nk) + 1
-                matches.Add(ValueMatch(currStart, l_pos - currStart))
-
     /// see: `LengthLookup`
     member this.llmatch_ends_fixlen
         (matches: byref<ValueList<ValueMatch>>, acc: byref<ValueList<int>>, len: int)
@@ -1512,31 +1464,15 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
         | LengthLookup.SetLookup(prefixLength, mtId, skipKind, nullKind, sv) when
             skipKind = SkipKind.NotSkip && nullKind <> NullKind.PendingNull
             ->
-            if
-                options.UseSearchValuesSetLookup
-                && sv.Mode = MintermSearchMode.SearchValues
-            then
-                match options.SetLookupAdaptiveThreshold with
-                | n when n > 0 ->
-                    this.llmatch_ends_setlookup_adaptive (
-                        &matches,
-                        &acc,
-                        input,
-                        prefixLength,
-                        mtId,
-                        sv,
-                        n,
-                        nullKind
-                    )
-                | _ ->
-                    this.llmatch_ends_setlookup_sv (
-                        &matches,
-                        &acc,
-                        input,
-                        prefixLength,
-                        sv,
-                        nullKind
-                    )
+            if sv.Mode = MintermSearchMode.SearchValues then
+                this.llmatch_ends_setlookup_sv (
+                    &matches,
+                    &acc,
+                    input,
+                    prefixLength,
+                    sv,
+                    nullKind
+                )
             else
                 this.llmatch_ends_setlookup_mt (
                     &matches,
