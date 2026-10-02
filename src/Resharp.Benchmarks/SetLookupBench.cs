@@ -12,8 +12,7 @@ public class SetLookupSyntheticBench
 {
     private Resharp.Regex scalar = null!;
     private Resharp.Regex searchValues = null!;
-    private Resharp.Regex hybrid4 = null!;
-    private Resharp.Regex hybrid8 = null!;
+    private Resharp.Regex adaptive16 = null!;
     private string haystack = "";
 
     [Params(4, 8, 12, 16, 24, 32)]
@@ -29,20 +28,17 @@ public class SetLookupSyntheticBench
         int repeats = Math.Max(1, targetChars / segment.Length);
         haystack = string.Concat(Enumerable.Repeat(segment, repeats));
 
-        scalar = new Resharp.Regex(pattern, CreateOptions(searchValues: false, scalarPrefixLength: 0));
-        searchValues = new Resharp.Regex(pattern, CreateOptions(searchValues: true, scalarPrefixLength: 0));
-        hybrid4 = new Resharp.Regex(pattern, CreateOptions(searchValues: true, scalarPrefixLength: 4));
-        hybrid8 = new Resharp.Regex(pattern, CreateOptions(searchValues: true, scalarPrefixLength: 8));
+        scalar = new Resharp.Regex(pattern, CreateOptions(searchValues: false, adaptiveThreshold: 0));
+        searchValues = new Resharp.Regex(pattern, CreateOptions(searchValues: true, adaptiveThreshold: 0));
+        adaptive16 = new Resharp.Regex(pattern, CreateOptions(searchValues: true, adaptiveThreshold: 16));
 
         ValidateRegex(scalar);
         ValidateRegex(searchValues);
-        ValidateRegex(hybrid4);
-        ValidateRegex(hybrid8);
+        ValidateRegex(adaptive16);
 
         int expected = scalar.Count(haystack);
         ValidateCount("SearchValues", expected, searchValues.Count(haystack));
-        ValidateCount("Hybrid4", expected, hybrid4.Count(haystack));
-        ValidateCount("Hybrid8", expected, hybrid8.Count(haystack));
+        ValidateCount("Adaptive16", expected, adaptive16.Count(haystack));
 
         Console.WriteLine(
             $"setlookup-synthetic gap={Gap} chars={haystack.Length} matches={expected}");
@@ -58,11 +54,7 @@ public class SetLookupSyntheticBench
 
     [Benchmark]
     [BenchmarkCategory("SetLookupSynthetic")]
-    public int Hybrid4() => hybrid4.Count(haystack);
-
-    [Benchmark]
-    [BenchmarkCategory("SetLookupSynthetic")]
-    public int Hybrid8() => hybrid8.Count(haystack);
+    public int Adaptive16() => adaptive16.Count(haystack);
 
     private static void ValidateRegex(Resharp.Regex regex)
     {
@@ -83,11 +75,11 @@ public class SetLookupSyntheticBench
                 $"count mismatch for {strategy}: scalar={expected}, candidate={actual}");
     }
 
-    private static ResharpOptions CreateOptions(bool searchValues, int scalarPrefixLength)
+    private static ResharpOptions CreateOptions(bool searchValues, int adaptiveThreshold)
     {
         var options = ResharpOptions.HighThroughputDefaults;
         options.UseSearchValuesSetLookup = searchValues;
-        options.SetLookupScalarPrefixLength = scalarPrefixLength;
+        options.SetLookupAdaptiveThreshold = adaptiveThreshold;
         return options;
     }
 }
@@ -100,8 +92,7 @@ public class SetLookupRealisticBench
 {
     private Resharp.Regex scalar = null!;
     private Resharp.Regex searchValues = null!;
-    private Resharp.Regex hybrid4 = null!;
-    private Resharp.Regex hybrid8 = null!;
+    private Resharp.Regex adaptive16 = null!;
     private string haystack = "";
 
     [Params("user-8", "token-16", "quoted-32", "message-64", "path-256")]
@@ -115,20 +106,17 @@ public class SetLookupRealisticBench
         int repeats = Math.Max(1, targetChars / record.Length);
         haystack = string.Concat(Enumerable.Repeat(record, repeats));
 
-        scalar = new Resharp.Regex(pattern, CreateOptions(searchValues: false, scalarPrefixLength: 0));
-        searchValues = new Resharp.Regex(pattern, CreateOptions(searchValues: true, scalarPrefixLength: 0));
-        hybrid4 = new Resharp.Regex(pattern, CreateOptions(searchValues: true, scalarPrefixLength: 4));
-        hybrid8 = new Resharp.Regex(pattern, CreateOptions(searchValues: true, scalarPrefixLength: 8));
+        scalar = new Resharp.Regex(pattern, CreateOptions(searchValues: false, adaptiveThreshold: 0));
+        searchValues = new Resharp.Regex(pattern, CreateOptions(searchValues: true, adaptiveThreshold: 0));
+        adaptive16 = new Resharp.Regex(pattern, CreateOptions(searchValues: true, adaptiveThreshold: 16));
 
         ValidateRegex(scalar);
         ValidateRegex(searchValues);
-        ValidateRegex(hybrid4);
-        ValidateRegex(hybrid8);
+        ValidateRegex(adaptive16);
 
         int expected = scalar.Count(haystack);
         ValidateCount("SearchValues", expected, searchValues.Count(haystack));
-        ValidateCount("Hybrid4", expected, hybrid4.Count(haystack));
-        ValidateCount("Hybrid8", expected, hybrid8.Count(haystack));
+        ValidateCount("Adaptive16", expected, adaptive16.Count(haystack));
 
         Console.WriteLine(
             $"setlookup-realistic case={Case} chars={haystack.Length} matches={expected}");
@@ -144,11 +132,7 @@ public class SetLookupRealisticBench
 
     [Benchmark]
     [BenchmarkCategory("SetLookupRealistic")]
-    public int Hybrid4() => hybrid4.Count(haystack);
-
-    [Benchmark]
-    [BenchmarkCategory("SetLookupRealistic")]
-    public int Hybrid8() => hybrid8.Count(haystack);
+    public int Adaptive16() => adaptive16.Count(haystack);
 
     private static void ValidateRegex(Resharp.Regex regex)
     {
@@ -189,11 +173,11 @@ public class SetLookupRealisticBench
         _ => throw new ArgumentOutOfRangeException(nameof(name), name, null)
     };
 
-    private static ResharpOptions CreateOptions(bool searchValues, int scalarPrefixLength)
+    private static ResharpOptions CreateOptions(bool searchValues, int adaptiveThreshold)
     {
         var options = ResharpOptions.HighThroughputDefaults;
         options.UseSearchValuesSetLookup = searchValues;
-        options.SetLookupScalarPrefixLength = scalarPrefixLength;
+        options.SetLookupAdaptiveThreshold = adaptiveThreshold;
         return options;
     }
 }
