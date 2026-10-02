@@ -5,17 +5,16 @@ open Resharp
 open Xunit
 open Common
 
-let private makeRegex pattern vectorized scalarPrefixLength =
+let private makeRegex pattern vectorized adaptiveThreshold =
     let options = ResharpOptions.HighThroughputDefaults
     options.UseSearchValuesSetLookup <- vectorized
-    options.SetLookupScalarPrefixLength <- scalarPrefixLength
+    options.SetLookupAdaptiveThreshold <- adaptiveThreshold
     Regex(pattern, options)
 
 let private assertEquivalent (pattern: string) (input: string) =
     let scalar = makeRegex pattern false 0
     let vectorized = makeRegex pattern true 0
-    let hybrid4 = makeRegex pattern true 4
-    let hybrid8 = makeRegex pattern true 8
+    let adaptive16 = makeRegex pattern true 16
     let chars = input.ToCharArray()
     let span = ReadOnlySpan<char>(chars)
 
@@ -25,25 +24,20 @@ let private assertEquivalent (pattern: string) (input: string) =
 
     use expected = scalar.ValueMatches(span)
     use actual = vectorized.ValueMatches(span)
-    use actual4 = hybrid4.ValueMatches(span)
-    use actual8 = hybrid8.ValueMatches(span)
+    use adaptive = adaptive16.ValueMatches(span)
 
     Assert.Equal(expected.Count, actual.Count)
-    Assert.Equal(expected.Count, actual4.Count)
-    Assert.Equal(expected.Count, actual8.Count)
+    Assert.Equal(expected.Count, adaptive.Count)
 
     for i = 0 to expected.Count - 1 do
         Assert.Equal(expected.pool[i].Index, actual.pool[i].Index)
         Assert.Equal(expected.pool[i].Length, actual.pool[i].Length)
-        Assert.Equal(expected.pool[i].Index, actual4.pool[i].Index)
-        Assert.Equal(expected.pool[i].Length, actual4.pool[i].Length)
-        Assert.Equal(expected.pool[i].Index, actual8.pool[i].Index)
-        Assert.Equal(expected.pool[i].Length, actual8.pool[i].Length)
+        Assert.Equal(expected.pool[i].Index, adaptive.pool[i].Index)
+        Assert.Equal(expected.pool[i].Length, adaptive.pool[i].Length)
 
     let expectedCount = scalar.Count(span)
     Assert.Equal(expectedCount, vectorized.Count(span))
-    Assert.Equal(expectedCount, hybrid4.Count(span))
-    Assert.Equal(expectedCount, hybrid8.Count(span))
+    Assert.Equal(expectedCount, adaptive16.Count(span))
 
 [<Fact>]
 let ``SetLookup SearchValues preserves ASCII match ends`` () =
