@@ -28,11 +28,17 @@ let private assertEquivalent (pattern: string) (input: string) =
     use actual4 = hybrid4.ValueMatches(span)
     use actual8 = hybrid8.ValueMatches(span)
 
-    for candidate in [| actual; actual4; actual8 |] do
-        Assert.Equal(expected.Count, candidate.Count)
-        for i = 0 to expected.Count - 1 do
-            Assert.Equal(expected.pool[i].Index, candidate.pool[i].Index)
-            Assert.Equal(expected.pool[i].Length, candidate.pool[i].Length)
+    Assert.Equal(expected.Count, actual.Count)
+    Assert.Equal(expected.Count, actual4.Count)
+    Assert.Equal(expected.Count, actual8.Count)
+
+    for i = 0 to expected.Count - 1 do
+        Assert.Equal(expected.pool[i].Index, actual.pool[i].Index)
+        Assert.Equal(expected.pool[i].Length, actual.pool[i].Length)
+        Assert.Equal(expected.pool[i].Index, actual4.pool[i].Index)
+        Assert.Equal(expected.pool[i].Length, actual4.pool[i].Length)
+        Assert.Equal(expected.pool[i].Index, actual8.pool[i].Index)
+        Assert.Equal(expected.pool[i].Length, actual8.pool[i].Length)
 
     let expectedCount = scalar.Count(span)
     Assert.Equal(expectedCount, vectorized.Count(span))
