@@ -82,12 +82,10 @@ jobs:
           test -s "${realistic}"
           grep -Fq "Scalar" "${synthetic}"
           grep -Fq "SearchValues" "${synthetic}"
-          grep -Fq "Hybrid4" "${synthetic}"
-          grep -Fq "Hybrid8" "${synthetic}"
+          grep -Fq "Adaptive16" "${synthetic}"
           grep -Fq "Scalar" "${realistic}"
           grep -Fq "SearchValues" "${realistic}"
-          grep -Fq "Hybrid4" "${realistic}"
-          grep -Fq "Hybrid8" "${realistic}"
+          grep -Fq "Adaptive16" "${realistic}"
 
           if grep -Fq "There are not any results runs" "${log}" \
             || grep -Fq "No Workload Results were obtained" "${log}" \
