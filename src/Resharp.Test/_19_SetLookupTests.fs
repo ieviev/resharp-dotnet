@@ -24,14 +24,16 @@ let private assertMatches
 
     use actual = regex.ValueMatches(span)
 
-    Assert.Equal(expected.Length, actual.Count)
+    let expectedCount = List.length expected
+    Assert.Equal(expectedCount, actual.Count)
 
-    for i = 0 to expected.Length - 1 do
-        let struct (expectedIndex, expectedLength) = expected[i]
+    expected
+    |> List.iteri (fun i (struct (expectedIndex, expectedLength)) ->
         Assert.Equal(expectedIndex, actual.pool[i].Index)
         Assert.Equal(expectedLength, actual.pool[i].Length)
+    )
 
-    Assert.Equal(expected.Length, regex.Count(span))
+    Assert.Equal(expectedCount, regex.Count(span))
 
 [<Fact>]
 let ``SetLookup SearchValues preserves ASCII match ends`` () =
