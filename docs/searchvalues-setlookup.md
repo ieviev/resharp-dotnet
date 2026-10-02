@@ -58,21 +58,37 @@ offset = SearchValues.nextIndexLeftToRight(input[pos..])
 pos = offset < 0 ? input.Length : pos + offset
 ```
 
-Hybrid:
+The scalar-prefix hybrid was benchmarked with 4- and 8-character probes. It did not
+improve the trade-off: the probe cost is paid for every match, so it was generally
+slower than pure SearchValues on medium/long fields and did not reliably beat scalar
+on short fields.
+
+The current candidate therefore adapts once per matching operation from observed
+input behavior:
 
 ```text
-scan first N code units with _mtlookup
-if target not found:
-    SearchValues(input[pos..])
+useSearchValues = false
+
+for each accepted candidate:
+    if useSearchValues:
+        SearchValues(input[pos..])
+    else:
+        start = pos
+        scalar minterm scan
+        if pos - start >= 16:
+            useSearchValues = true
 ```
 
-The hybrid preserves the cheap scalar path for nearby delimiters while retaining the
-bulk-search benefit for longer distances.
+The first sufficiently long scan pays the original scalar cost and acts as a sample.
+Subsequent SetLookup searches in the same operation use SearchValues. Short-field
+inputs therefore remain scalar without paying SearchValues setup on every match.
 
-The strategy switch occurs once in the `LengthLookup` dispatch. Direct
-`SearchValues` minterms can use the hybrid. Inverted `IndexOfAnyExcept` minterms
-remain on the scalar path because the follow-up benchmark did not show a sufficiently
-stable or scalable benefit.
+The threshold of 16 is deliberately conservative: direct SearchValues was clearly
+faster at that distance on both measured runners, while shorter-distance behavior was
+architecture-dependent.
+
+Inverted `IndexOfAnyExcept` minterms remain on the scalar path because their measured
+benefit was smaller and inconsistent.
 
 ## Complexity
 
@@ -109,12 +125,16 @@ That run established:
 - inverted `IndexOfAnyExcept` is much less consistent and is not retained as a
   candidate strategy.
 
-The next benchmark keeps only direct `IndexOfAny` and compares four strategies:
+The scalar-prefix follow-up compared scalar, pure SearchValues, Hybrid4, and Hybrid8.
+Both hybrids were rejected because they add repeated scalar work before almost every
+vector search.
+
+The next benchmark keeps only direct `IndexOfAny` and compares:
 
 - scalar;
 - pure SearchValues;
-- Hybrid4: four scalar probes, then SearchValues;
-- Hybrid8: eight scalar probes, then SearchValues.
+- Adaptive16: start scalar and switch subsequent searches after observing a scan of
+  at least 16 UTF-16 code units.
 
 The total haystack remains approximately 1 MiB.
 
@@ -162,16 +182,16 @@ Primary comparisons:
 
 ```text
 SearchValues / Scalar
-Hybrid4 / Scalar
-Hybrid8 / Scalar
+Adaptive16 / Scalar
 ```
 
-The selected strategy should preserve the large long-distance gains while avoiding
-the short-distance regression seen for unconditional SearchValues on some hardware.
+The adaptive candidate should track scalar behavior for consistently short fields and
+approach pure SearchValues after the first long field. This uses observed delimiter
+distance rather than a CPU-specific assumption.
 
 Because the crossover differed between the Intel AVX-512/AVX10 and AMD AVX2 runners,
-the hybrid is evaluated as an input-distance strategy rather than by hard-coding a
-machine-specific SearchValues cutoff.
+the 16-character threshold is chosen as the shortest distance that was clearly in the
+SearchValues-favorable region on both measured systems.
 
 A result is not considered representative unless the corresponding workload is
 confirmed to use `LengthLookup.SetLookup`.
