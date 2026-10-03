@@ -135,3 +135,53 @@ matches = [[0, 4]]
 pattern = '([^\w])\s+(\S)'
 input = '. a'
 matches = [[0, 3]]
+
+[[test]]
+pattern = '.+\n*'
+input = 'a'
+matches = [[0, 1]]
+
+[[test]]
+pattern = '.+\n?'
+input = 'a'
+matches = [[0, 1]]
+
+[[test]]
+pattern = '.+\n{0,3}'
+input = 'a'
+matches = [[0, 1]]
+
+[[test]]
+pattern = '.+\n*'
+input = "ab\n\n\ncd"
+matches = [[0, 5], [5, 7]]
+
+[[test]]
+pattern = '.+\nb*'
+input = "x\nb"
+matches = [[0, 3]]
+
+[[test]]
+pattern = '.+\n+'
+input = "ab:\n\na"
+matches = [[0, 5]]
+
+[[test]]
+pattern = '.+\n?'
+input = "a\nb"
+matches = [[0, 2], [2, 3]]
+
+[[test]]
+pattern = 'a[^b]*b'
+input = 'axxbxxb'
+matches = [[0, 4]]
+
+[[test]]
+pattern = 'a_{2,4}'
+input = 'a-bab'
+matches = [[0, 5]]
+
+[[test]]
+pattern = 'a[ab]{2,5}'
+input = 'aababab'
+matches = [[0, 6]]

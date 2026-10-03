@@ -106,4 +106,26 @@ let tests07_unsupported () =
 [<Fact>]
 let tests08_semantics () = runTomlTests "tests08_semantics.toml"
 
+[<Fact>]
+let ``nested complement + bounded-inexact-repeat + intersection terminates quickly and correctly`` () =
+    let task =
+        System.Threading.Tasks.Task.Run(fun () ->
+            use m = Resharp.Regex("~(.?~(.-?){2,3}.+)&-+").ValueMatches("-")
+            m.ToArray().Length
+        )
+
+    Assert.True(task.Wait(System.TimeSpan.FromSeconds(10.0)), "regex construction/matching hung")
+    Assert.Equal(0, task.Result)
+
+[<Fact>]
+let ``fixed-count group under unbounded star intersected with doubly-wrapped complement of repeated complement hangs`` () =
+    let task =
+        System.Threading.Tasks.Task.Run(fun () ->
+            use m = Resharp.Regex("(x{2})*&~(((~(_){2})+){2})").ValueMatches("caa")
+            m.ToArray().Length
+        )
+
+    Assert.True(task.Wait(System.TimeSpan.FromSeconds(10.0)), "regex construction/matching hung")
+    Assert.Equal(0, task.Result)
+
 #endif

@@ -218,3 +218,43 @@ matches = [[0, 5]]
 pattern = '.*a.*&.*b.*&.*c.*'
 input = '"$odd" style="background-color:#f1f1f1">{{ x.Country }}'
 matches = [[0, 55]]
+
+[[test]]
+pattern = 'a&b&c'
+input = 'b'
+matches = []
+
+[[test]]
+pattern = 'a&b&c'
+input = 'xax'
+matches = []
+
+[[test]]
+pattern = 'c&d&a'
+input = 'xax'
+matches = []
+
+[[test]]
+pattern = '[ab]&[bc]&[cd]'
+input = 'abcd'
+matches = []
+
+[[test]]
+pattern = 'aa&bb&cc'
+input = 'xaxaabbcc'
+matches = []
+
+[[test]]
+pattern = 'a&a&a'
+input = 'a'
+matches = [[0, 1]]
+
+[[test]]
+pattern = '[ab]&[bc]&[b-d]'
+input = 'xbx'
+matches = [[1, 2]]
+
+[[test]]
+pattern = 'a&_&_{1}'
+input = ":-a:bc.\ncb.:\n"
+matches = [[2, 3]]

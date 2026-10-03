@@ -334,6 +334,7 @@ let getPotentialStartNode
     getPrefixNodeCore false cache node
 
 let rec calcPrefixSets
+    (options: ResharpOptions)
     getNonInitialDerivative
     (cache: RegexCache<'t>)
     (startNode: RegexNodeId)
@@ -357,7 +358,11 @@ let rec calcPrefixSets
     let mutable cont = true
 
     while cont do
-        if (acc.Count > 0 && redundant.Contains(node)) || b.Info(node).CanBeNullable then
+        if
+            (acc.Count > 0 && redundant.Contains(node))
+            || b.Info(node).CanBeNullable
+            || acc.Count >= options.MaxPrefixLength
+        then
             cont <- false
         else
             let prefix_derivs =
@@ -370,6 +375,7 @@ let rec calcPrefixSets
                     acc.Clear()
                     cont <- false
                 else
+                    redundant.Add(node) |> ignore
                     acc.Add(mt)
                     node <- deriv
             | _ -> cont <- false
@@ -672,7 +678,7 @@ let findInitialOptimizations
     if options.FindPotentialStartSizeLimit = 0 then
         InitialAccelerator.NoAccelerator
     else
-        let prefix = Optimizations.calcPrefixSets getNonInitialDerivative c node
+        let prefix = Optimizations.calcPrefixSets options getNonInitialDerivative c node
 
         if prefix.Count > 1 then
             let singleCharPrefixes =
@@ -905,6 +911,21 @@ let inferLengthLookup
     : LengthLookup<'t> =
     let b = c.Builder
 
+    let isSetLookupContinuation (mt: 't) (der: RegexNodeId) =
+        b.Info(der).IsAlwaysNullable
+        && isExactMinterm c mt
+        && getImmediateDerivativesMerged getDerivative c der
+           |> Seq.forall (fun (_, d) -> d = RegexNodeId.BOT)
+
+    let exactSingletonLoop(n: RegexNodeId) =
+        match b.Node(n) with
+        | Loop loopNodes when loopNodes[1] = 0 && loopNodes[2] <= (int Byte.MaxValue) ->
+            match b.Node(loopNodes[0]) with
+            | Singleton nodes when isExactMinterm c (b.GetTSet(nodes[0])) ->
+                ValueSome(b.GetTSet(nodes[0]), byte loopNodes[2])
+            | _ -> ValueNone
+        | _ -> ValueNone
+
     if opts.FindPotentialStartSizeLimit = 0 then
         LengthLookup.MatchEnd
     else
@@ -915,66 +936,10 @@ let inferLengthLookup
 
             match fixedPrefix with
             | ValueSome prefixLen, ValueSome remaining ->
-                let stateId = getNodeId remaining
-
-                match b.Node(remaining) with
-                | Loop loopNodes when loopNodes[1] = 0 ->
-                    let body = loopNodes[0]
-                    let remainUp = loopNodes[2]
-                    match b.Node(body) with
-                    | Singleton nodes when remainUp <= (int Byte.MaxValue) ->
-                        let pred = b.GetTSet(nodes[0])
-                        LengthLookup.RemainingSets(
-                            prefixLen,
-                            c.MintermToId(pred),
-                            byte remainUp
-                        )
-                    | _ ->
-                        let prefix_derivs =
-                            getNonRedundantDerivatives
-                                getDerivative
-                                c
-                                (HashSet(
-                                    [
-                                        node
-                                        remaining
-                                    ]
-                                ))
-                                remaining
-                            |> Seq.toArray
-
-                        match prefix_derivs with
-                        | [| mt, der |] when b.Info(der).IsAlwaysNullable ->
-                            let prefix_derivs_2 =
-                                getNonRedundantDerivatives
-                                    getDerivative
-                                    c
-                                    (HashSet(
-                                        [
-                                            node
-                                            remaining
-                                            der
-                                        ]
-                                    ))
-                                    der
-                                |> Seq.toArray
-
-                            match prefix_derivs_2 with
-                            | [| _, der2 |] when der2 = RegexNodeId.BOT && isExactMinterm c mt ->
-                                let nullKind, skipKind, _ = (getInfo der)
-                                let mtId = c.MintermToId(mt)
-                                let sv = c.MintermSearchValues(mt)
-
-                                LengthLookup.SetLookup(
-                                    prefixLen,
-                                    mtId,
-                                    skipKind,
-                                    nullKind,
-                                    sv
-                                )
-                            | _ -> LengthLookup.FixedLengthPrefixMatchEnd(prefixLen, stateId)
-                        | _ -> LengthLookup.FixedLengthPrefixMatchEnd(prefixLen, stateId)
-                | _ ->
+                match exactSingletonLoop remaining with
+                | ValueSome(pred, remainUp) ->
+                    LengthLookup.RemainingSets(prefixLen, c.MintermToId(pred), remainUp)
+                | ValueNone ->
                     let prefix_derivs =
                         getNonRedundantDerivatives
                             getDerivative
@@ -989,29 +954,16 @@ let inferLengthLookup
                         |> Seq.toArray
 
                     match prefix_derivs with
-                    | [| mt, der |] when b.Info(der).IsAlwaysNullable ->
-                        let prefix_derivs_2 =
-                            getNonRedundantDerivatives
-                                getDerivative
-                                c
-                                (HashSet(
-                                    [
-                                        node
-                                        remaining
-                                        der
-                                    ]
-                                ))
-                                der
-                            |> Seq.toArray
-
-                        match prefix_derivs_2 with
-                        | [| _, der2 |] when der2 = RegexNodeId.BOT && isExactMinterm c mt ->
-                            let nullKind, skipKind, _ = (getInfo der)
-                            let mtId = c.MintermToId(mt)
-                            let sv = c.MintermSearchValues(mt)
-                            LengthLookup.SetLookup(prefixLen, mtId, skipKind, nullKind, sv)
-                        | _ -> LengthLookup.FixedLengthPrefixMatchEnd(prefixLen, stateId)
-                    | _ -> LengthLookup.FixedLengthPrefixMatchEnd(prefixLen, stateId)
+                    | [| mt, der |] when
+                        not (b.Info(remaining).CanBeNullable)
+                        && isSetLookupContinuation mt der
+                        ->
+                        let nullKind, skipKind, _ = (getInfo der)
+                        let mtId = c.MintermToId(mt)
+                        let sv = c.MintermSearchValues(mt)
+                        LengthLookup.SetLookup(prefixLen, mtId, skipKind, nullKind, sv)
+                    | _ ->
+                        LengthLookup.FixedLengthPrefixMatchEnd(prefixLen, getNodeId remaining)
 
             | _ -> LengthLookup.MatchEnd
         )

@@ -188,7 +188,7 @@ let applyPrefix pattern =
     let getder = (fun (mt, v) -> matcher.CreateDerivative(LocationKind.Center, mt, v))
 
     let prefix =
-        Optimizations.calcPrefixSets getder matcher.Cache matcher.ReversePattern
+        Optimizations.calcPrefixSets regex.Options getder matcher.Cache matcher.ReversePattern
 
     let applied =
         Optimizations.applyPrefixSets
@@ -205,7 +205,7 @@ let assertOptimizationPrefixSets pattern expected =
     let getder = regex.CreateNonInitialDerivative
 
     let prefix =
-        Optimizations.calcPrefixSets getder matcher.Cache matcher.ReversePattern
+        Optimizations.calcPrefixSets regex.Options getder matcher.Cache matcher.ReversePattern
 
     let prefixString = Optimizations.printPrefixSets matcher.Cache prefix
     assertEqual expected prefixString

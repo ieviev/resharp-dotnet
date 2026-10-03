@@ -24,6 +24,14 @@ let ``conjunction match tests 1`` () =
 [<Fact>]
 let ``conjunction match tests 2`` () = assertNoMatch """_*A_*&_*B""" "B  A"
 
+[<Fact>]
+let ``complement of optional-complement-then-fixed-count donates length 5 at the start instead of always splitting into 2s`` () =
+    assertAllLLmatches """~(~(_{2,2})?_{3})""" "aa\naa\na-b" [ 0, 5; 5, 2; 7, 2; 9, 0 ]
+
+[<Fact>]
+let ``disjoint same-body loop bounds in an Or must not merge across a gap`` () =
+    assertFirstMatch """~(_{2,2})_{3}""" "xxxxx" (0, 4)
+
 
 let twainExampleShort =
     """

@@ -1383,6 +1383,7 @@ type internal RegexMatcher<'t when 't: struct and TSet<'t> and 't: equality>
                 while (l_pos < input.Length && I.mintermId _mtlookup input l_pos <> mtId) do
                     l_pos <- l_pos + 1
 
+                assert (l_pos < input.Length)
                 l_pos <- (I.sub l_pos nk) + 1
                 matches.Add(ValueMatch(currStart, l_pos - currStart))
 

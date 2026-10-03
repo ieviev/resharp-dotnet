@@ -14,6 +14,13 @@ open System.Runtime.InteropServices
 open System.Threading
 open Resharp.Internal
 
+module internal Ranges =
+    let overlapsOrAdjacent (lo1: int) (up1: int) (lo2: int) (up2: int) =
+        let loA, upA, loB =
+            if lo1 <= lo2 then lo1, up1, lo2 else lo2, up2, lo1
+
+        upA = Int32.MaxValue || loB <= upA + 1
+
 type internal ResharpRegexNodeConverter(solver: CharSetSolver) =
     let _setBddCache = new Dictionary<string, BDD>()
 
@@ -886,7 +893,10 @@ type internal RegexBuilder<'t
                 | _ when node1 = RegexNodeId.EPS -> this.mkLoop (node2, 0, 1)
                 | _ when node2 = RegexNodeId.EPS -> this.mkLoop (node1, 0, 1)
                 // a{0,5}|a{4,7} -> a{0,7}
-                | Loop ns1, Loop ns2 when ns1[0] = ns2[0] ->
+                | Loop ns1, Loop ns2 when
+                    ns1[0] = ns2[0]
+                    && Ranges.overlapsOrAdjacent ns1[1] ns1[2] ns2[1] ns2[2]
+                    ->
                     this.mkLoop (ns1[0], min ns1[1] ns2[1], max ns1[2] ns2[2])
                 // (ab)|(ab){2} -> (ab){1,2}
                 | Loop ns, _ when ns[0] = node2 ->
@@ -1281,10 +1291,10 @@ type internal RegexBuilder<'t
                     if allSingletons && derivatives.Count > 0 then
                         derivatives
                         |> fold
-                            solver.Empty
+                            solver.Full
                             (fun acc v ->
                                 match this.Node(v) with
-                                | Singleton nodes -> solver.Or(acc, _tsets[nodes[0]])
+                                | Singleton nodes -> solver.And(acc, _tsets[nodes[0]])
                                 | _ -> failwith "bug in regex node constructor"
                             )
                         |> b.one

@@ -15,7 +15,7 @@ let ``calc reverse prefix 1`` () =
     let matcher = regex.TSetMatcher
     let getder = regex.CreateNonInitialDerivative
     let prefix =
-        Optimizations.calcPrefixSets getder matcher.Cache matcher.ReversePattern
+        Optimizations.calcPrefixSets regex.Options getder matcher.Cache matcher.ReversePattern
     let prefixString = Optimizations.printPrefixSets matcher.Cache prefix
     Assert.Equal("n;i;a;w;T", prefixString)
 
